@@ -21,24 +21,29 @@ class _LoginScreenState extends State<LoginScreen> {
   String username = "";
   String password = "";
   String value = "";
+  int id = 0;
+  String token = "";
 
-  @override
-  void initState() {
-    super.initState();
-    //_loadPreferences();
-    init();
-  }
-
-/*
-  // Method to load the shared preference data
   void _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       username = prefs.getString('username') ?? '';
       password = prefs.getString('password') ?? '';
+      id = prefs.getInt('id') ?? 0;
+      token = prefs.getString('token') ?? '';
     });
   }
-*/
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+    //init();
+  }
+
+  // Method to load the shared preference data
+
+/*
   final EncryptedSharedPreferences encryptedSharedPreferences =
       EncryptedSharedPreferences();
 
@@ -49,6 +54,7 @@ class _LoginScreenState extends State<LoginScreen> {
       });
     });
   }
+  */
 
   @override
   Widget build(BuildContext context) {
@@ -137,8 +143,8 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 Container(
                     child: Column(children: <Widget>[
-                  //if (username.isNotEmpty && password.isNotEmpty)
-                  buildAuthenticate(context),
+                  if (username.isNotEmpty && password.isNotEmpty)
+                    buildAuthenticate(context),
                 ])),
               ],
             ),
@@ -163,34 +169,16 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (isAuthenticated) {
             http.Response response =
-                await AuthServices.login('pruebaapp', 'Pruebaapp123');
+                await AuthServices.login(username, password);
             Map responseMap = jsonDecode(response.body);
-            print(responseMap);
-            if (response.statusCode == 200) {
-              encryptedSharedPreferences
-                  .setString('token', responseMap['token'])
-                  .then((bool success) {
-                if (success) {
-                  print('token save success');
-                  encryptedSharedPreferences
-                      .getString('token')
-                      .then((String value) {
-                    print(value);
 
-                    /// Prints Hello, World!
-                  });
-                } else {
-                  print('token don´t save');
-                }
-              });
-              /* final prefs = await SharedPreferences.getInstance();
-              prefs.setString('token', responseMap['token']);*/
-              //encryptedSharedPreferences.setString('token', responseMap['Map']);
-              Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => HomeScreen()),
-              );
-            } else if (response.statusCode == 401) {
-              errorSnackBar(context, responseMap['error_message']);
+            print(responseMap['user']['id']);
+
+            if (response.statusCode == 200) {
+              final prefs = await SharedPreferences.getInstance();
+              prefs.setString('token', responseMap['token']);
+              prefs.setInt('id', responseMap['user']['id']);
+              Navigator.pushNamed(context, '/home_page');
             }
           }
         },
@@ -220,10 +208,10 @@ class _LoginScreenState extends State<LoginScreen> {
       if (password.isNotEmpty) {
         http.Response response = await AuthServices.login(username, password);
         Map responseMap = jsonDecode(response.body);
-
+        print(response.statusCode);
         if (response.statusCode == 200) {
           final prefs = await SharedPreferences.getInstance();
-          prefs.setInt('user_id', responseMap["user"]['id']);
+          prefs.setInt('id', responseMap["user"]['id']);
           prefs.setString('email', responseMap["user"]['email']);
           prefs.setString('name', responseMap["user"]['name']);
           prefs.setString('email', responseMap["user"]['email']);
@@ -231,7 +219,9 @@ class _LoginScreenState extends State<LoginScreen> {
           prefs.setString('username', username);
           prefs.setString('password', password);
 
-          Navigator.pushNamed(context, 'home_page');
+          print(prefs.getString('token'));
+
+          Navigator.pushNamed(context, '/home_page');
         }
         if (response.statusCode == 401) {
           errorSnackBar(context, responseMap['error_message']);

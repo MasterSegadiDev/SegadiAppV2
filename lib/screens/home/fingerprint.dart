@@ -1,6 +1,6 @@
 //import 'package:fingerprint_auth_example/api/local_auth_api.dart';
 //import 'package:fingerprint_auth_example/main.dart';
-import 'package:segadi/services/home_page.dart';
+import 'package:segadi/screens/home/home.dart';
 import 'package:flutter/material.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:segadi/services/login_local_auth/biometric_authentication.dart';
@@ -46,9 +46,7 @@ class FingerprintPage extends StatelessWidget {
           final isAuthenticated = await localAuth.authenticate();
 
           if (isAuthenticated) {
-            Navigator.of(context).pushReplacement(
-              MaterialPageRoute(builder: (context) => HomePage()),
-            );
+            Navigator.pushNamed(context, '/home_page');
           }
         },
       );

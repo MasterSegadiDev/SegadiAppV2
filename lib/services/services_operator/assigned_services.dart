@@ -1,68 +1,43 @@
-class Service {
-  final int id;
-  final String service;
-  final String client;
-  final String loadOrigen;
-  final String loadSource;
-  final String loadDate;
-  final String sourceDate;
-  final String documentator;
+import 'dart:convert';
 
-  const Service(
-      {required this.id,
-      required this.service,
-      required this.client,
-      required this.loadOrigen,
-      required this.loadSource,
-      required this.loadDate,
-      required this.sourceDate,
-      required this.documentator});
+import 'package:segadi/models/services/services.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:segadi/services/globals.dart';
+import 'package:http/http.dart' as http;
+
+class ListServiceRemote {
+  Future<List<Services>> getServices() async {
+    var client = http.Client();
+    int _id = 0;
+    String _token = "";
+    List<Services> services = [];
+
+    final prefs = await SharedPreferences.getInstance();
+    _id = prefs.getInt('id') ?? 0;
+    _token = prefs.getString('token') ?? '';
+    var route = 'index.php';
+
+    /*var url = Uri.parse(baseURL + route).replace(queryParameters: {
+      'r': 'esegadi/getactivas',
+      'id': _id.toString(),
+      'token': _token,
+    });*/
+
+    var response =
+        await http.get(Uri.parse(baseURL + route).replace(queryParameters: {
+      'r': 'esegadi/getactivas',
+      'id': _id.toString(),
+      'token': _token,
+    }));
+    var data = jsonDecode(response.body.toString());
+    if (response.statusCode == 200) {
+      for (Map<String, dynamic> index in data) {
+        services.add(Services.fromJson(index));
+      }
+      return services;
+    } else {
+      return services;
+    }
+  }
 }
-
-final services = [
-  new Service(
-      id: 1,
-      service: 'S36112',
-      client: 'DIVERSIDAD GLOBAL',
-      loadOrigen: 'Manzanillo',
-      loadSource: 'Guadalajara',
-      loadDate: '21/09/2023',
-      sourceDate: '22/10/2023',
-      documentator: 'Itzel Garcia'),
-  new Service(
-      id: 2,
-      service: 'S36113',
-      client: 'DIVERSIDAD GLOBAL',
-      loadOrigen: 'Manzanillo',
-      loadSource: 'Guadalajara',
-      loadDate: '21/09/2023',
-      sourceDate: '22/10/2023',
-      documentator: 'Itzel Garcia'),
-  new Service(
-      id: 3,
-      service: 'S36114',
-      client: 'DIVERSIDAD GLOBAL',
-      loadOrigen: 'Manzanillo',
-      loadSource: 'Guadalajara',
-      loadDate: '21/09/2023',
-      sourceDate: '22/10/2023',
-      documentator: 'Itzel Garcia'),
-  new Service(
-      id: 4,
-      service: 'S36115',
-      client: 'DIVERSIDAD GLOBAL',
-      loadOrigen: 'Manzanillo',
-      loadSource: 'Guadalajara',
-      loadDate: '21/09/2023',
-      sourceDate: '22/10/2023',
-      documentator: 'Itzel Garcia'),
-  new Service(
-      id: 5,
-      service: 'S36116',
-      client: 'DIVERSIDAD GLOBAL',
-      loadOrigen: 'Manzanillo',
-      loadSource: 'Guadalajara',
-      loadDate: '21/09/2023',
-      sourceDate: '22/10/2023',
-      documentator: 'Itzel Garcia'),
-];

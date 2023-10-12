@@ -22,9 +22,9 @@ class MyApp extends StatelessWidget {
       title: 'Segadi',
       routes: {
         '/': (context) => const LoginScreen(),
-        '/home_page': (context) => HomePage(),
-        '/services': (context) => ServicesScreen(),
-        '/detail_service': (context) => DetailServicesScreen(),
+        '/home_page': (context) => const HomeScreen(),
+        '/services': (context) => const ServicesScreen(),
+        '/detail_service': (context) => const DetailServicesScreen(),
       },
     );
   }
