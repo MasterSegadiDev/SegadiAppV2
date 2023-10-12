@@ -1,26 +1,27 @@
 // To parse this JSON data, do
 //
-//     final services = servicesFromJson(jsonString);
+//     final servicesFinished = servicesFinishedFromJson(jsonString);
 
 import 'dart:convert';
 
-List<Services> servicesFromJson(String str) =>
-    List<Services>.from(json.decode(str).map((x) => Services.fromJson(x)));
+List<ServicesFinished> servicesFinishedFromJson(String str) =>
+    List<ServicesFinished>.from(
+        json.decode(str).map((x) => ServicesFinished.fromJson(x)));
 
-String servicesToJson(List<Services> data) =>
+String servicesFinishedToJson(List<ServicesFinished> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
-class Services {
+class ServicesFinished {
   final int id;
   final String service;
   final String client;
   final String origin;
   final String destination;
-  final DateTime loadDate;
-  final DateTime unloadDate;
+  final String loadDate;
+  final String unloadDate;
   final String documenter;
 
-  Services({
+  ServicesFinished({
     required this.id,
     required this.service,
     required this.client,
@@ -31,14 +32,15 @@ class Services {
     required this.documenter,
   });
 
-  factory Services.fromJson(Map<String, dynamic> json) => Services(
+  factory ServicesFinished.fromJson(Map<String, dynamic> json) =>
+      ServicesFinished(
         id: json["id"],
         service: json["service"],
         client: json["client"],
         origin: json["origin"],
         destination: json["destination"],
-        loadDate: DateTime.parse(json["load_date"]),
-        unloadDate: DateTime.parse(json["unload_date"]),
+        loadDate: json["load_date"],
+        unloadDate: json["unload_date"],
         documenter: json["documenter"],
       );
 
@@ -48,8 +50,8 @@ class Services {
         "client": client,
         "origin": origin,
         "destination": destination,
-        "load_date": loadDate.toIso8601String(),
-        "unload_date": unloadDate.toIso8601String(),
+        "load_date": loadDate,
+        "unload_date": unloadDate,
         "documenter": documenter,
       };
 }

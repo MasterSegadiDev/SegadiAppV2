@@ -8,7 +8,6 @@ import 'package:http/http.dart' as http;
 
 class ListServiceRemote {
   Future<List<Services>> getServices() async {
-    var client = http.Client();
     int _id = 0;
     String _token = "";
     List<Services> services = [];
@@ -18,16 +17,10 @@ class ListServiceRemote {
     _token = prefs.getString('token') ?? '';
     var route = 'index.php';
 
-    /*var url = Uri.parse(baseURL + route).replace(queryParameters: {
-      'r': 'esegadi/getactivas',
-      'id': _id.toString(),
-      'token': _token,
-    });*/
-
     var response =
         await http.get(Uri.parse(baseURL + route).replace(queryParameters: {
       'r': 'esegadi/getactivas',
-      'id': _id.toString(),
+      'id': _id,
       'token': _token,
     }));
     var data = jsonDecode(response.body.toString());

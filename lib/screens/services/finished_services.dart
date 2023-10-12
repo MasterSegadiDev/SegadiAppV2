@@ -3,21 +3,21 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:segadi/screens/home/sidebar.dart';
-import 'package:segadi/models/services/services.dart';
+import 'package:segadi/models/services/services_finished.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:segadi/services/globals.dart';
 import 'package:http/http.dart' as http;
 
-class ServicesScreen extends StatefulWidget {
-  const ServicesScreen({Key? key}) : super(key: key);
+class FinishServiceList extends StatefulWidget {
+  const FinishServiceList({Key? key}) : super(key: key);
 
   @override
-  _ServicesScreen createState() => _ServicesScreen();
+  _FinishServiceList createState() => _FinishServiceList();
 }
 
-class _ServicesScreen extends State<ServicesScreen> {
-  List<Services> services = [];
+class _FinishServiceList extends State<FinishServiceList> {
+  List<ServicesFinished> services = [];
   bool loading = true;
 
   @override
@@ -38,7 +38,7 @@ class _ServicesScreen extends State<ServicesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Servicios Asignados'),
+        title: Text('Servicios Terminados'),
         backgroundColor: Colors.green,
       ),
       drawer: const DrawerScreen(),
@@ -117,7 +117,7 @@ class _ServicesScreen extends State<ServicesScreen> {
     );
   }
 
-  Future<List<Services>> getServices() async {
+  Future<List<ServicesFinished>> getServices() async {
     int _id = 0;
     String _token = "";
 
@@ -126,24 +126,19 @@ class _ServicesScreen extends State<ServicesScreen> {
     _token = prefs.getString('token') ?? '';
     var route = 'index.php';
 
-    /*var url = Uri.parse(baseURL + route).replace(queryParameters: {
-      'r': 'esegadi/getactivas',
-      'id': _id.toString(),
-      'token': _token,
-    });*/
-
     var response = await http
         .get(Uri.parse(baseURL + route).replace(queryParameters: {
-          'r': 'esegadi/getactivas',
+          'r': 'esegadi/getterminadas',
           'id': _id.toString(),
           'token': _token,
         }))
         .timeout(const Duration(seconds: 90));
+
     var data = jsonDecode(response.body.toString());
 
     if (response.statusCode == 200) {
       for (Map<String, dynamic> index in data) {
-        services.add(Services.fromJson(index));
+        services.add(ServicesFinished.fromJson(index));
       }
 
       return services;
@@ -152,49 +147,3 @@ class _ServicesScreen extends State<ServicesScreen> {
     }
   }
 }
-
-/*
-Widget _buildItem(Services services) {
-  return Card(
-    color: Colors.white,
-    borderOnForeground: true,
-    elevation: 10,
-    child: Column(
-      mainAxisSize: MainAxisSize.min,
-      children: <Widget>[
-        ListTile(
-          title: Text('Servicio:',
-              style:
-                  TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-          leading: Icon(FontAwesomeIcons.truck),
-          subtitle: Text(
-            "Cliente:",
-            style: TextStyle(color: Colors.black),
-          ),
-        ),
-        Container(
-          padding: EdgeInsets.all(5.0),
-          alignment: Alignment.bottomLeft,
-          child: Text('Carga Origen:' + '           ' + 'Carga Destino:'),
-        ),
-        Container(
-          padding: EdgeInsets.all(5.0),
-          alignment: Alignment.bottomLeft,
-          child: Text('Fecha Carga:' + '           ' + 'Fecha Descarga:'),
-        ),
-        Container(
-          padding: EdgeInsets.all(5.0),
-          alignment: Alignment.bottomLeft,
-          child: Text('Documentador:'),
-        ),
-        ButtonBar(
-          children: [
-            TextButton(
-                onPressed: () {}, child: const Text('Ver Detalle Servicio'))
-          ],
-        ),
-      ],
-    ),
-  );
-}
-*/
