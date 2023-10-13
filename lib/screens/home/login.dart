@@ -41,21 +41,6 @@ class _LoginScreenState extends State<LoginScreen> {
     //init();
   }
 
-  // Method to load the shared preference data
-
-/*
-  final EncryptedSharedPreferences encryptedSharedPreferences =
-      EncryptedSharedPreferences();
-
-  init() async {
-    encryptedSharedPreferences.getString('sample').then((String _value) {
-      setState(() {
-        value = _value;
-      });
-    });
-  }
-  */
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(

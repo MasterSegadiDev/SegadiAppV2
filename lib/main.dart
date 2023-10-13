@@ -26,7 +26,7 @@ class MyApp extends StatelessWidget {
         '/home_page': (context) => const HomeScreen(),
         '/services': (context) => const ServicesScreen(),
         '/services_finished': (context) => const FinishServiceList(),
-        '/detail_service': (context) => const DetailServicesScreen(),
+        //'/detail_service': (context) => DetailServicesScreen(),
       },
     );
   }

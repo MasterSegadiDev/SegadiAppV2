@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:segadi/screens/home/routes.dart';
 import 'package:segadi/screens/home/sidebar.dart';
 import 'package:segadi/models/services/services.dart';
 
@@ -96,9 +97,13 @@ class _ServicesScreen extends State<ServicesScreen> {
                       ButtonBar(
                         children: [
                           TextButton(
-                              onPressed: () {
-                                print(services[index].id);
-                              },
+                              onPressed: () => Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => DetailServicesScreen(
+                                      id: services[index].id,
+                                    ),
+                                  )),
                               child: const Text('Ver Detalle Servicio'))
                         ],
                       ),
@@ -118,19 +123,13 @@ class _ServicesScreen extends State<ServicesScreen> {
   }
 
   Future<List<Services>> getServices() async {
-    int _id = 0;
-    String _token = "";
+    int _id;
+    String _token;
 
     final prefs = await SharedPreferences.getInstance();
     _id = prefs.getInt('id') ?? 0;
     _token = prefs.getString('token') ?? '';
     var route = 'index.php';
-
-    /*var url = Uri.parse(baseURL + route).replace(queryParameters: {
-      'r': 'esegadi/getactivas',
-      'id': _id.toString(),
-      'token': _token,
-    });*/
 
     var response = await http
         .get(Uri.parse(baseURL + route).replace(queryParameters: {
