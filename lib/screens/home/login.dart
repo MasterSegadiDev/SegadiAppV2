@@ -193,18 +193,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (password.isNotEmpty) {
         http.Response response = await AuthServices.login(username, password);
         Map responseMap = jsonDecode(response.body);
-        print(response.statusCode);
+
         if (response.statusCode == 200) {
           final prefs = await SharedPreferences.getInstance();
           prefs.setInt('id', responseMap["user"]['id']);
-          prefs.setString('email', responseMap["user"]['email']);
           prefs.setString('name', responseMap["user"]['name']);
           prefs.setString('email', responseMap["user"]['email']);
           prefs.setString('token', responseMap['token']);
-          prefs.setString('username', username);
-          prefs.setString('password', password);
-
-          print(prefs.getString('token'));
 
           Navigator.pushNamed(context, '/home_page');
         }

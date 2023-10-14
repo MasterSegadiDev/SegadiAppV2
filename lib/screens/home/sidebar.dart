@@ -1,7 +1,27 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
-class DrawerScreen extends StatelessWidget {
+class DrawerScreen extends StatefulWidget {
   const DrawerScreen({Key? key}) : super(key: key);
+  _DrawerScreen createState() => _DrawerScreen();
+}
+
+class _DrawerScreen extends State<DrawerScreen> {
+  var name = "";
+  var email = "";
+  void _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      name = prefs.getString('name') ?? '';
+      email = prefs.getString('email') ?? '';
+    });
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -15,8 +35,8 @@ class DrawerScreen extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: Colors.green,
                 ),
-                accountName: Text('Brian'),
-                accountEmail: Text('segadi@gmail.com'),
+                accountName: Text(name),
+                accountEmail: Text(email),
                 currentAccountPicture: CircleAvatar(
                   backgroundColor: Colors.white,
                   child: ClipOval(

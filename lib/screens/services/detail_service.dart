@@ -68,7 +68,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
         //color: Colors.purple,
 
         margin: const EdgeInsets.all(20),
-        padding: const EdgeInsets.only(top: 50),
+        padding: const EdgeInsets.only(top: 0),
         /* decoration: BoxDecoration(
           border: Border.all(color: Colors.black, width: 3),
         ),*/
@@ -79,7 +79,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
               return Column(
                 children: <Widget>[
                   Row(children: [
-                    Text('Servicio:'),
+                    Text("                                 Servicio: "),
                     Text(
                       snapshot.data!.service,
                       style: TextStyle(fontWeight: FontWeight.bold),
@@ -117,11 +117,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                           ' ' +
                           snapshot.data!.senderOutdoorNumber +
                           ' ' +
-                          snapshot.data!.senderInteriorNumber +
-                          ' ' +
-                          snapshot.data!.senderZipCode +
-                          ' ' +
-                          snapshot.data!.senderState)
+                          //snapshot.data!.senderInteriorNumber +
+                          snapshot.data!.senderZipCode.toString())
                     ],
                   ),
                   Divider(
@@ -156,9 +153,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                           ' ' +
                           snapshot.data!.recipientOutdoorNumber +
                           ' ' +
-                          snapshot.data!.senderInteriorNumber +
-                          ' ' +
-                          snapshot.data!.recipientZipCode +
+                          //snapshot.data!.senderInteriorNumber +
+                          snapshot.data!.recipientZipCode.toString() +
                           ' ' +
                           snapshot.data!.recipientState)
                     ],
@@ -168,27 +164,27 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                   ),
                   Row(
                     children: <Widget>[
-                      SizedBox(width: 30),
+                      SizedBox(width: 20),
                       Column(
                         children: [Icon(FontAwesomeIcons.clipboardList)],
                       ),
-                      SizedBox(width: 30),
+                      SizedBox(width: 20),
                       Column(
                         children: [Icon(FontAwesomeIcons.locationDot)],
                       ),
-                      SizedBox(width: 30),
+                      SizedBox(width: 20),
                       Column(
                         children: [Icon(FontAwesomeIcons.mapLocationDot)],
                       ),
-                      SizedBox(width: 30),
+                      SizedBox(width: 20),
                       Column(
                         children: [Icon(FontAwesomeIcons.circleCheck)],
                       ),
-                      SizedBox(width: 30),
+                      SizedBox(width: 20),
                       Column(
                         children: [Icon(FontAwesomeIcons.fileInvoiceDollar)],
                       ),
-                      SizedBox(width: 30),
+                      SizedBox(width: 20),
                       Column(
                         children: [Icon(FontAwesomeIcons.solidFilePdf)],
                       )
@@ -202,7 +198,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                       FancyButton(
                           button_text: "Iniciar Viaje ",
                           button_height: 40,
-                          button_width: 350,
+                          button_width: 320,
                           button_radius: 0,
                           button_color: Colors.green,
                           button_outline_color: Colors.green,
