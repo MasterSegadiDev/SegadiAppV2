@@ -288,6 +288,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.9.1"
+  mvvm:
+    dependency: "direct main"
+    description:
+      name: mvvm
+      sha256: "18dbca5d5e77b465c188e5f0fe900c42e0ec79f2db8124930d29cdc88aa6048c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.5.2"
   path:
     dependency: transitive
     description:

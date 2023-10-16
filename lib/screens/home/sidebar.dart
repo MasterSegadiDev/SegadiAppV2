@@ -41,7 +41,7 @@ class _DrawerScreen extends State<DrawerScreen> {
                   backgroundColor: Colors.white,
                   child: ClipOval(
                     child: Image.network(
-                      'https://oflutter.com/wp-content/uploads/2021/02/girl-profile.png',
+                      'http://198.251.68.42/DesarrolloSEGADI/web/uploads/FotoPlantilla.jpeg',
                       fit: BoxFit.cover,
                       width: 90,
                       height: 90,
