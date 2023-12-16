@@ -42,6 +42,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
 
   bool loading = true;
 
+  bool listCked = false;
+
   @override
   void initState() {
     super.initState();
@@ -103,6 +105,9 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                 if (snapshot.hasData) {
                   if (snapshot.data!.statusSupportId > 0) {
                     statusSupportId = snapshot.data!.statusSupportId;
+                  }
+                  if (snapshot.data!.list != null) {
+                    listCked = true;
                   }
                   return Column(
                     children: <Widget>[
@@ -265,49 +270,51 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: IconButton(
-                              icon: const Icon(FontAwesomeIcons.clipboardList),
-                              iconSize: 50.0,
-                              tooltip: 'CheckList',
-                              onPressed: () => _dialogCircleCheck((context)),
-                              /*onPressed: () {
-                                Navigator.pushNamed(context, '/check_list',
-                                    arguments: {
-                                      'id': id,
-                                    });
-                              },*/
+                            child: Column(
+                              children: <Widget>[
+                                IconButton(
+                                  icon: const Icon(
+                                    FontAwesomeIcons.clipboardList,
+                                  ),
+                                  iconSize: 40,
+                                  onPressed: () =>
+                                      _dialogCircleCheck((context)),
+                                ),
+                                const Text('Check List')
+                              ],
                             ),
                           ),
                           Expanded(
-                            child: IconButton(
-                              icon: const Icon(
-                                FontAwesomeIcons.locationDot,
-                              ),
-                              iconSize: 50.0,
-                              tooltip: 'Localidad',
-                              onPressed: snapshot.data!.isEnableStatusSupport
-                                  ? () {
-                                      _dialogBuilderEnbled(context);
-                                    }
-                                  : null,
-                              /*true
-                                    // ignore: dead_code
-                                    ? () {
-                                        Navigator.pushNamed(
-                                            context, '/status_support',
-                                            arguments: {
-                                              'id': id,
-                                            });
-                                      }
-                                    // ignore: dead_code
-                                    : null*/
+                            child: Column(
+                              children: <Widget>[
+                                IconButton(
+                                  icon: const Icon(
+                                    FontAwesomeIcons.locationDot,
+                                  ),
+                                  iconSize: 40,
+                                  onPressed:
+                                      snapshot.data!.isEnableStatusSupport
+                                          ? () {
+                                              _dialogBuilderEnbled(context);
+                                            }
+                                          : null,
+                                ),
+                                const Text('Status de Soporte')
+                              ],
                             ),
                           ),
                           const Expanded(
-                            child: Icon(
-                              FontAwesomeIcons.mapLocationDot,
-                              size: 50,
-                              color: Colors.blue,
+                            child: Column(
+                              children: <Widget>[
+                                IconButton(
+                                  icon: Icon(
+                                    FontAwesomeIcons.mapLocationDot,
+                                  ),
+                                  iconSize: 40,
+                                  onPressed: null,
+                                ),
+                                Text('Ruta Sugerida')
+                              ],
                             ),
                           ),
                         ],
@@ -319,45 +326,56 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                       Row(
                         children: <Widget>[
                           Expanded(
-                            child: IconButton(
-                              icon: const Icon(
-                                FontAwesomeIcons.circleCheck,
-                              ),
-                              iconSize: 50.0,
-                              tooltip: 'Remision Terminada',
-                              onPressed: snapshot.data!.isEnableTripClosure
-                                  // ignore: dead_code
-                                  ? () {
-                                      Navigator.pushNamed(
-                                          context, '/trip_closure', arguments: {
-                                        'id': snapshot.data!.id,
-                                        'serviceId': snapshot.data!.service
-                                      });
-                                    }
-                                  : null,
-                              //() => _dialogBuilder(context)),
-                            ),
-                          ),
-                          Expanded(
-                            child: IconButton(
-                              //FontAwesomeIcons.fileInvoiceDollar,
-                              //size: 50,
-                              icon: const Icon(
-                                FontAwesomeIcons.fileInvoiceDollar,
-                              ),
-                              iconSize: 50.0,
-                              color: Colors.green,
-                              onPressed: snapshot.data!.isEnableTripClosure
-                                  // ignore: dead_code
-                                  ? () {}
-                                  : null,
+                            child: Column(
+                              children: <Widget>[
+                                IconButton(
+                                  icon: const Icon(
+                                    FontAwesomeIcons.circleCheck,
+                                  ),
+                                  iconSize: 40,
+                                  onPressed: snapshot.data!.isEnableTripClosure
+                                      // ignore: dead_code
+                                      ? () {
+                                          Navigator.pushNamed(
+                                              context, '/trip_closure',
+                                              arguments: {
+                                                'id': snapshot.data!.id,
+                                                'serviceId':
+                                                    snapshot.data!.service
+                                              });
+                                        }
+                                      : null,
+                                ),
+                                const Text('Cierre de viaje')
+                              ],
                             ),
                           ),
                           const Expanded(
-                            child: Icon(
-                              FontAwesomeIcons.solidFilePdf,
-                              size: 50,
-                              color: Colors.redAccent,
+                            child: Column(
+                              children: <Widget>[
+                                IconButton(
+                                  icon: Icon(
+                                    FontAwesomeIcons.fileInvoiceDollar,
+                                  ),
+                                  iconSize: 40,
+                                  onPressed: null,
+                                ),
+                                Text(' Viaticos')
+                              ],
+                            ),
+                          ),
+                          const Expanded(
+                            child: Column(
+                              children: <Widget>[
+                                IconButton(
+                                  icon: Icon(
+                                    FontAwesomeIcons.solidFilePdf,
+                                  ),
+                                  iconSize: 40,
+                                  onPressed: null,
+                                ),
+                                Text('Descargar Servicio')
+                              ],
                             ),
                           ),
                         ],
@@ -370,7 +388,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                         children: <Widget>[
                           Expanded(
                             child: SizedBox(
-                              height: 50,
+                              height: 40,
                               child: ElevatedButton(
                                 onPressed: snapshot.data!.isEnableButton
                                     ? () {
@@ -507,7 +525,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
               ],
             ),
           ),
-          actions: <Widget>[
+          /* actions: <Widget>[
             TextButton(
               style: TextButton.styleFrom(
                 textStyle: Theme.of(context).textTheme.labelLarge,
@@ -517,6 +535,15 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                 _continueRute(statusSupportId);
                 Navigator.of(context).pop();
               },
+            ),
+          ],*/
+          actions: [
+            ElevatedButton(
+              onPressed: () {
+                _continueRute(statusSupportId);
+                Navigator.of(context).pop();
+              },
+              child: const Text('Continuar ruta'),
             ),
           ],
         );
@@ -571,17 +598,51 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                         },
                       ),
               ),
-              actions: <Widget>[
-                TextButton(
-                  style: TextButton.styleFrom(
-                    textStyle: Theme.of(context).textTheme.labelLarge,
+              actions: [
+                if (listCked == false)
+                  ElevatedButton(
+                    onPressed: canUpload
+                        ? () {
+                            confirmationCheckList(context, id);
+                          }
+                        : null, //addOptionList(id),
+                    child: const Text('Registrar'),
                   ),
-                  child: const Text('Registrar'),
-                  onPressed: () => addOptionList(id),
-                ),
               ],
             );
           },
+        );
+      },
+    );
+  }
+
+  Future<void> confirmationCheckList(BuildContext context, id) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          //title: const Text(''),
+          content: const Text('¿Esta seguro de guardar este check list?'),
+          actions: <Widget>[
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('No'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            TextButton(
+              style: TextButton.styleFrom(
+                textStyle: Theme.of(context).textTheme.labelLarge,
+              ),
+              child: const Text('Si'),
+              onPressed: () {
+                addOptionList(id);
+              },
+            ),
+          ],
         );
       },
     );
@@ -644,6 +705,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
       setState(() {
         _loadData();
       });
+      print('Tu registro se guardo con éxito');
+      Navigator.of(context).pop();
       Navigator.of(context).pop();
     }
   }

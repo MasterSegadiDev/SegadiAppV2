@@ -21,6 +21,7 @@ class Detail {
       'token': token,
       'id': userId.toString(),
     }));
+
     if (response.statusCode == 200) {
       var result = DetailService.fromJson(json.decode(response.body));
       if (result.statusId == 24 && result.type == "begin" ||

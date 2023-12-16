@@ -205,6 +205,7 @@ class _TripClosureState extends State<TripClosureScreen> {
       builder: (BuildContext context) {
         _timer = Timer(const Duration(seconds: 3), () {
           Navigator.of(context).pop();
+          Navigator.of(context).pop();
         });
         return const AlertDialog(
           title: Text('Cierre de viaje exitoso'),
