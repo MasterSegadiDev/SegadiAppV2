@@ -3,6 +3,9 @@ import 'dart:developer';
 
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/model/services/detail_service.dart';
+import 'package:segadi/model/services/travel_expenses.dart';
+
+import 'package:segadi/view/home/routes.dart';
 import 'package:segadi/view_model/globals.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -193,5 +196,35 @@ class Detail {
       body: body,
     );
     return response;
+  }
+
+  Future<List<TravelExpenses>> getTravelExpenses(int remisionId) async {
+    String token;
+    List<TravelExpenses> travelExpenses = [];
+
+    final prefs = await SharedPreferences.getInstance();
+    var id = prefs.getInt('id') ?? 0;
+    token = prefs.getString('token') ?? '';
+
+    var response = await http.get(
+        Uri.parse("http://198.251.68.42/DesarrolloSEGADI/web/index.php")
+            .replace(queryParameters: {
+      'r': 'esegadi/getcomprobaciones',
+      'id': id.toString(),
+      'id_remision': remisionId.toString(),
+      'token': token,
+    }));
+    var data = jsonDecode(response.body.toString());
+
+    if (response.statusCode == 200) {
+      for (Map<String, dynamic> index in data) {
+        travelExpenses.add(TravelExpenses.fromJson(index));
+      }
+      print(inspect(travelExpenses));
+
+      return travelExpenses;
+    } else {
+      return travelExpenses;
+    }
   }
 }

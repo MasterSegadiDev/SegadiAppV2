@@ -7,6 +7,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:segadi/model/services/checklist.dart';
 
 import 'package:segadi/view/home/sidebar.dart';
+import 'package:segadi/view/services/travel_expenses.dart';
 import 'package:segadi/view_model/globals.dart';
 import 'package:segadi/view_model/services_operator/detail_service.dart';
 import 'package:segadi/model/services/detail_service.dart';
@@ -350,17 +351,17 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                               ],
                             ),
                           ),
-                          const Expanded(
+                          Expanded(
                             child: Column(
                               children: <Widget>[
                                 IconButton(
-                                  icon: Icon(
+                                  icon: const Icon(
                                     FontAwesomeIcons.fileInvoiceDollar,
                                   ),
                                   iconSize: 40,
-                                  onPressed: null,
+                                  onPressed: () => sendTravelExpenses(id),
                                 ),
-                                Text(' Viaticos')
+                                const Text(' Viaticos')
                               ],
                             ),
                           ),
@@ -709,5 +710,16 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
       Navigator.of(context).pop();
       Navigator.of(context).pop();
     }
+  }
+
+  sendTravelExpenses(int id) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => TravelExpensesScreen(
+          id: id,
+        ),
+      ),
+    );
   }
 }

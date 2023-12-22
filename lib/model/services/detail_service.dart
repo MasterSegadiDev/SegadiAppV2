@@ -45,6 +45,8 @@ class DetailService {
   bool isEnableTripClosure;
   bool isEnableRouteFinished;
   bool isEnableStatusSupport;
+  final bool serviceClosed;
+  final int remainingEvidences;
 
   DetailService({
     required this.id,
@@ -82,6 +84,8 @@ class DetailService {
     required this.isEnableTripClosure,
     required this.isEnableRouteFinished,
     required this.isEnableStatusSupport,
+    required this.serviceClosed,
+    required this.remainingEvidences,
   });
 
   factory DetailService.fromJson(Map<String, dynamic> json) => DetailService(
@@ -122,6 +126,8 @@ class DetailService {
         isEnableTripClosure: false,
         isEnableRouteFinished: false,
         isEnableStatusSupport: false,
+        serviceClosed: json["service_closed"],
+        remainingEvidences: json["remaining_evidences"],
       );
 
   Map<String, dynamic> toJson() => {
@@ -160,5 +166,7 @@ class DetailService {
         "is_enable_trip_closure": isEnableTripClosure,
         "is_enable_route_finished": isEnableRouteFinished,
         "is_enable_status_support": isEnableStatusSupport,
+        "service_closed": serviceClosed,
+        "remaining_evidences": remainingEvidences,
       };
 }
