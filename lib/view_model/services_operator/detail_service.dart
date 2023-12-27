@@ -198,33 +198,50 @@ class Detail {
     return response;
   }
 
-  Future<List<TravelExpenses>> getTravelExpenses(int remisionId) async {
-    String token;
-    List<TravelExpenses> travelExpenses = [];
+  static Future<http.Response> insertImport(
+      int serviceId, int moneyCheckId, dynamic importTotal) async {
+    final prefs = await SharedPreferences.getInstance();
+    final String token = prefs.getString('token') ?? '';
+
+    Map data = {
+      "service_id": serviceId,
+      "token": token,
+      "money_check_id": moneyCheckId,
+      "total_used": importTotal,
+    };
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}index.php?r=esegadi/comprobacionespost');
+    http.Response response = await http.post(
+      url,
+      headers: headers,
+      body: body,
+    );
+    return response;
+  }
+
+  Future<List<TravelExpenses>> getTravelExpenses(int id) async {
+    int id = 24031;
 
     final prefs = await SharedPreferences.getInstance();
-    var id = prefs.getInt('id') ?? 0;
-    token = prefs.getString('token') ?? '';
+    var userId = prefs.getInt('id') ?? 0;
+    var token = prefs.getString('token') ?? '';
+    var route = 'index.php';
 
-    var response = await http.get(
-        Uri.parse("http://198.251.68.42/DesarrolloSEGADI/web/index.php")
-            .replace(queryParameters: {
-      'r': 'esegadi/getcomprobaciones',
-      'id': id.toString(),
-      'id_remision': remisionId.toString(),
-      'token': token,
-    }));
-    var data = jsonDecode(response.body.toString());
+    var response = await http
+        .get(Uri.parse(baseURL + route).replace(queryParameters: {
+          'r': 'esegadi/getcomprobaciones',
+          'id': userId.toString(),
+          'id_remision': id.toString(),
+          'token': token,
+        }))
+        .timeout(const Duration(seconds: 90));
 
-    if (response.statusCode == 200) {
-      for (Map<String, dynamic> index in data) {
-        travelExpenses.add(TravelExpenses.fromJson(index));
-      }
-      print(inspect(travelExpenses));
+    var data = jsonDecode(response.body);
+    List jsonResponse = data as List;
 
-      return travelExpenses;
-    } else {
-      return travelExpenses;
-    }
+    var datas = jsonResponse.map((e) => TravelExpenses.fromJson(e)).toList();
+
+    return datas;
   }
 }

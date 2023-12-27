@@ -3,6 +3,8 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:segadi/model/services/travel_expenses.dart';
+import 'package:segadi/view/services/DataClass.dart';
+import 'package:segadi/view_model/globals.dart';
 
 import 'package:segadi/view_model/services_operator/detail_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -25,10 +27,13 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   List data = [];
   String concept = "";
   String comentery = "";
-  String importe = "";
+  dynamic importe = 0;
+
   String? valuePaymentConcept;
   int? selected;
   int? conceptId;
+
+  bool loading = true;
 
   getData() async {
     final prefs = await SharedPreferences.getInstance();
@@ -51,10 +56,22 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
     return jsonData;
   }
 
+  List travelExpenses = [];
+  Future getTravelExpenses(int id) async {
+    travelExpenses = await Detail().getTravelExpenses(id);
+
+    setState(() {
+      loading = false;
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     getData();
+    getTravelExpenses(id);
+
+    // print(travelExpenses);
   }
 
   @override
@@ -80,22 +97,23 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
             const SizedBox(
               height: 20,
             ),
-            Table(children: const [
-              TableRow(children: [
-                Text(
-                  'Concepto',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Comentario',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  'Importe',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-              ]),
-            ]),
+            FutureBuilder<List<TravelExpenses>>(
+              future: Detail().getTravelExpenses(id),
+              builder: (BuildContext context,
+                  AsyncSnapshot<List<TravelExpenses>> snapshot) {
+                if (snapshot.hasData) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else {
+                  return Container(
+                    padding: const EdgeInsets.all(5),
+                    child: DataClass(
+                        dataList: snapshot.data as List<TravelExpenses>),
+                  );
+                }
+              },
+            )
           ],
         ),
       ),
@@ -108,6 +126,7 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text('Basic dialog title'),
+          insetPadding: const EdgeInsets.all(20),
           content: Column(
             children: [
               DropdownButtonFormField(
@@ -130,6 +149,9 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
                 isDense: true,
                 isExpanded: true,
               ),
+              const SizedBox(
+                height: 20,
+              ),
               TextFormField(
                 minLines: 4,
                 keyboardType: TextInputType.multiline,
@@ -145,8 +167,11 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
                   comentery = value;
                 },
               ),
+              const SizedBox(
+                height: 20,
+              ),
               TextFormField(
-                keyboardType: TextInputType.name,
+                keyboardType: const TextInputType.numberWithOptions(),
                 decoration: const InputDecoration(
                   labelText: 'Importe',
                   border: OutlineInputBorder(),
@@ -175,6 +200,26 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
     print(importe);
     var estateSelected =
         data.firstWhere((dropdown) => dropdown['id'] == conceptId);
+    print(estateSelected);
     print(estateSelected['payment_total']);
+
+    //if (importe == estateSelected['payment_total']) {
+    http.Response response = await Detail.insertImport(id, conceptId!, importe);
+    // Map responseMap = jsonDecode(response.body);
+    print(response.statusCode);
+    //}
+  }
+
+  Future<void> message(BuildContext context) {
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return const AlertDialog(
+            title: Text('Basic dialog title'),
+            insetPadding: EdgeInsets.all(20),
+            content:
+                Text('El importe registrado es mayor al importe asignado'));
+      },
+    );
   }
 }
