@@ -1,16 +1,7 @@
-import 'dart:convert';
-import 'dart:developer';
-import 'dart:ffi';
-
 import 'package:flutter/material.dart';
 import 'package:segadi/model/services/travel_expenses.dart';
-import 'package:segadi/view/services/DataClass.dart';
-import 'package:segadi/view_model/globals.dart';
 
-import 'package:segadi/view_model/services_operator/detail_service.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-
-import 'package:http/http.dart' as http;
+import 'package:segadi/view_model/services_operator/travel_expenses.dart';
 
 class TravelExpensesScreen extends StatefulWidget {
   final int id;
@@ -35,43 +26,16 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   int? conceptId;
   late double totalImport = 0;
 
-  getData() async {
-    var arrayDataOption = [];
-    final prefs = await SharedPreferences.getInstance();
-    var userId = prefs.getInt('id') ?? 0;
-    var token = prefs.getString('token') ?? '';
+  List listDataOption = [];
 
-    final result = await http.get(
-        Uri.parse("http://198.251.68.42/DesarrolloSEGADI/web/index.php")
-            .replace(queryParameters: {
-      'r': 'esegadi/getcomprobaciones',
-      'id': userId.toString(),
-      'id_remision': id.toString(),
-      'token': token,
-    }));
-    var jsonData = json.decode(result.body.toString());
-
-    jsonData.forEach((subject) {
-      if (subject["total_used"] == "0.00") {
-        print("${subject["id"]}: ${subject["payment_concept"]}");
-
-        arrayDataOption.add(subject);
-      } else {
-        print('vacio');
-      }
-    });
-
-    setState(() {
-      data = arrayDataOption;
-    });
-    return arrayDataOption;
+  Future getDataOption(int id) async {
+    listDataOption = await TravelExpensesService().getData(id);
   }
 
   List<TravelExpenses> listTravelExpenses = [];
   bool loading = true;
   Future getTravelExpenses(int id) async {
-    listTravelExpenses = await Detail().getTravelExpenses(id);
-
+    listTravelExpenses = await TravelExpensesService().getTravelExpenses(id);
     setState(() {
       loading = false;
     });
@@ -80,7 +44,7 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   @override
   void initState() {
     super.initState();
-    getData();
+    getDataOption(id);
     getTravelExpenses(id);
   }
 
@@ -110,28 +74,14 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: DataTable(
-                // Datatable widget that have the property columns and rows.
                 columns: const [
-                  // Set the name of the column
                   DataColumn(
                     label: Text('Concepto'),
                   ),
-                  /* DataColumn(
-                    label: Text('Comentario'),
-                  ),*/
                   DataColumn(
                     label: Text('Importe'),
                   ),
                 ],
-                /*rows: listTravelExpenses
-                    .map(
-                      (e) => DataRow(cells: [
-                        DataCell(Text(e.paymentConcept.toString())),
-                        DataCell(Text(e.comments.toString())),
-                        DataCell(Text(e.totalUsed.toString())),
-                      ]),
-                    )
-                    .toList(),*/
                 rows: listTravelExpenses.map((e) {
                   double result = double.parse(e.totalUsed);
                   totalImport += result;
@@ -169,7 +119,7 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
             children: [
               DropdownButtonFormField(
                 hint: const Text('Selecciona un concepto'),
-                items: data.map((e) {
+                items: listDataOption.map((e) {
                   return DropdownMenuItem(
                     value: e["id"],
                     child: SizedBox(
@@ -235,15 +185,28 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   }
 
   validate() async {
+    double importSelected = 0;
+    double importAdd = 0;
     var estateSelected =
-        data.firstWhere((dropdown) => dropdown['id'] == conceptId);
+        listDataOption.firstWhere((dropdown) => dropdown['id'] == conceptId);
 
-    //if (importe == estateSelected['payment_total']) {
-    http.Response response =
-        await Detail.insertImport(id, conceptId!, importe, comentery);
-    // Map responseMap = jsonDecode(response.body);
+    importAdd = double.parse(importe);
+    importSelected = double.parse(estateSelected['payment_total']);
+    print(importAdd);
 
-    //}
+    if (importAdd <= importSelected) {
+      print('el importe es menor o igual');
+
+      //http.Response response =
+      // await Detail.insertImport(id, conceptId!, importe, comentery);
+      // Map responseMap = jsonDecode(response.body);
+      getTravelExpenses(id);
+      Navigator.pop(context);
+    } else if (importAdd > importSelected) {
+      print('el importe agregado es mayor que el seleecionado');
+    } else {
+      print('es un valor desconocido');
+    }
   }
 
   Future<void> message(BuildContext context) {

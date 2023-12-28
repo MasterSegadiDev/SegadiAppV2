@@ -9,17 +9,17 @@ String travelExpensesToJson(List<TravelExpenses> data) =>
 
 class TravelExpenses {
   final int id;
-  final String datetime;
-  final int serviceId;
-  final int paymentConceptId;
+  //final String? datetime;
+  final int? serviceId;
+  final int? paymentConceptId;
   final String paymentConcept;
   final String totalUsed;
   String? paymentTotal;
-  final String comments;
+  final String? comments;
 
   TravelExpenses({
     required this.id,
-    required this.datetime,
+    //required this.datetime,
     required this.serviceId,
     required this.paymentConceptId,
     required this.paymentConcept,
@@ -30,7 +30,7 @@ class TravelExpenses {
 
   factory TravelExpenses.fromJson(Map<String, dynamic> json) => TravelExpenses(
         id: json["id"],
-        datetime: json["datetime"],
+        // datetime: json["datetime"],
         serviceId: json["service_id"],
         paymentConceptId: json["payment_concept_id"],
         paymentConcept: json["payment_concept"],
@@ -41,7 +41,7 @@ class TravelExpenses {
 
   Map<String, dynamic> toJson() => {
         "id": id,
-        "datetime": datetime,
+        // "datetime": datetime,
         "service_id": serviceId,
         "payment_concept_id": paymentConceptId,
         "payment_concept": paymentConcept,
