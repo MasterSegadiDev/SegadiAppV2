@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:ffi';
 
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/model/services/detail_service.dart';
@@ -199,7 +200,7 @@ class Detail {
   }
 
   static Future<http.Response> insertImport(
-      int serviceId, int moneyCheckId, dynamic importTotal) async {
+      int serviceId, int moneyCheckId, dynamic importTotal, comentary) async {
     final prefs = await SharedPreferences.getInstance();
     final String token = prefs.getString('token') ?? '';
 
@@ -208,6 +209,7 @@ class Detail {
       "token": token,
       "money_check_id": moneyCheckId,
       "total_used": importTotal,
+      "comments": comentary,
     };
 
     var body = json.encode(data);
@@ -221,8 +223,6 @@ class Detail {
   }
 
   Future<List<TravelExpenses>> getTravelExpenses(int id) async {
-    int id = 24031;
-
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';

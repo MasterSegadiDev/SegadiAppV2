@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:developer';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
 import 'package:segadi/model/services/travel_expenses.dart';
@@ -32,10 +33,10 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   String? valuePaymentConcept;
   int? selected;
   int? conceptId;
-
-  bool loading = true;
+  late double totalImport = 0;
 
   getData() async {
+    var arrayDataOption = [];
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';
@@ -48,17 +49,28 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
       'id_remision': id.toString(),
       'token': token,
     }));
-    var jsonData = json.decode(result.body);
+    var jsonData = json.decode(result.body.toString());
+
+    jsonData.forEach((subject) {
+      if (subject["total_used"] == "0.00") {
+        print("${subject["id"]}: ${subject["payment_concept"]}");
+
+        arrayDataOption.add(subject);
+      } else {
+        print('vacio');
+      }
+    });
 
     setState(() {
-      data = jsonData;
+      data = arrayDataOption;
     });
-    return jsonData;
+    return arrayDataOption;
   }
 
-  List travelExpenses = [];
+  List<TravelExpenses> listTravelExpenses = [];
+  bool loading = true;
   Future getTravelExpenses(int id) async {
-    travelExpenses = await Detail().getTravelExpenses(id);
+    listTravelExpenses = await Detail().getTravelExpenses(id);
 
     setState(() {
       loading = false;
@@ -70,8 +82,6 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
     super.initState();
     getData();
     getTravelExpenses(id);
-
-    // print(travelExpenses);
   }
 
   @override
@@ -97,22 +107,50 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
             const SizedBox(
               height: 20,
             ),
-            FutureBuilder<List<TravelExpenses>>(
-              future: Detail().getTravelExpenses(id),
-              builder: (BuildContext context,
-                  AsyncSnapshot<List<TravelExpenses>> snapshot) {
-                if (snapshot.hasData) {
-                  return const Center(
-                    child: CircularProgressIndicator(),
-                  );
-                } else {
-                  return Container(
-                    padding: const EdgeInsets.all(5),
-                    child: DataClass(
-                        dataList: snapshot.data as List<TravelExpenses>),
-                  );
-                }
-              },
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                // Datatable widget that have the property columns and rows.
+                columns: const [
+                  // Set the name of the column
+                  DataColumn(
+                    label: Text('Concepto'),
+                  ),
+                  /* DataColumn(
+                    label: Text('Comentario'),
+                  ),*/
+                  DataColumn(
+                    label: Text('Importe'),
+                  ),
+                ],
+                /*rows: listTravelExpenses
+                    .map(
+                      (e) => DataRow(cells: [
+                        DataCell(Text(e.paymentConcept.toString())),
+                        DataCell(Text(e.comments.toString())),
+                        DataCell(Text(e.totalUsed.toString())),
+                      ]),
+                    )
+                    .toList(),*/
+                rows: listTravelExpenses.map((e) {
+                  double result = double.parse(e.totalUsed);
+                  totalImport += result;
+
+                  return DataRow(cells: [
+                    DataCell(Text(e.paymentConcept.toString())),
+                    //DataCell(Text(e.comments.toString())),
+                    DataCell(Text(e.totalUsed.toString())),
+                  ]);
+                }).toList(),
+              ),
+            ),
+            Row(
+              children: [
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [Text('Importe Total:$totalImport')],
+                )
+              ],
             )
           ],
         ),
@@ -197,16 +235,14 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   }
 
   validate() async {
-    print(importe);
     var estateSelected =
         data.firstWhere((dropdown) => dropdown['id'] == conceptId);
-    print(estateSelected);
-    print(estateSelected['payment_total']);
 
     //if (importe == estateSelected['payment_total']) {
-    http.Response response = await Detail.insertImport(id, conceptId!, importe);
+    http.Response response =
+        await Detail.insertImport(id, conceptId!, importe, comentery);
     // Map responseMap = jsonDecode(response.body);
-    print(response.statusCode);
+
     //}
   }
 
