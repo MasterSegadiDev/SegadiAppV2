@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 import 'package:segadi/model/services/travel_expenses.dart';
@@ -26,6 +27,7 @@ class TravelExpensesService {
       headers: headers,
       body: body,
     );
+    print(response.statusCode);
     return response;
   }
 
@@ -33,6 +35,8 @@ class TravelExpensesService {
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';
+
+    var data;
 
     final result = await http.get(
         Uri.parse("http://198.251.68.42/DesarrolloSEGADI/web/index.php")
@@ -44,8 +48,13 @@ class TravelExpensesService {
     }));
     var jsonData = json.decode(result.body.toString());
 
-    print(jsonData);
-    return jsonData;
+    if (jsonData["error_message"] != null) {
+      data = [];
+    } else {
+      data = jsonData;
+    }
+
+    return data;
   }
 
   Future<List<TravelExpenses>> getTravelExpenses(int id) async {
@@ -63,7 +72,12 @@ class TravelExpensesService {
         }))
         .timeout(const Duration(seconds: 90));
 
-    var data = jsonDecode(response.body);
+    var data = jsonDecode(response.body.toString());
+
+    data.removeWhere((str) {
+      return str["total_used"] == "0.00";
+    });
+    // inspect(data);
     List jsonResponse = data as List;
 
     var datas = jsonResponse.map((e) => TravelExpenses.fromJson(e)).toList();

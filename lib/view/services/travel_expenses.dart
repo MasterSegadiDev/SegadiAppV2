@@ -1,4 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:segadi/model/services/travel_expenses.dart';
 
 import 'package:segadi/view_model/services_operator/travel_expenses.dart';
@@ -24,16 +27,23 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   String? valuePaymentConcept;
   int? selected;
   int? conceptId;
-  late double totalImport = 0;
+  //double totalImport = 0;
 
+  bool loading = true;
   List listDataOption = [];
+
+  bool cancelButton = true;
 
   Future getDataOption(int id) async {
     listDataOption = await TravelExpensesService().getData(id);
+    if (listDataOption.isEmpty) {
+      setState(() {
+        cancelButton = false;
+      });
+    }
   }
 
   List<TravelExpenses> listTravelExpenses = [];
-  bool loading = true;
   Future getTravelExpenses(int id) async {
     listTravelExpenses = await TravelExpensesService().getTravelExpenses(id);
     setState(() {
@@ -50,6 +60,7 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
 
   @override
   Widget build(BuildContext context) {
+    double totalImport = 0;
     return Scaffold(
       appBar: AppBar(
         title: const Text('Viaticos'),
@@ -63,7 +74,11 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
               mainAxisAlignment: MainAxisAlignment.start,
               children: [
                 TextButton(
-                  onPressed: () => _dialogBuilder(context),
+                  onPressed: cancelButton
+                      ? () {
+                          _dialogBuilder(context);
+                        }
+                      : null,
                   child: const Text('Agregar concepto'),
                 ),
               ],
@@ -88,7 +103,6 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
 
                   return DataRow(cells: [
                     DataCell(Text(e.paymentConcept.toString())),
-                    //DataCell(Text(e.comments.toString())),
                     DataCell(Text(e.totalUsed.toString())),
                   ]);
                 }).toList(),
@@ -175,8 +189,8 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
               style: TextButton.styleFrom(
                 textStyle: Theme.of(context).textTheme.labelLarge,
               ),
-              child: const Text('Agregar'),
               onPressed: () => validate(),
+              child: const Text('Agregar'),
             ),
           ],
         );
@@ -185,28 +199,31 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   }
 
   validate() async {
-    double importSelected = 0;
+    /* double importSelected = 0;
     double importAdd = 0;
     var estateSelected =
         listDataOption.firstWhere((dropdown) => dropdown['id'] == conceptId);
 
     importAdd = double.parse(importe);
     importSelected = double.parse(estateSelected['payment_total']);
-    print(importAdd);
 
     if (importAdd <= importSelected) {
       print('el importe es menor o igual');
 
-      //http.Response response =
-      // await Detail.insertImport(id, conceptId!, importe, comentery);
+      http.Response response = await TravelExpensesService()
+          .insertImport(id, conceptId!, importe, comentery);
       // Map responseMap = jsonDecode(response.body);
-      getTravelExpenses(id);
-      Navigator.pop(context);
+      print(response.statusCode);
+      if (response.statusCode == 200) {*/
+    getTravelExpenses(id);
+    // ignore: use_build_context_synchronously
+    Navigator.pop(context);
+    /* }
     } else if (importAdd > importSelected) {
       print('el importe agregado es mayor que el seleecionado');
     } else {
       print('es un valor desconocido');
-    }
+    }*/
   }
 
   Future<void> message(BuildContext context) {
