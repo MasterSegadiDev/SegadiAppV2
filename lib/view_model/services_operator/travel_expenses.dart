@@ -27,32 +27,36 @@ class TravelExpensesService {
       headers: headers,
       body: body,
     );
+
     print(response.statusCode);
     return response;
   }
 
   getData(int id) async {
+    print(id);
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';
 
-    var data;
+    var data = [];
 
-    final result = await http.get(
-        Uri.parse("http://198.251.68.42/DesarrolloSEGADI/web/index.php")
-            .replace(queryParameters: {
-      'r': 'esegadi/getcomprobaciones',
-      'id': userId.toString(),
-      'id_remision': id.toString(),
-      'token': token,
-    }));
-    var jsonData = json.decode(result.body.toString());
+    final response = await http.get(
+      Uri.parse("http://198.251.68.42/DesarrolloSEGADI/web/index.php")
+          .replace(queryParameters: {
+        'r': 'esegadi/getcomprobaciones',
+        'id': userId.toString(),
+        'id_remision': id.toString(),
+        'token': token,
+      }),
+    );
+    var jsonData = json.decode(response.body.toString());
 
-    if (jsonData["error_message"] != null) {
-      data = [];
-    } else {
+    if (response.statusCode == 200) {
       data = jsonData;
     }
+    /*if (response.statusCode == 204) {
+      print('No tiene viaticos asignados');
+    }*/
 
     return data;
   }
@@ -73,6 +77,9 @@ class TravelExpensesService {
         .timeout(const Duration(seconds: 90));
 
     var data = jsonDecode(response.body.toString());
+
+    print(data);
+    inspect(data);
 
     data.removeWhere((str) {
       return str["total_used"] == "0.00";

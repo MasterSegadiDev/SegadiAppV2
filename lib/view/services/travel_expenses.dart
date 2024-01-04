@@ -199,7 +199,7 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   }
 
   validate() async {
-    /* double importSelected = 0;
+    double importSelected = 0;
     double importAdd = 0;
     var estateSelected =
         listDataOption.firstWhere((dropdown) => dropdown['id'] == conceptId);
@@ -214,16 +214,16 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
           .insertImport(id, conceptId!, importe, comentery);
       // Map responseMap = jsonDecode(response.body);
       print(response.statusCode);
-      if (response.statusCode == 200) {*/
-    getTravelExpenses(id);
-    // ignore: use_build_context_synchronously
-    Navigator.pop(context);
-    /* }
+      if (response.statusCode == 200) {
+        getTravelExpenses(id);
+        // ignore: use_build_context_synchronously
+        Navigator.pop(context);
+      }
     } else if (importAdd > importSelected) {
       print('el importe agregado es mayor que el seleecionado');
     } else {
       print('es un valor desconocido');
-    }*/
+    }
   }
 
   Future<void> message(BuildContext context) {

@@ -1,12 +1,9 @@
 import 'dart:convert';
 import 'dart:developer';
-import 'dart:ffi';
 
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/model/services/detail_service.dart';
-import 'package:segadi/model/services/travel_expenses.dart';
 
-import 'package:segadi/view/home/routes.dart';
 import 'package:segadi/view_model/globals.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -81,6 +78,24 @@ class Detail {
         result.isEnableButton = false;
       }
 
+      if (result.statusId == 0 &&
+          result.serviceClosed == false &&
+          result.remainingEvidences == false) {
+        result.serviceClosed = false;
+      }
+
+      if (result.serviceClosed == false &&
+          result.remainingEvidences > 0 &&
+          result.statusId == 23) {
+        result.serviceClosed = true;
+      }
+
+      if (result.serviceClosed == true &&
+          result.remainingEvidences == 0 &&
+          result.statusId != 23) {
+        result.serviceClosed = false;
+      }
+
       print(inspect(result));
       return result;
     } else {
@@ -149,7 +164,7 @@ class Detail {
       headers: headers,
       body: body,
     );
-    print(inspect(response.body));
+
     return response;
   }
 

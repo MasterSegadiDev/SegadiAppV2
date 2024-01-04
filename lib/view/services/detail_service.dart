@@ -334,7 +334,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                     FontAwesomeIcons.circleCheck,
                                   ),
                                   iconSize: 40,
-                                  onPressed: snapshot.data!.isEnableTripClosure
+                                  // onPressed: snapshot.data!.isEnableTripClosure
+                                  onPressed: snapshot.data!.serviceClosed
                                       // ignore: dead_code
                                       ? () {
                                           Navigator.pushNamed(
@@ -359,7 +360,12 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                     FontAwesomeIcons.fileInvoiceDollar,
                                   ),
                                   iconSize: 40,
-                                  onPressed: () => sendTravelExpenses(id),
+                                  // onPressed: () => sendTravelExpenses(id),
+                                  onPressed: snapshot.data!.pendingMoneyChecks
+                                      ? () {
+                                          sendTravelExpenses(id);
+                                        }
+                                      : null,
                                 ),
                                 const Text(' Viaticos')
                               ],
