@@ -90,9 +90,7 @@ class Detail {
         result.serviceClosed = true;
       }
 
-      if (result.serviceClosed == true &&
-          result.remainingEvidences == 0 &&
-          result.statusId != 23) {
+      if (result.serviceClosed == true && result.remainingEvidences == 0) {
         result.serviceClosed = false;
       }
 

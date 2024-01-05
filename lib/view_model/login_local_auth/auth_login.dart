@@ -8,13 +8,13 @@ class AuthServices {
     Map data = {"usuario": user, "password": password, "apptoken": "prueba"};
 
     var body = json.encode(data);
-    var url = Uri.parse(baseURL + 'index.php?r=esegadi/autenticapost');
+    var url = Uri.parse('${baseURL}index.php?r=esegadi/autenticapost');
     http.Response response = await http.post(
       url,
       headers: headers,
       body: body,
     );
-    print(response);
+
     return response;
   }
 }

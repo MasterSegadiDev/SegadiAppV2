@@ -43,9 +43,8 @@ class _ServicesScreen extends State<ServicesScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Remisiones Asignadas'),
-        backgroundColor: Colors.black,
-      ),
+          title: const Text('Remisiones Asignadas'),
+          backgroundColor: Colors.green),
       drawer: const DrawerScreen(),
       body: loading == true
           ? const Center(

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:segadi/model/user/UserInformation.dart';
+import 'package:segadi/view_model/user/user_information.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -12,6 +14,8 @@ class DrawerScreen extends StatefulWidget {
 class _DrawerScreen extends State<DrawerScreen> {
   var name = "";
   var email = "";
+  late Future<Photo>? detail;
+
   void _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
@@ -24,6 +28,7 @@ class _DrawerScreen extends State<DrawerScreen> {
   void initState() {
     super.initState();
     _loadPreferences();
+    detail = User().getUserPhot();
   }
 
   @override
@@ -32,6 +37,8 @@ class _DrawerScreen extends State<DrawerScreen> {
       child: SizedBox(
         width: 280,
         child: Drawer(
+          backgroundColor: Colors.green,
+          //#84A756
           child: ListView(
             children: [
               UserAccountsDrawerHeader(
@@ -39,44 +46,86 @@ class _DrawerScreen extends State<DrawerScreen> {
                   color: Colors.green,
                 ),
                 accountName: Text(name),
-                accountEmail: Text(email),
+                accountEmail: const Text('ale029610@gmail.com'),
                 currentAccountPicture: CircleAvatar(
                   backgroundColor: Colors.white,
-                  child: ClipOval(
-                    child: Image.network(
-                      'http://198.251.68.42/DesarrolloSEGADI/web/uploads/FotoPlantilla.jpeg',
-                      fit: BoxFit.cover,
-                      width: 90,
-                      height: 90,
-                    ),
+                  child: FutureBuilder<Photo>(
+                    future: detail,
+                    builder: (context, snapshot) {
+                      if (snapshot.hasData) {
+                        return ClipOval(
+                          child: Image.network(
+                            snapshot.data!.url.toString(),
+                            fit: BoxFit.cover,
+                            width: 90,
+                            height: 90,
+                          ),
+                        );
+                      } else if (snapshot.hasError) {
+                        return Text("${snapshot.error}");
+                      }
+                      return const CircularProgressIndicator();
+                    },
                   ),
                 ),
               ),
               ListTile(
-                leading: const Icon(Icons.person),
-                title: const Text('Perfil'),
+                leading: const Icon(
+                  Icons.person,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Perfil',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {},
               ),
               ListTile(
-                leading: const Icon(FontAwesomeIcons.house),
-                title: const Text('Home'),
+                leading: const Icon(
+                  FontAwesomeIcons.house,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Home',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {
                   Navigator.pushNamed(context, '/home_page');
                 },
               ),
               ExpansionTile(
-                title: const Text('Servicios'),
-                leading: const Icon(Icons.file_open),
+                title: const Text(
+                  'Servicios',
+                  style: TextStyle(color: Colors.white),
+                ),
+                leading: const Icon(
+                  Icons.file_open,
+                  color: Colors.white,
+                ),
                 childrenPadding: const EdgeInsets.only(left: 60),
                 children: [
                   ListTile(
-                    title: const Text("Servicios Asignados"),
+                    leading: const Icon(
+                      FontAwesomeIcons.file,
+                      color: Colors.white,
+                    ),
+                    title: const Text(
+                      "Servicios Asignados",
+                      style: TextStyle(color: Colors.white),
+                    ),
                     onTap: () {
                       Navigator.pushNamed(context, '/services');
                     },
                   ),
                   ListTile(
-                    title: const Text("Servicios Realizados"),
+                    leading: const Icon(
+                      FontAwesomeIcons.circleCheck,
+                      color: Colors.white,
+                    ),
+                    title: const Text(
+                      "Servicios Realizados",
+                      style: TextStyle(color: Colors.white),
+                    ),
                     onTap: () {
                       Navigator.pushNamed(context, '/services_finished');
                     },
@@ -84,18 +133,36 @@ class _DrawerScreen extends State<DrawerScreen> {
                 ],
               ),
               ListTile(
-                leading: const Icon(Icons.folder),
-                title: const Text('Expendiente'),
+                leading: const Icon(
+                  Icons.folder,
+                  color: Colors.white,
+                ),
+                title: const Text(
+                  'Expendiente',
+                  style: TextStyle(color: Colors.white),
+                ),
                 onTap: () {},
               ),
               const ListTile(
-                leading: Icon(FontAwesomeIcons.tools),
-                title: Text('Mantenimiento'),
+                leading: Icon(
+                  FontAwesomeIcons.tools,
+                  color: Colors.white,
+                ),
+                title: Text(
+                  'Mantenimiento',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
               const Divider(),
               ListTile(
-                title: const Text('Salir'),
-                leading: const Icon(Icons.exit_to_app),
+                title: const Text(
+                  'Salir',
+                  style: TextStyle(color: Colors.white),
+                ),
+                leading: const Icon(
+                  Icons.exit_to_app,
+                  color: Colors.white,
+                ),
                 onTap: () {
                   Navigator.pushNamed(context, '/');
                 },

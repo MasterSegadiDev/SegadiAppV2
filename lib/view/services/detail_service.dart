@@ -76,7 +76,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Detalle del servicio'),
-        backgroundColor: Colors.black,
+        backgroundColor: Colors.green,
       ),
       drawer: const DrawerScreen(),
       body: _body(),
@@ -277,11 +277,14 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   icon: const Icon(
                                     FontAwesomeIcons.clipboardList,
                                   ),
-                                  iconSize: 40,
+                                  iconSize: 27.5,
                                   onPressed: () =>
                                       _dialogCircleCheck((context)),
                                 ),
-                                const Text('Check List')
+                                const Text(
+                                  'Check List',
+                                  style: TextStyle(fontSize: 12),
+                                )
                               ],
                             ),
                           ),
@@ -292,7 +295,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   icon: const Icon(
                                     FontAwesomeIcons.locationDot,
                                   ),
-                                  iconSize: 40,
+                                  iconSize: 27.5,
                                   onPressed:
                                       snapshot.data!.isEnableStatusSupport
                                           ? () {
@@ -300,7 +303,10 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                             }
                                           : null,
                                 ),
-                                const Text('Status de Soporte')
+                                const Text(
+                                  'Status de Soporte',
+                                  style: TextStyle(fontSize: 12),
+                                )
                               ],
                             ),
                           ),
@@ -311,10 +317,13 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   icon: Icon(
                                     FontAwesomeIcons.mapLocationDot,
                                   ),
-                                  iconSize: 40,
+                                  iconSize: 27.5,
                                   onPressed: null,
                                 ),
-                                Text('Ruta Sugerida')
+                                Text(
+                                  'Ruta Sugerida',
+                                  style: TextStyle(fontSize: 12),
+                                )
                               ],
                             ),
                           ),
@@ -333,7 +342,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   icon: const Icon(
                                     FontAwesomeIcons.circleCheck,
                                   ),
-                                  iconSize: 40,
+                                  iconSize: 27.5,
                                   // onPressed: snapshot.data!.isEnableTripClosure
                                   onPressed: snapshot.data!.serviceClosed
                                       // ignore: dead_code
@@ -348,7 +357,10 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                         }
                                       : null,
                                 ),
-                                const Text('Cierre de viaje')
+                                const Text(
+                                  'Cierre de viaje',
+                                  style: TextStyle(fontSize: 12),
+                                )
                               ],
                             ),
                           ),
@@ -359,7 +371,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   icon: const Icon(
                                     FontAwesomeIcons.fileInvoiceDollar,
                                   ),
-                                  iconSize: 40,
+                                  iconSize: 27.5,
                                   // onPressed: () => sendTravelExpenses(id),
                                   onPressed: snapshot.data!.pendingMoneyChecks
                                       ? () {
@@ -367,7 +379,10 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                         }
                                       : null,
                                 ),
-                                const Text(' Viaticos')
+                                const Text(
+                                  ' Viaticos',
+                                  style: TextStyle(fontSize: 12),
+                                )
                               ],
                             ),
                           ),
@@ -378,10 +393,13 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   icon: Icon(
                                     FontAwesomeIcons.solidFilePdf,
                                   ),
-                                  iconSize: 40,
+                                  iconSize: 27.5,
                                   onPressed: null,
                                 ),
-                                Text('Descargar Servicio')
+                                Text(
+                                  'Descargar Servicio',
+                                  style: TextStyle(fontSize: 12),
+                                )
                               ],
                             ),
                           ),

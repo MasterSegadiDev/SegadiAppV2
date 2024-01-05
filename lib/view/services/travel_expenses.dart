@@ -127,7 +127,7 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Basic dialog title'),
+          title: const Text('Registra los conceptos'),
           insetPadding: const EdgeInsets.all(20),
           content: Column(
             children: [

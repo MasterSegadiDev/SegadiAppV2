@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:segadi/view/home/sidebar.dart';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -12,14 +13,19 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _MainListHomePage extends State<HomeScreen> {
+  var name = "";
+  void _loadPreferences() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      var name = prefs.getString('name') ?? '';
+      var email = prefs.getString('email') ?? '';
+    });
+  }
+
   @override
   void initState() {
     super.initState();
     _loadPreferences();
-  }
-
-  void _loadPreferences() async {
-    setState(() {});
   }
 
   @override
@@ -29,91 +35,105 @@ class _MainListHomePage extends State<HomeScreen> {
         title: const Text('Menu'),
         backgroundColor: Colors.green,
       ),
+      backgroundColor: Colors.green,
       drawer: const DrawerScreen(),
-      body: GridView.count(
-        crossAxisCount: 2,
-        padding: const EdgeInsets.all(16.0),
-        childAspectRatio: 8.0 / 9.0,
-        children: <Widget>[
-          GestureDetector(
-            onTap: () {
-              Navigator.popAndPushNamed(context, '/services');
-            },
-            child: const Card(
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(top: 50),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(
-                          FontAwesomeIcons.truck,
-                          color: Colors.green,
-                          size: 50.0,
-                        ),
-                        Text('Servicio',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, height: 4)),
-                      ],
+      body: Center(
+        child: GridView.count(
+          crossAxisCount: 2,
+          padding: const EdgeInsets.all(10.0),
+          children: <Widget>[
+            GestureDetector(
+              onTap: () {
+                Navigator.popAndPushNamed(context, '/services');
+              },
+              child: const Card(
+                color: Colors.green,
+                shadowColor: Colors.transparent,
+                child: Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.only(top: 50),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(
+                            FontAwesomeIcons.truck,
+                            color: Colors.white,
+                            size: 50.0,
+                          ),
+                          Text('Servicio',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  height: 4,
+                                  color: Colors.white)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {},
-            child: const Card(
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(top: 50),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(
-                          Icons.folder,
-                          color: Colors.green,
-                          size: 50.0,
-                        ),
-                        Text('Expediente',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, height: 4)),
-                      ],
+            GestureDetector(
+              onTap: () {},
+              child: const Card(
+                color: Colors.green,
+                shadowColor: Colors.transparent,
+                child: Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.only(top: 50),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(
+                            Icons.folder,
+                            color: Colors.white,
+                            size: 50.0,
+                          ),
+                          Text('Expediente',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  height: 4,
+                                  color: Colors.white)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-          GestureDetector(
-            onTap: () {},
-            child: const Card(
-              child: Column(
-                children: <Widget>[
-                  Padding(
-                    padding: EdgeInsets.only(top: 50),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        Icon(
-                          // ignore: deprecated_member_use
-                          FontAwesomeIcons.tools,
-                          color: Colors.green,
-                          size: 40.0,
-                        ),
-                        Text('Mantenimiento',
-                            style: TextStyle(
-                                fontWeight: FontWeight.bold, height: 4)),
-                      ],
+            GestureDetector(
+              onTap: () {},
+              child: const Card(
+                color: Colors.green,
+                shadowColor: Colors.transparent,
+                child: Column(
+                  children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.only(top: 50),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: <Widget>[
+                          Icon(
+                            // ignore: deprecated_member_use
+                            FontAwesomeIcons.tools,
+                            color: Colors.white,
+                            size: 40.0,
+                          ),
+                          Text('Mantenimiento',
+                              style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  height: 4,
+                                  color: Colors.white)),
+                        ],
+                      ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
