@@ -33,9 +33,9 @@ class _MainListHomePage extends State<HomeScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Menu'),
-        backgroundColor: Colors.green,
+        backgroundColor: const Color(0xFF2C522A),
       ),
-      backgroundColor: Colors.green,
+      backgroundColor: Colors.white,
       drawer: const DrawerScreen(),
       body: Center(
         child: GridView.count(
@@ -47,7 +47,7 @@ class _MainListHomePage extends State<HomeScreen> {
                 Navigator.popAndPushNamed(context, '/services');
               },
               child: const Card(
-                color: Colors.green,
+                color: Color(0xFF84A756),
                 shadowColor: Colors.transparent,
                 child: Column(
                   children: <Widget>[
@@ -76,7 +76,7 @@ class _MainListHomePage extends State<HomeScreen> {
             GestureDetector(
               onTap: () {},
               child: const Card(
-                color: Colors.green,
+                color: Color(0xFF84A756),
                 shadowColor: Colors.transparent,
                 child: Column(
                   children: <Widget>[
@@ -105,7 +105,7 @@ class _MainListHomePage extends State<HomeScreen> {
             GestureDetector(
               onTap: () {},
               child: const Card(
-                color: Colors.green,
+                color: Color(0xFF84A756),
                 shadowColor: Colors.transparent,
                 child: Column(
                   children: <Widget>[

@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Detail {
   Future<DetailService>? getService(int id) async {
+    print(id);
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';
@@ -94,7 +95,7 @@ class Detail {
         result.serviceClosed = false;
       }
 
-      print(inspect(result));
+      // print(inspect(result));
       return result;
     } else {
       throw Exception('Failed to load detail');

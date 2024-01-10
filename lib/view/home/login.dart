@@ -45,6 +45,7 @@ class _LoginScreenState extends State<LoginScreen> {
       appBar: AppBar(
         backgroundColor: Colors.green,
       ),
+      backgroundColor: Colors.white,
       body: Padding(
         padding: const EdgeInsets.all(10),
         child: Center(

@@ -4,6 +4,7 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'package:segadi/model/services/checklist.dart';
 
 import 'package:segadi/view/home/sidebar.dart';
@@ -75,370 +76,471 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle del servicio'),
-        backgroundColor: Colors.green,
+        title: const Text('Detalle Remisión'),
+        backgroundColor: const Color(0xFF2C522A),
       ),
+      backgroundColor: Colors.white,
       drawer: const DrawerScreen(),
-      body: _body(),
-      floatingActionButton: FloatingActionButton(
+      body: FutureBuilder<DetailService>(
+        future: detail,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            if (snapshot.data!.statusSupportId > 0) {
+              statusSupportId = snapshot.data!.statusSupportId;
+            }
+            if (snapshot.data!.list != null) {
+              listCked = true;
+            }
+            return Center(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      height: 420,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        border: Border.all(
+                          color: const Color(0xFF84A756),
+                        ),
+                        color: const Color(0xFF84A756),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        children: [
+                          Column(
+                            children: [
+                              Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Servicio: ${snapshot.data!.service}',
+                                  style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                ),
+                              ),
+                              const Row(children: [
+                                Text(
+                                  'Remitente',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                )
+                              ]),
+                              const Divider(
+                                height: 15.0,
+                                color: Colors.white,
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Razon Social:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    snapshot.data!.senderBusinessName,
+                                    style: const TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Télefono:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    snapshot.data!.senderPhoneNumber,
+                                    style: const TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Contacto:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    snapshot.data!.senderName,
+                                    style: const TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Domicilio:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ${snapshot.data!.senderZipCode}',
+                                    style: const TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              const Divider(
+                                color: Colors.green,
+                                height: 15.0,
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Destinatario',
+                                    style: TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              const Divider(
+                                color: Colors.white,
+                                height: 15.0,
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Razón Social:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    snapshot.data!.recipientBusinessName,
+                                    style: const TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Télefono:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    snapshot.data!.recipientPhoneNumber,
+                                    style: const TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Contacto:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    snapshot.data!.recipientName,
+                                    style: const TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Domicilio:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}',
+                                    textAlign: TextAlign.center,
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}',
+                                    style: const TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      height: 130,
+                      width: 380,
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Column(
+                                  children: <Widget>[
+                                    IconButton(
+                                      icon: const Icon(
+                                        FontAwesomeIcons.clipboardList,
+                                        color: Colors.black,
+                                      ),
+                                      iconSize: 27.5,
+                                      onPressed: () =>
+                                          _dialogCircleCheck((context)),
+                                    ),
+                                    const Text(
+                                      'Check List',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.black),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  children: <Widget>[
+                                    IconButton(
+                                      icon: const Icon(
+                                        FontAwesomeIcons.locationDot,
+                                        color: Colors.black,
+                                      ),
+                                      iconSize: 27.5,
+                                      onPressed:
+                                          snapshot.data!.isEnableStatusSupport
+                                              ? () {
+                                                  _dialogBuilderEnbled(context);
+                                                }
+                                              : null,
+                                    ),
+                                    const Text(
+                                      'Status de Soporte',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.black),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              const Expanded(
+                                child: Column(
+                                  children: <Widget>[
+                                    IconButton(
+                                      icon: Icon(
+                                        FontAwesomeIcons.mapLocationDot,
+                                        color: Colors.black,
+                                      ),
+                                      iconSize: 27.5,
+                                      onPressed: null,
+                                    ),
+                                    Text(
+                                      'Ruta Sugerida',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.black),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: Column(
+                                  children: <Widget>[
+                                    IconButton(
+                                      icon: const Icon(
+                                        FontAwesomeIcons.circleCheck,
+                                        color: Colors.black,
+                                      ),
+                                      iconSize: 27.5,
+                                      // onPressed: snapshot.data!.isEnableTripClosure
+                                      onPressed: snapshot.data!.serviceClosed
+                                          // ignore: dead_code
+                                          ? () {
+                                              Navigator.pushNamed(
+                                                  context, '/trip_closure',
+                                                  arguments: {
+                                                    'id': snapshot.data!.id,
+                                                    'serviceId':
+                                                        snapshot.data!.service
+                                                  });
+                                            }
+                                          : null,
+                                    ),
+                                    const Text(
+                                      'Cierre de viaje',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.black),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  children: <Widget>[
+                                    IconButton(
+                                      icon: const Icon(
+                                        FontAwesomeIcons.fileInvoiceDollar,
+                                        color: Colors.black,
+                                      ),
+                                      iconSize: 27.5,
+                                      // onPressed: () => sendTravelExpenses(id),
+                                      onPressed:
+                                          snapshot.data!.pendingMoneyChecks
+                                              ? () {
+                                                  sendTravelExpenses(id);
+                                                }
+                                              : null,
+                                    ),
+                                    const Text(
+                                      ' Viaticos',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.black),
+                                    )
+                                  ],
+                                ),
+                              ),
+                              const Expanded(
+                                child: Column(
+                                  children: <Widget>[
+                                    IconButton(
+                                      icon: Icon(
+                                        FontAwesomeIcons.solidFilePdf,
+                                        color: Colors.black,
+                                      ),
+                                      iconSize: 27.5,
+                                      onPressed: null,
+                                    ),
+                                    Text(
+                                      'Descargar Servicio',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.black),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      height: 40,
+                      width: 380,
+                      color: const Color(0xFF84A756),
+                      child: /*Column(
+                        children: [
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: SizedBox(
+                                  height: 40,
+                                  child: ElevatedButton(
+                                    onPressed: snapshot.data!.isEnableButton
+                                        ? () {
+                                            addStatus(snapshot
+                                                .data!.mandatoryStatusId!);
+                                          }
+                                        : null,
+                                    child:
+                                        Text(snapshot.data!.mandatoryStatus!),
+                                  ),
+                                ),
+                              )
+                            ],
+                          ),
+                        ],
+                      ),*/
+                          MaterialButton(
+                        onPressed: snapshot.data!.isEnableButton
+                            ? () {
+                                addStatus(snapshot.data!.mandatoryStatusId!);
+                              }
+                            : null,
+                        color: const Color(0xFF2C522A),
+                        child: Text(
+                          snapshot.data!.mandatoryStatus!,
+                          style: const TextStyle(
+                            fontSize: 15,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ],
+              ),
+            );
+          } else if (snapshot.hasError) {
+            return Text("${snapshot.error}");
+          }
+          return const CircularProgressIndicator();
+        },
+      ),
+      /*floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
         elevation: 20.0,
         child: const Icon(Icons.phone),
         onPressed: () {
           // FlutterPhoneDirectCaller.callNumber('+523311364928');
         },
-      ),
+      ),*/
     );
-  }
-
-  _body() {
-    return Column(children: <Widget>[
-      Expanded(
-        child: Padding(
-          padding: const EdgeInsets.all(10.0),
-          child: Container(
-            padding: const EdgeInsets.all(0.0),
-            color: Colors.white,
-            alignment: Alignment.center,
-            child: FutureBuilder<DetailService>(
-              future: detail,
-              builder: (context, snapshot) {
-                if (snapshot.hasData) {
-                  if (snapshot.data!.statusSupportId > 0) {
-                    statusSupportId = snapshot.data!.statusSupportId;
-                  }
-                  if (snapshot.data!.list != null) {
-                    listCked = true;
-                  }
-                  return Column(
-                    children: <Widget>[
-                      Column(
-                        children: [
-                          Align(
-                            alignment: Alignment.center,
-                            child: Text(
-                              'Servicio: ${snapshot.data!.service}',
-                              style: const TextStyle(
-                                  fontSize: 20, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Divider(
-                        color: Colors.transparent,
-                        height: 10.0,
-                      ),
-                      const Row(children: [
-                        Text(
-                          'Remitente:',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        )
-                      ]),
-                      const Divider(
-                        color: Colors.transparent,
-                        height: 15.0,
-                      ),
-                      const Row(
-                        children: [
-                          Text(
-                            'Razon Social:',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [Text(snapshot.data!.senderBusinessName)],
-                      ),
-                      const Row(
-                        children: [
-                          Text(
-                            'Télefono:',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [Text(snapshot.data!.senderPhoneNumber)],
-                      ),
-                      const Row(
-                        children: [
-                          Text(
-                            'Contacto:',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [Text(snapshot.data!.senderName)],
-                      ),
-                      const Row(
-                        children: [
-                          Text(
-                            'Domicilio:',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                              '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ${snapshot.data!.senderZipCode}')
-                        ],
-                      ),
-                      const Divider(
-                        color: Colors.transparent,
-                      ),
-                      const Row(children: [
-                        Text(
-                          'Destinatario:',
-                          style: TextStyle(
-                              fontSize: 20, fontWeight: FontWeight.bold),
-                        )
-                      ]),
-                      const Divider(
-                        color: Colors.transparent,
-                        height: 15.0,
-                      ),
-                      const Row(
-                        children: [
-                          Text(
-                            'Razon Social:',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [Text(snapshot.data!.recipientBusinessName)],
-                      ),
-                      const Row(
-                        children: [
-                          Text(
-                            'Télefono:',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [Text(snapshot.data!.recipientPhoneNumber)],
-                      ),
-                      const Row(
-                        children: [
-                          Text(
-                            'Contacto:',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [Text(snapshot.data!.recipientName)],
-                      ),
-                      const Row(
-                        children: [
-                          Text(
-                            'Domicilio:',
-                            style: TextStyle(
-                                fontSize: 12, fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                            '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}',
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(color: Colors.black),
-                          ),
-                        ],
-                      ),
-                      Row(
-                        children: [
-                          Text(
-                              '${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}'),
-                        ],
-                      ),
-                      const Divider(
-                        color: Colors.transparent,
-                        height: 20,
-                      ),
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Column(
-                              children: <Widget>[
-                                IconButton(
-                                  icon: const Icon(
-                                    FontAwesomeIcons.clipboardList,
-                                  ),
-                                  iconSize: 27.5,
-                                  onPressed: () =>
-                                      _dialogCircleCheck((context)),
-                                ),
-                                const Text(
-                                  'Check List',
-                                  style: TextStyle(fontSize: 12),
-                                )
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              children: <Widget>[
-                                IconButton(
-                                  icon: const Icon(
-                                    FontAwesomeIcons.locationDot,
-                                  ),
-                                  iconSize: 27.5,
-                                  onPressed:
-                                      snapshot.data!.isEnableStatusSupport
-                                          ? () {
-                                              _dialogBuilderEnbled(context);
-                                            }
-                                          : null,
-                                ),
-                                const Text(
-                                  'Status de Soporte',
-                                  style: TextStyle(fontSize: 12),
-                                )
-                              ],
-                            ),
-                          ),
-                          const Expanded(
-                            child: Column(
-                              children: <Widget>[
-                                IconButton(
-                                  icon: Icon(
-                                    FontAwesomeIcons.mapLocationDot,
-                                  ),
-                                  iconSize: 27.5,
-                                  onPressed: null,
-                                ),
-                                Text(
-                                  'Ruta Sugerida',
-                                  style: TextStyle(fontSize: 12),
-                                )
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Divider(
-                        color: Colors.transparent,
-                        height: 20,
-                      ),
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: Column(
-                              children: <Widget>[
-                                IconButton(
-                                  icon: const Icon(
-                                    FontAwesomeIcons.circleCheck,
-                                  ),
-                                  iconSize: 27.5,
-                                  // onPressed: snapshot.data!.isEnableTripClosure
-                                  onPressed: snapshot.data!.serviceClosed
-                                      // ignore: dead_code
-                                      ? () {
-                                          Navigator.pushNamed(
-                                              context, '/trip_closure',
-                                              arguments: {
-                                                'id': snapshot.data!.id,
-                                                'serviceId':
-                                                    snapshot.data!.service
-                                              });
-                                        }
-                                      : null,
-                                ),
-                                const Text(
-                                  'Cierre de viaje',
-                                  style: TextStyle(fontSize: 12),
-                                )
-                              ],
-                            ),
-                          ),
-                          Expanded(
-                            child: Column(
-                              children: <Widget>[
-                                IconButton(
-                                  icon: const Icon(
-                                    FontAwesomeIcons.fileInvoiceDollar,
-                                  ),
-                                  iconSize: 27.5,
-                                  // onPressed: () => sendTravelExpenses(id),
-                                  onPressed: snapshot.data!.pendingMoneyChecks
-                                      ? () {
-                                          sendTravelExpenses(id);
-                                        }
-                                      : null,
-                                ),
-                                const Text(
-                                  ' Viaticos',
-                                  style: TextStyle(fontSize: 12),
-                                )
-                              ],
-                            ),
-                          ),
-                          const Expanded(
-                            child: Column(
-                              children: <Widget>[
-                                IconButton(
-                                  icon: Icon(
-                                    FontAwesomeIcons.solidFilePdf,
-                                  ),
-                                  iconSize: 27.5,
-                                  onPressed: null,
-                                ),
-                                Text(
-                                  'Descargar Servicio',
-                                  style: TextStyle(fontSize: 12),
-                                )
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Divider(
-                        color: Colors.transparent,
-                        height: 20,
-                      ),
-                      Row(
-                        children: <Widget>[
-                          Expanded(
-                            child: SizedBox(
-                              height: 40,
-                              child: ElevatedButton(
-                                onPressed: snapshot.data!.isEnableButton
-                                    ? () {
-                                        addStatus(
-                                            snapshot.data!.mandatoryStatusId!);
-                                      }
-                                    : null,
-                                child: Text(snapshot.data!.mandatoryStatus!),
-                              ),
-                            ),
-                          )
-                        ],
-                      ),
-                    ],
-                  );
-                } else if (snapshot.hasError) {
-                  return Text("${snapshot.error}");
-                }
-                return const CircularProgressIndicator();
-              },
-            ),
-          ),
-        ),
-      ),
-    ]);
   }
 
   Future<void> _dialogBuilderEnbled(BuildContext context) {

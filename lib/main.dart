@@ -31,8 +31,7 @@ class MyApp extends StatelessWidget {
               id: 0,
             ),
         '/detail_service_finished': (context) =>
-            const DetailServicesFinishedScreen(
-                id: 0, detailFinished: false, response: {}),
+            const DetailServicesFinishedScreen(id: 0),
         '/check_list': (context) => const CustomDialog(),
         '/status_support': (context) => const StatusSupport(),
         '/trip_closure': (context) => const TripClosureScreen(),

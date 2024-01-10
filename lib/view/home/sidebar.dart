@@ -37,16 +37,16 @@ class _DrawerScreen extends State<DrawerScreen> {
       child: SizedBox(
         width: 280,
         child: Drawer(
-          backgroundColor: Colors.green,
+          backgroundColor: const Color(0xFF2C522A),
           //#84A756
           child: ListView(
             children: [
               UserAccountsDrawerHeader(
                 decoration: const BoxDecoration(
-                  color: Colors.green,
+                  color: Color(0xFF2C522A),
                 ),
                 accountName: Text(name),
-                accountEmail: const Text('ale029610@gmail.com'),
+                accountEmail: Text(email),
                 currentAccountPicture: CircleAvatar(
                   backgroundColor: Colors.white,
                   child: FutureBuilder<Photo>(
