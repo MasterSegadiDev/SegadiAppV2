@@ -335,7 +335,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                     IconButton(
                                       icon: const Icon(
                                         FontAwesomeIcons.clipboardList,
-                                        color: Colors.black,
+                                        color: Colors.blue,
                                       ),
                                       iconSize: 27.5,
                                       onPressed: () =>
@@ -351,17 +351,20 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                               ),
                               Expanded(
                                 child: Column(
-                                  children: <Widget>[
+                                  children: [
+                                    iconStatus(context,
+                                        snapshot.data!.isEnableStatusSupport),
+                                  ],
+                                  /*<Widget>[
                                     IconButton(
                                       icon: const Icon(
                                         FontAwesomeIcons.locationDot,
-                                        color: Colors.black,
                                       ),
                                       iconSize: 27.5,
                                       onPressed:
                                           snapshot.data!.isEnableStatusSupport
                                               ? () {
-                                                  _dialogBuilderEnbled(context);
+                                                  _showBottomSheet(context);
                                                 }
                                               : null,
                                     ),
@@ -370,7 +373,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                       style: TextStyle(
                                           fontSize: 12, color: Colors.black),
                                     )
-                                  ],
+                                  ],*/
                                 ),
                               ),
                               const Expanded(
@@ -379,7 +382,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                     IconButton(
                                       icon: Icon(
                                         FontAwesomeIcons.mapLocationDot,
-                                        color: Colors.black,
+                                        color: Colors.blueAccent,
                                       ),
                                       iconSize: 27.5,
                                       onPressed: null,
@@ -402,7 +405,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                     IconButton(
                                       icon: const Icon(
                                         FontAwesomeIcons.circleCheck,
-                                        color: Colors.black,
+                                        color: Colors.green,
                                       ),
                                       iconSize: 27.5,
                                       // onPressed: snapshot.data!.isEnableTripClosure
@@ -433,7 +436,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                     IconButton(
                                       icon: const Icon(
                                         FontAwesomeIcons.fileInvoiceDollar,
-                                        color: Colors.black,
+                                        color: Colors.green,
                                       ),
                                       iconSize: 27.5,
                                       // onPressed: () => sendTravelExpenses(id),
@@ -458,7 +461,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                     IconButton(
                                       icon: Icon(
                                         FontAwesomeIcons.solidFilePdf,
-                                        color: Colors.black,
+                                        color: Colors.red,
                                       ),
                                       iconSize: 27.5,
                                       onPressed: null,
@@ -479,11 +482,10 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                   ),
                   Padding(
                     padding: const EdgeInsets.all(10.0),
-                    child: Container(
+                    child: SizedBox(
                       height: 40,
                       width: 380,
-                      color: const Color(0xFF84A756),
-                      child: /*Column(
+                      child: Column(
                         children: [
                           Row(
                             children: <Widget>[
@@ -497,6 +499,13 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                                 .data!.mandatoryStatusId!);
                                           }
                                         : null,
+                                    style: ElevatedButton.styleFrom(
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                              10), // <-- Radius
+                                        ),
+                                        backgroundColor:
+                                            const Color(0xFF2C522A)),
                                     child:
                                         Text(snapshot.data!.mandatoryStatus!),
                                   ),
@@ -505,21 +514,6 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                             ],
                           ),
                         ],
-                      ),*/
-                          MaterialButton(
-                        onPressed: snapshot.data!.isEnableButton
-                            ? () {
-                                addStatus(snapshot.data!.mandatoryStatusId!);
-                              }
-                            : null,
-                        color: const Color(0xFF2C522A),
-                        child: Text(
-                          snapshot.data!.mandatoryStatus!,
-                          style: const TextStyle(
-                            fontSize: 15,
-                            color: Colors.white,
-                          ),
-                        ),
                       ),
                     ),
                   )
@@ -532,14 +526,6 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
           return const CircularProgressIndicator();
         },
       ),
-      /*floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.red,
-        elevation: 20.0,
-        child: const Icon(Icons.phone),
-        onPressed: () {
-          // FlutterPhoneDirectCaller.callNumber('+523311364928');
-        },
-      ),*/
     );
   }
 
@@ -652,18 +638,6 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
               ],
             ),
           ),
-          /* actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Continuar ruta'),
-              onPressed: () {
-                _continueRute(statusSupportId);
-                Navigator.of(context).pop();
-              },
-            ),
-          ],*/
           actions: [
             ElevatedButton(
               onPressed: () {
@@ -775,6 +749,53 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
     );
   }
 
+  void _showBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 20.0),
+          child: Container(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  'This is a Modal bottom sheet!',
+                  style: Theme.of(context).textTheme.headline4,
+                  textAlign: TextAlign.center,
+                ),
+                ElevatedButton(
+                  child: const Text('Close BottomSheet'),
+                  onPressed: () => Navigator.pop(context),
+                )
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget iconStatus(BuildContext context, bool status) {
+    if (status == false) {
+      return const IconButton(
+        icon: Icon(
+          FontAwesomeIcons.locationDot,
+        ),
+        onPressed: null,
+      );
+    } else {
+      return IconButton(
+        icon: const Icon(
+          FontAwesomeIcons.locationDot,
+          color: Colors.red,
+        ),
+        onPressed: () {},
+      );
+    }
+  }
+
   Future<void> addStatusSupport({required int value}) async {
     print(value);
     http.Response response = await Detail.addStatusSupport(id, value, 'begin');
@@ -818,7 +839,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
       for (var idx in service_list) {
         _isChecked.add(false);
       }
-      print(inspect(service_list));
+
       return service_list;
     } else {
       return service_list;
