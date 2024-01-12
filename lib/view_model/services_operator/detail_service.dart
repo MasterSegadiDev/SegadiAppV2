@@ -95,7 +95,7 @@ class Detail {
         result.serviceClosed = false;
       }
 
-      // print(inspect(result));
+      print(inspect(result));
       return result;
     } else {
       throw Exception('Failed to load detail');

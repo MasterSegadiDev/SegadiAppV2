@@ -350,31 +350,9 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                 ),
                               ),
                               Expanded(
-                                child: Column(
-                                  children: [
-                                    iconStatus(context,
-                                        snapshot.data!.isEnableStatusSupport),
-                                  ],
-                                  /*<Widget>[
-                                    IconButton(
-                                      icon: const Icon(
-                                        FontAwesomeIcons.locationDot,
-                                      ),
-                                      iconSize: 27.5,
-                                      onPressed:
-                                          snapshot.data!.isEnableStatusSupport
-                                              ? () {
-                                                  _showBottomSheet(context);
-                                                }
-                                              : null,
-                                    ),
-                                    const Text(
-                                      'Status de Soporte',
-                                      style: TextStyle(
-                                          fontSize: 12, color: Colors.black),
-                                    )
-                                  ],*/
-                                ),
+                                child: iconStatus(
+                                    snapshot.data!.isEnableStatusSupport,
+                                    snapshot.data!.isEnableButton),
                               ),
                               const Expanded(
                                 child: Column(
@@ -400,60 +378,14 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                           Row(
                             children: <Widget>[
                               Expanded(
-                                child: Column(
-                                  children: <Widget>[
-                                    IconButton(
-                                      icon: const Icon(
-                                        FontAwesomeIcons.circleCheck,
-                                        color: Colors.green,
-                                      ),
-                                      iconSize: 27.5,
-                                      // onPressed: snapshot.data!.isEnableTripClosure
-                                      onPressed: snapshot.data!.serviceClosed
-                                          // ignore: dead_code
-                                          ? () {
-                                              Navigator.pushNamed(
-                                                  context, '/trip_closure',
-                                                  arguments: {
-                                                    'id': snapshot.data!.id,
-                                                    'serviceId':
-                                                        snapshot.data!.service
-                                                  });
-                                            }
-                                          : null,
-                                    ),
-                                    const Text(
-                                      'Cierre de viaje',
-                                      style: TextStyle(
-                                          fontSize: 12, color: Colors.black),
-                                    )
-                                  ],
-                                ),
+                                child: iconTripClosure(
+                                    snapshot.data!.serviceClosed,
+                                    snapshot.data!.id,
+                                    snapshot.data!.service),
                               ),
                               Expanded(
-                                child: Column(
-                                  children: <Widget>[
-                                    IconButton(
-                                      icon: const Icon(
-                                        FontAwesomeIcons.fileInvoiceDollar,
-                                        color: Colors.green,
-                                      ),
-                                      iconSize: 27.5,
-                                      // onPressed: () => sendTravelExpenses(id),
-                                      onPressed:
-                                          snapshot.data!.pendingMoneyChecks
-                                              ? () {
-                                                  sendTravelExpenses(id);
-                                                }
-                                              : null,
-                                    ),
-                                    const Text(
-                                      ' Viaticos',
-                                      style: TextStyle(
-                                          fontSize: 12, color: Colors.black),
-                                    )
-                                  ],
-                                ),
+                                child: iconTravelExpenses(
+                                    snapshot.data!.pendingMoneyChecks),
                               ),
                               const Expanded(
                                 child: Column(
@@ -502,7 +434,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                     style: ElevatedButton.styleFrom(
                                         shape: RoundedRectangleBorder(
                                           borderRadius: BorderRadius.circular(
-                                              10), // <-- Radius
+                                              20), // <-- Radius
                                         ),
                                         backgroundColor:
                                             const Color(0xFF2C522A)),
@@ -529,12 +461,15 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
     );
   }
 
-  Future<void> _dialogBuilderEnbled(BuildContext context) {
+  Future<void> _dialogBuilderEnbled(BuildContext context, buttonStatus) {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          title: const Text('Registrar Parada'),
+          title: const Text(
+            '             Registrar Parada',
+            style: TextStyle(color: Color(0xFF2C522A)),
+          ),
           content: SizedBox(
             width: 300,
             height: 300,
@@ -639,13 +574,14 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             ),
           ),
           actions: [
-            ElevatedButton(
-              onPressed: () {
-                _continueRute(statusSupportId);
-                Navigator.of(context).pop();
-              },
-              child: const Text('Continuar ruta'),
-            ),
+            if (buttonStatus == false)
+              ElevatedButton(
+                onPressed: () {
+                  _continueRute(statusSupportId);
+                  Navigator.of(context).pop();
+                },
+                child: const Text('Continuar ruta'),
+              ),
           ],
         );
       },
@@ -754,10 +690,10 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
       context: context,
       builder: (context) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20.0),
+          padding: const EdgeInsets.symmetric(vertical: 200.0),
           child: Container(
             child: Column(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisSize: MainAxisSize.max,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: <Widget>[
                 Text(
@@ -777,21 +713,131 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
     );
   }
 
-  Widget iconStatus(BuildContext context, bool status) {
-    if (status == false) {
-      return const IconButton(
-        icon: Icon(
-          FontAwesomeIcons.locationDot,
-        ),
-        onPressed: null,
+  iconStatus(status, buttonStatus) {
+    if (status == true) {
+      return Column(
+        children: <Widget>[
+          IconButton(
+            icon: const Icon(
+              FontAwesomeIcons.locationDot,
+              color: Colors.red,
+            ),
+            iconSize: 27.5,
+            onPressed: status
+                ? () {
+                    _dialogBuilderEnbled(context, buttonStatus);
+                  }
+                : null,
+          ),
+          const Text(
+            'Status de Soporte',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          )
+        ],
       );
     } else {
-      return IconButton(
-        icon: const Icon(
-          FontAwesomeIcons.locationDot,
-          color: Colors.red,
-        ),
-        onPressed: () {},
+      return const Column(
+        children: <Widget>[
+          IconButton(
+            icon: Icon(
+              FontAwesomeIcons.locationDot,
+            ),
+            iconSize: 27.5,
+            onPressed: null,
+          ),
+          Text(
+            'Status de Soporte',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          )
+        ],
+      );
+    }
+  }
+
+  iconTripClosure(status, id, service) {
+    if (status == true) {
+      return Column(
+        children: <Widget>[
+          IconButton(
+            icon: const Icon(
+              FontAwesomeIcons.circleCheck,
+              color: Colors.green,
+            ),
+            iconSize: 27.5,
+            // onPressed: snapshot.data!.isEnableTripClosure
+            onPressed: status
+                // ignore: dead_code
+                ? () {
+                    Navigator.pushNamed(context, '/trip_closure',
+                        arguments: {'id': id, 'serviceId': service});
+                  }
+                : null,
+          ),
+          const Text(
+            'Cierre de viaje',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          )
+        ],
+      );
+    } else {
+      return const Column(
+        children: <Widget>[
+          IconButton(
+            icon: Icon(
+              FontAwesomeIcons.circleCheck,
+            ),
+            iconSize: 27.5,
+            // onPressed: snapshot.data!.isEnableTripClosure
+            onPressed: null,
+          ),
+          Text(
+            'Cierre de viaje',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          )
+        ],
+      );
+    }
+  }
+
+  iconTravelExpenses(status) {
+    if (status == true) {
+      return Column(
+        children: <Widget>[
+          IconButton(
+            icon: const Icon(
+              FontAwesomeIcons.fileInvoiceDollar,
+              color: Colors.green,
+            ),
+            iconSize: 27.5,
+            // onPressed: () => sendTravelExpenses(id),
+            onPressed: status
+                ? () {
+                    sendTravelExpenses(id);
+                  }
+                : null,
+          ),
+          const Text(
+            ' Viaticos',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          )
+        ],
+      );
+    } else {
+      return const Column(
+        children: <Widget>[
+          IconButton(
+            icon: Icon(
+              FontAwesomeIcons.fileInvoiceDollar,
+            ),
+            iconSize: 27.5,
+            // onPressed: () => sendTravelExpenses(id),
+            onPressed: null,
+          ),
+          Text(
+            ' Viaticos',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          )
+        ],
       );
     }
   }

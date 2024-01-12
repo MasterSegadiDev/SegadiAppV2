@@ -64,7 +64,7 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Viaticos'),
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF2C522A),
       ),
       body: Padding(
         padding: const EdgeInsets.all(20),
@@ -76,10 +76,14 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
                 TextButton(
                   onPressed: cancelButton
                       ? () {
-                          _dialogBuilder(context);
+                          // _dialogBuilder(context);
+                          _showBottomSheet(context);
                         }
                       : null,
-                  child: const Text('Agregar concepto'),
+                  child: const Text(
+                    'Agregar concepto',
+                    style: TextStyle(color: Colors.black),
+                  ),
                 ),
               ],
             ),
@@ -236,6 +240,134 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
             content:
                 Text('El importe registrado es mayor al importe asignado'));
       },
+    );
+  }
+
+  void _showBottomSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(0),
+          child: Column(
+            mainAxisSize: MainAxisSize.max,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: SizedBox(
+                  width: 380,
+                  child: Column(
+                    children: [
+                      DropdownButtonFormField(
+                        hint: const Text('Selecciona un concepto'),
+                        items: listDataOption.map((e) {
+                          return DropdownMenuItem(
+                            value: e["id"],
+                            child: SizedBox(
+                              width: double.infinity,
+                              child: Text(
+                                e["payment_concept"],
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                        onChanged: (value) {
+                          conceptId = value as int?;
+                        },
+                        isDense: true,
+                        isExpanded: true,
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: SizedBox(
+                  width: 380,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        minLines: 4,
+                        keyboardType: TextInputType.multiline,
+                        maxLines: 250,
+                        textCapitalization: TextCapitalization.sentences,
+                        decoration: const InputDecoration(
+                          filled: true,
+                          alignLabelWithHint: true,
+                          border: OutlineInputBorder(),
+                          labelText: 'Agrega un comentario',
+                        ),
+                        onChanged: (value) {
+                          comentery = value;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: SizedBox(
+                  width: 380,
+                  child: Column(
+                    children: [
+                      TextFormField(
+                        keyboardType: const TextInputType.numberWithOptions(),
+                        decoration: const InputDecoration(
+                          labelText: 'Importe',
+                          border: OutlineInputBorder(),
+                        ),
+                        onChanged: (value) {
+                          importe = value;
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: SizedBox(
+                  height: 40,
+                  width: 380,
+                  child: Column(
+                    children: [
+                      Row(
+                        children: <Widget>[
+                          Expanded(
+                            child: SizedBox(
+                              height: 40,
+                              child: ElevatedButton(
+                                onPressed: () => validate(),
+                                style: ElevatedButton.styleFrom(
+                                    shape: RoundedRectangleBorder(
+                                      borderRadius: BorderRadius.circular(
+                                          20), // <-- Radius
+                                    ),
+                                    backgroundColor: const Color(0xFF2C522A)),
+                                child: const Text('Agregar'),
+                              ),
+                            ),
+                          )
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              )
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

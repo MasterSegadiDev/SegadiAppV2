@@ -6,7 +6,7 @@ import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'package:http/http.dart' as http;
-import 'package:segadi/view/home/routes.dart';
+
 import 'package:segadi/view_model/services_operator/detail_service.dart';
 
 class TripClosureScreen extends StatefulWidget {
@@ -131,10 +131,10 @@ class _TripClosureState extends State<TripClosureScreen> {
         bottom: PreferredSize(
             preferredSize: Size.zero,
             child: Text(
-              'Remision #: ${arguments['serviceId']}',
+              'Remisión: ${arguments['serviceId']}',
               style: const TextStyle(color: Colors.white, fontSize: 15),
             )),
-        backgroundColor: Colors.black,
+        backgroundColor: const Color(0xFF2C522A),
       ),
       body: Align(
         alignment: Alignment.center,
@@ -154,18 +154,25 @@ class _TripClosureState extends State<TripClosureScreen> {
             Text('Captura $counter evidencias para el cierre del viaje'),
             if (image != null)
               ElevatedButton(
-                // ignore: sort_child_properties_last
-                child: const Text('Enviar Evidencia '),
-                /*onPressed: () =>
-                    senDataImage(id, imageEncode, serviceId + extension),*/
+                style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    backgroundColor: const Color(0xFF2C522A)),
                 onPressed: addImage
                     ? () {
                         senDataImage(id, imageEncode, serviceId + extension);
                       }
                     : null,
+                child: const Text('Enviar Evidencia '),
               ),
 
             ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20), // <-- Radius
+                  ),
+                  backgroundColor: const Color(0xFF2C522A)),
               child: const Text('Selecciona imagenes de la galería'),
               onPressed: () => getAllImage(),
             ),
@@ -174,6 +181,7 @@ class _TripClosureState extends State<TripClosureScreen> {
               onPressed: () => captureImage(),
               child: const Icon(
                 Icons.camera_alt,
+                color: Color(0xFF2C522A),
                 size: 50,
               ),
             ),
