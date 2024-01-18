@@ -96,7 +96,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                   Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Container(
-                      height: 500,
+                      height: 430,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         border: Border.all(

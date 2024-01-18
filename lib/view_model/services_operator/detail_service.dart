@@ -142,7 +142,8 @@ class Detail {
           result.mandatoryStatusId == 23 &&
           result.remainingEvidences == 0 &&
           result.pendingMoneyChecks == false) {
-        print('entraste a bloquear viaticos');
+        print('entraste a bloquear viaticos con false');
+
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;
@@ -157,7 +158,8 @@ class Detail {
           result.mandatoryStatusId == 23 &&
           result.remainingEvidences == 0 &&
           result.pendingMoneyChecks == true) {
-        print('entraste a bloquear viaticos');
+        print('entraste para ver los viaticos');
+
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;

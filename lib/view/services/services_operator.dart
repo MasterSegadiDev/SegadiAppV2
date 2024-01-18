@@ -39,8 +39,6 @@ class _ServicesScreen extends State<ServicesScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Material es una hoja de papel conceptual en la que aparece la UI.
-
     return Scaffold(
       appBar: AppBar(
           title: const Text('Remisiones Asignadas'),

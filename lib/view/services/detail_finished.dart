@@ -63,7 +63,7 @@ class _DetailServicesFinishedScreen
                   Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Container(
-                      height: 700,
+                      height: 600,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         border: Border.all(
