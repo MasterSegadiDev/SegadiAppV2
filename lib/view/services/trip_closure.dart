@@ -63,8 +63,6 @@ class _TripClosureState extends State<TripClosureScreen> {
         String base64string =
             base64.encode(imagebytes); //convert bytes to base64 string
         imageEncode = base64string;
-      } else {
-        print("No image is selected.");
       }
     } on PlatformException catch (e) {
       print('Failed to pick image: $e');
@@ -95,8 +93,6 @@ class _TripClosureState extends State<TripClosureScreen> {
         String base64string =
             base64.encode(imagebytes); //convert bytes to base64 string
         imageEncode = base64string;
-      } else {
-        print("No image is selected.");
       }
     } on PlatformException catch (e) {
       print('Failed to capture image: $e');
@@ -106,7 +102,6 @@ class _TripClosureState extends State<TripClosureScreen> {
   senDataImage(id, String imageEncode, String serviceIdExtension) async {
     http.Response response = await Detail.insertImageTripClosure(
         id, imageEncode, serviceIdExtension);
-    print(response);
 
     if (response.statusCode == 200) {
       decrementCounter();
@@ -204,17 +199,11 @@ class _TripClosureState extends State<TripClosureScreen> {
     );
   }
 
-  late Timer _timer;
-
   Future<void> _showMyDialog() async {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
-        _timer = Timer(const Duration(seconds: 3), () {
-          Navigator.of(context).pop();
-          Navigator.of(context).pop();
-        });
         return const AlertDialog(
           title: Text('Cierre de viaje exitoso'),
           content: SingleChildScrollView(

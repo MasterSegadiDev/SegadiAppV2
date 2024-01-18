@@ -54,10 +54,6 @@ class _CustomDialogState extends State<CustomDialog> {
     // print(arguments['value']);
     final int id = arguments['id'];
 
-    print(id);
-
-    int count = 0;
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Check List'),

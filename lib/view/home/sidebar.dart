@@ -145,6 +145,7 @@ class _DrawerScreen extends State<DrawerScreen> {
               ),
               const ListTile(
                 leading: Icon(
+                  // ignore: deprecated_member_use
                   FontAwesomeIcons.tools,
                   color: Colors.white,
                 ),

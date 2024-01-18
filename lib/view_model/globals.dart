@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 const String baseURL = 'http://198.251.68.42/DesarrolloSEGADI/web/';
 
+// ignore: constant_identifier_names
 const String REFERRAL_LIST =
     "http://198.251.68.42/DesarrolloSEGADI/web/index.php";
 
@@ -15,7 +16,7 @@ errorSnackBar(BuildContext context, String text) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text("Error"),
+      title: const Text("Error"),
       content: Text(text),
       actions: <Widget>[
         TextButton(
@@ -34,15 +35,10 @@ errorSnackBar(BuildContext context, String text) {
 }
 
 successSnackBar(BuildContext context, String text) {
-  /*ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-    backgroundColor: Colors.green,
-    content: Text(text),
-    duration: const Duration(seconds: 1),
-  ));*/
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: Text("Bienvenido"),
+      title: const Text("Bienvenido"),
       content: Text(text),
       actions: <Widget>[
         TextButton(

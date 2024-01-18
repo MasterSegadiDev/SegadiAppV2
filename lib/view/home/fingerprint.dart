@@ -2,19 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:segadi/view_model/login_local_auth/biometric_authentication.dart';
 
 class FingerprintPage extends StatelessWidget {
+  const FingerprintPage({super.key});
+
   @override
   Widget build(BuildContext context) => Scaffold(
         appBar: AppBar(
-          title: Text('Segadi'),
+          title: const Text('Segadi'),
           centerTitle: true,
         ),
         body: Padding(
-          padding: EdgeInsets.all(32),
+          padding: const EdgeInsets.all(32),
           child: Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                SizedBox(height: 24),
+                const SizedBox(height: 24),
                 buildAuthenticate(context),
               ],
             ),
@@ -23,14 +25,14 @@ class FingerprintPage extends StatelessWidget {
       );
 
   Widget buildText(String text, bool checked) => Container(
-        margin: EdgeInsets.symmetric(vertical: 8),
+        margin: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           children: [
             checked
-                ? Icon(Icons.check, color: Colors.green, size: 24)
-                : Icon(Icons.close, color: Colors.red, size: 24),
+                ? const Icon(Icons.check, color: Colors.green, size: 24)
+                : const Icon(Icons.close, color: Colors.red, size: 24),
             const SizedBox(width: 12),
-            Text(text, style: TextStyle(fontSize: 24)),
+            Text(text, style: const TextStyle(fontSize: 24)),
           ],
         ),
       );
@@ -42,6 +44,7 @@ class FingerprintPage extends StatelessWidget {
           final isAuthenticated = await localAuth.authenticate();
 
           if (isAuthenticated) {
+            // ignore: use_build_context_synchronously
             Navigator.pushNamed(context, '/home_page');
           }
         },
@@ -54,12 +57,12 @@ class FingerprintPage extends StatelessWidget {
   }) =>
       ElevatedButton.icon(
         style: ElevatedButton.styleFrom(
-          minimumSize: Size.fromHeight(50),
+          minimumSize: const Size.fromHeight(50),
         ),
         icon: Icon(icon, size: 26),
         label: Text(
           text,
-          style: TextStyle(fontSize: 20),
+          style: const TextStyle(fontSize: 20),
         ),
         onPressed: onClicked,
       );

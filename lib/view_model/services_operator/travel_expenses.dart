@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:http/http.dart' as http;
 import 'package:segadi/model/services/travel_expenses.dart';
@@ -28,12 +27,10 @@ class TravelExpensesService {
       body: body,
     );
 
-    print(response.statusCode);
     return response;
   }
 
   getData(int id) async {
-    print(id);
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';
@@ -54,9 +51,6 @@ class TravelExpensesService {
     if (response.statusCode == 200) {
       data = jsonData;
     }
-    /*if (response.statusCode == 204) {
-      print('No tiene viaticos asignados');
-    }*/
 
     return data;
   }
@@ -78,13 +72,10 @@ class TravelExpensesService {
 
     var data = jsonDecode(response.body.toString());
 
-    print(data);
-    inspect(data);
-
     data.removeWhere((str) {
       return str["total_used"] == "0.00";
     });
-    // inspect(data);
+
     List jsonResponse = data as List;
 
     var datas = jsonResponse.map((e) => TravelExpenses.fromJson(e)).toList();

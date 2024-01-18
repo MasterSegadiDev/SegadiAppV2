@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:segadi/model/services/travel_expenses.dart';
@@ -126,82 +124,6 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
     );
   }
 
-  Future<void> _dialogBuilder(BuildContext context) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Registra los conceptos'),
-          insetPadding: const EdgeInsets.all(20),
-          content: Column(
-            children: [
-              DropdownButtonFormField(
-                hint: const Text('Selecciona un concepto'),
-                items: listDataOption.map((e) {
-                  return DropdownMenuItem(
-                    value: e["id"],
-                    child: SizedBox(
-                      width: double.infinity,
-                      child: Text(
-                        e["payment_concept"],
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (value) {
-                  conceptId = value as int?;
-                },
-                isDense: true,
-                isExpanded: true,
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                minLines: 4,
-                keyboardType: TextInputType.multiline,
-                maxLines: 250,
-                textCapitalization: TextCapitalization.sentences,
-                decoration: const InputDecoration(
-                  filled: true,
-                  alignLabelWithHint: true,
-                  border: OutlineInputBorder(),
-                  labelText: 'Agrega un comentario',
-                ),
-                onChanged: (value) {
-                  comentery = value;
-                },
-              ),
-              const SizedBox(
-                height: 20,
-              ),
-              TextFormField(
-                keyboardType: const TextInputType.numberWithOptions(),
-                decoration: const InputDecoration(
-                  labelText: 'Importe',
-                  border: OutlineInputBorder(),
-                ),
-                onChanged: (value) {
-                  importe = value;
-                },
-              ),
-            ],
-          ),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              onPressed: () => validate(),
-              child: const Text('Agregar'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
   validate() async {
     double importSelected = 0;
     double importAdd = 0;
@@ -212,33 +134,30 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
     importSelected = double.parse(estateSelected['payment_total']);
 
     if (importAdd <= importSelected) {
-      print('el importe es menor o igual');
-
       http.Response response = await TravelExpensesService()
           .insertImport(id, conceptId!, importe, comentery);
       // Map responseMap = jsonDecode(response.body);
-      print(response.statusCode);
+
       if (response.statusCode == 200) {
         getTravelExpenses(id);
         // ignore: use_build_context_synchronously
         Navigator.pop(context);
       }
     } else if (importAdd > importSelected) {
-      print('el importe agregado es mayor que el seleecionado');
-    } else {
-      print('es un valor desconocido');
+      message(context, importAdd, importSelected);
     }
   }
 
-  Future<void> message(BuildContext context) {
+  Future<void> message(BuildContext context, importAdd, importSelected) {
     return showDialog<void>(
       context: context,
       builder: (BuildContext context) {
-        return const AlertDialog(
-            title: Text('Basic dialog title'),
-            insetPadding: EdgeInsets.all(20),
-            content:
-                Text('El importe registrado es mayor al importe asignado'));
+        return AlertDialog(
+          title: null,
+          insetPadding: const EdgeInsets.all(20),
+          content: Text(
+              'El importe agregado de: $importAdd es mayor al importe seleccionado de: $importSelected'),
+        );
       },
     );
   }
@@ -267,7 +186,9 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
                             child: SizedBox(
                               width: double.infinity,
                               child: Text(
-                                e["payment_concept"],
+                                e["payment_concept"] +
+                                    '  \$' +
+                                    e["payment_total"].toString(),
                                 overflow: TextOverflow.ellipsis,
                               ),
                             ),

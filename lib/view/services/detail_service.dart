@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -97,7 +96,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                   Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Container(
-                      height: 420,
+                      height: 500,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         border: Border.all(
@@ -204,7 +203,15 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                               Row(
                                 children: [
                                   Text(
-                                    '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ${snapshot.data!.senderZipCode}',
+                                    '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ',
+                                    style: const TextStyle(color: Colors.white),
+                                  )
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${snapshot.data!.senderZipCode}',
                                     style: const TextStyle(color: Colors.white),
                                   )
                                 ],
@@ -330,29 +337,13 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                           Row(
                             children: <Widget>[
                               Expanded(
-                                child: Column(
-                                  children: <Widget>[
-                                    IconButton(
-                                      icon: const Icon(
-                                        FontAwesomeIcons.clipboardList,
-                                        color: Colors.blue,
-                                      ),
-                                      iconSize: 27.5,
-                                      onPressed: () =>
-                                          _dialogCircleCheck((context)),
-                                    ),
-                                    const Text(
-                                      'Check List',
-                                      style: TextStyle(
-                                          fontSize: 12, color: Colors.black),
-                                    )
-                                  ],
-                                ),
+                                child: checkListF(
+                                    snapshot.data!.isEnableCheckList),
                               ),
                               Expanded(
                                 child: iconStatus(
                                     snapshot.data!.isEnableStatusSupport,
-                                    snapshot.data!.isEnableButton),
+                                    snapshot.data!.isEnableContinueRute),
                               ),
                               const Expanded(
                                 child: Column(
@@ -574,12 +565,17 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             ),
           ),
           actions: [
-            if (buttonStatus == false)
+            if (buttonStatus == true)
               ElevatedButton(
                 onPressed: () {
                   _continueRute(statusSupportId);
                   Navigator.of(context).pop();
                 },
+                style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(20), // <-- Radius
+                    ),
+                    backgroundColor: const Color(0xFF2C522A)),
                 child: const Text('Continuar ruta'),
               ),
           ],
@@ -642,7 +638,13 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                         ? () {
                             confirmationCheckList(context, id);
                           }
-                        : null, //addOptionList(id),
+                        : null,
+                    style: ElevatedButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20), // <-- Radius
+                        ),
+                        backgroundColor:
+                            const Color(0xFF2C522A)), //addOptionList(id),
                     child: const Text('Registrar'),
                   ),
               ],
@@ -685,32 +687,41 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
     );
   }
 
-  void _showBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (context) => SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 200.0),
-          child: Container(
-            child: Column(
-              mainAxisSize: MainAxisSize.max,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: <Widget>[
-                Text(
-                  'This is a Modal bottom sheet!',
-                  style: Theme.of(context).textTheme.headline4,
-                  textAlign: TextAlign.center,
-                ),
-                ElevatedButton(
-                  child: const Text('Close BottomSheet'),
-                  onPressed: () => Navigator.pop(context),
-                )
-              ],
+  checkListF(status) {
+    if (status == true) {
+      return Column(
+        children: <Widget>[
+          IconButton(
+            icon: const Icon(
+              FontAwesomeIcons.clipboardList,
+              color: Colors.blue,
             ),
+            iconSize: 27.5,
+            onPressed: () => _dialogCircleCheck((context)),
           ),
-        ),
-      ),
-    );
+          const Text(
+            'Check List',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          )
+        ],
+      );
+    } else {
+      return const Column(
+        children: <Widget>[
+          IconButton(
+            icon: Icon(
+              FontAwesomeIcons.clipboardList,
+            ),
+            iconSize: 27.5,
+            onPressed: null,
+          ),
+          Text(
+            'Check List',
+            style: TextStyle(fontSize: 12, color: Colors.black),
+          )
+        ],
+      );
+    }
   }
 
   iconStatus(status, buttonStatus) {
@@ -843,7 +854,6 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
   }
 
   Future<void> addStatusSupport({required int value}) async {
-    print(value);
     http.Response response = await Detail.addStatusSupport(id, value, 'begin');
     if (response.statusCode == 200) {
       setState(() {
@@ -894,13 +904,15 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
 
   addOptionList(int id) async {
     http.Response response = await Detail.addOption(id, sumMap);
-    print(response.statusCode);
+
     if (response.statusCode == 200) {
       setState(() {
         _loadData();
       });
-      print('Tu registro se guardo con éxito');
+
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pop();
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pop();
     }
   }

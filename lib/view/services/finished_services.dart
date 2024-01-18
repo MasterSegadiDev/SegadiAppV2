@@ -14,6 +14,7 @@ class FinishServiceList extends StatefulWidget {
   const FinishServiceList({Key? key}) : super(key: key);
 
   @override
+  // ignore: library_private_types_in_public_api
   _FinishServiceList createState() => _FinishServiceList();
 }
 
@@ -39,8 +40,9 @@ class _FinishServiceList extends State<FinishServiceList> {
 
     return Scaffold(
       appBar: AppBar(
-          title: const Text('Remisiones Finalizadas'),
-          backgroundColor: Colors.green),
+        title: const Text('Remisiones Finalizadas'),
+        backgroundColor: const Color(0xFF2C522A),
+      ),
       drawer: const DrawerScreen(),
       body: loading == true
           ? const Center(
@@ -51,6 +53,7 @@ class _FinishServiceList extends State<FinishServiceList> {
               ),
             )
           : ListView.builder(
+              padding: const EdgeInsets.all(10),
               itemCount: services.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
@@ -58,7 +61,7 @@ class _FinishServiceList extends State<FinishServiceList> {
                     sendScreenWidget(services[index].id);
                   },
                   child: Card(
-                    color: Colors.white,
+                    color: const Color(0xFF84A756),
                     borderOnForeground: true,
                     elevation: 10,
                     child: Column(
@@ -68,40 +71,46 @@ class _FinishServiceList extends State<FinishServiceList> {
                           title: Text(
                               'Remision No:  ${services[index].service}',
                               style: const TextStyle(
-                                  color: Colors.black,
+                                  color: Colors.white,
                                   fontWeight: FontWeight.bold)),
                           leading: const Icon(
                             FontAwesomeIcons.truck,
-                            color: Colors.green,
+                            color: Colors.white,
                           ),
                           subtitle: Text(
                             "Cliente: ${services[index].client}",
-                            style: const TextStyle(color: Colors.black),
+                            style: const TextStyle(color: Colors.white),
                           ),
                         ),
                         Row(
                           children: [
                             const Text(
-                              'Carga Origen:  ',
+                              '   Carga Origen:  ',
                               style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                             ),
                             Text(
                               services[index].origin,
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
                         Row(
                           children: [
                             const Text(
-                              'Fecha Carga:  ',
+                              '   Fecha Carga:  ',
                               style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                             ),
                             Text(
                               services[index].loadDate,
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
@@ -112,26 +121,32 @@ class _FinishServiceList extends State<FinishServiceList> {
                         Row(
                           children: [
                             const Text(
-                              'Carga Destino:  ',
+                              '   Carga Destino:  ',
                               style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                             ),
                             Text(
                               services[index].destination,
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
                         Row(
                           children: [
                             const Text(
-                              'Fecha Descarga:  ',
+                              '   Fecha Descarga:  ',
                               style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                             ),
                             Text(
                               services[index].unloadDate,
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
@@ -142,13 +157,16 @@ class _FinishServiceList extends State<FinishServiceList> {
                         Row(
                           children: [
                             const Text(
-                              'Documentador:  ',
+                              '   Documentador:  ',
                               style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold),
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
                             ),
                             Text(
                               services[index].documenter,
-                              style: const TextStyle(fontSize: 14),
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),

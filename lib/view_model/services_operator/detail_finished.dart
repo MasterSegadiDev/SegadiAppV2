@@ -1,14 +1,13 @@
 import 'dart:convert';
-import 'dart:developer';
 
-import 'package:segadi/model/user/UserInformation.dart';
+import 'package:segadi/model/services/detail_finished.dart';
 import 'package:segadi/view_model/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:http/http.dart' as http;
 
-class User {
-  Future<Photo>? getUserPhot() async {
+class Detail {
+  Future<DetailFinished>? getService(int id) async {
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';
@@ -16,16 +15,18 @@ class User {
 
     var response =
         await http.get(Uri.parse(baseURL + route).replace(queryParameters: {
-      'r': 'esegadi/getfoto',
+      'r': 'esegadi/getterminadasdetalle',
       'id': userId.toString(),
+      'service_id': id.toString(),
       'token': token,
     }));
 
-    var data = jsonDecode(response.body);
+    if (response.statusCode == 200) {
+      var result = DetailFinished.fromJson(json.decode(response.body));
 
-    var result = Photo.fromJson(data["photo"] as Map<String, dynamic>);
-    inspect(result);
-
-    return result;
+      return result;
+    } else {
+      throw Exception('Failed to load detail');
+    }
   }
 }

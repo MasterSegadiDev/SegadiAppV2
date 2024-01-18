@@ -26,76 +26,149 @@ class Detail {
 
     if (response.statusCode == 200) {
       var result = DetailService.fromJson(json.decode(response.body));
-      if (result.statusId == 24 && result.type == "begin" ||
-          result.statusId == 22 && result.type == "begin" ||
-          result.statusId == 38 && result.type == "begin" ||
-          result.statusId == 39 && result.type == "begin") {
-        result.isEnableButton = false;
-        result.mandatoryStatus = result.status;
-      }
+      result.isEnableButton = false;
 
-      if (result.nextMandatoryStatusId != 0) {
+      if (result.statusId == 24 && result.type == "begin") {
+        result.isEnableButton = false;
+        result.isEnableContinueRute = true;
+
+        result.isEnableStatusSupport = true;
+        result.isEnableTripClosure = false;
+        result.pendingMoneyChecks = false;
+        result.isEnableCheckList = false;
+
+        result.statusSupportId = 24;
+        result.mandatoryStatusId = result.nextMandatoryStatusId;
+        result.mandatoryStatus = result.nextMandatoryStatus;
+      }
+      if (result.statusId == 22 && result.type == "begin") {
+        result.isEnableButton = false;
+        result.isEnableContinueRute = true;
+
+        result.isEnableStatusSupport = true;
+        result.isEnableTripClosure = false;
+        result.pendingMoneyChecks = false;
+        result.isEnableCheckList = false;
+
+        result.statusSupportId = 22;
+        result.mandatoryStatusId = result.nextMandatoryStatusId;
+        result.mandatoryStatus = result.nextMandatoryStatus;
+      }
+      if (result.statusId == 38 && result.type == "begin") {
+        result.isEnableButton = false;
+        result.isEnableContinueRute = true;
+
+        result.isEnableStatusSupport = true;
+        result.isEnableTripClosure = false;
+        result.pendingMoneyChecks = false;
+        result.isEnableCheckList = false;
+
+        result.statusSupportId = 38;
+        result.mandatoryStatusId = result.nextMandatoryStatusId;
+        result.mandatoryStatus = result.nextMandatoryStatus;
+      }
+      if (result.statusId == 39 && result.type == "begin") {
+        result.isEnableButton = false;
+        result.isEnableContinueRute = true;
+
+        result.statusSupportId = 39;
+        result.isEnableStatusSupport = true;
+        result.isEnableTripClosure = false;
+        result.pendingMoneyChecks = false;
+        result.isEnableCheckList = false;
+
         result.mandatoryStatusId = result.nextMandatoryStatusId;
         result.mandatoryStatus = result.nextMandatoryStatus;
       }
 
-      if (result.statusId != 0 && result.mandatoryStatusId != 0) {
-        result.isEnableStatusSupport = true;
-      }
-
-      if (result.list == null) {
-        result.isEnableButton = false;
-      }
-
-      if (result.list != null) {
-        result.isEnableCheckList = false;
-      }
-
-      if (result.statusId == 23) {
-        result.isEnableTripClosure = true;
-      }
-      if (result.statusId == 23) {
-        result.isEnableRouteFinished = true;
-      }
-
-      if (result.statusId == 24) {
-        result.statusSupportId = 24;
-        result.statusSupport = true;
-      } else if (result.statusId == 22) {
-        result.statusSupportId = 22;
-        result.statusSupport = true;
-      } else if (result.statusId == 38) {
-        result.statusSupportId = 38;
-        result.statusSupport = true;
-      } else if (result.statusId == 39) {
-        result.statusSupportId = 39;
-        result.statusSupport = true;
-      } else {
-        result.statusSupportId = 0;
-        result.statusSupport = false;
-      }
-
-      if (result.statusId == 23) {
-        result.isEnableButton = false;
+      //habilitar check list y deshabilitar los demas botones
+      if (result.statusId == 0 &&
+          result.mandatoryStatusId == 0 &&
+          result.list == null) {
+        print('entraste al check list');
+        result.isEnableStatusSupport = false;
+        result.isEnableTripClosure = false;
+        result.pendingMoneyChecks = false;
+        result.isEnableCheckList = true;
+        result.mandatoryStatusId = result.nextMandatoryStatusId;
+        result.mandatoryStatus = result.nextMandatoryStatus;
       }
 
       if (result.statusId == 0 &&
-          result.serviceClosed == false &&
-          result.remainingEvidences == false) {
-        result.serviceClosed = false;
+          result.mandatoryStatusId == 0 &&
+          result.nextMandatoryStatusId == 2 &&
+          result.list != null) {
+        print('entraste a activar el boton');
+        result.isEnableButton = true;
+        result.isEnableStatusSupport = false;
+        result.isEnableCheckList = false;
+        result.isEnableTripClosure = false;
+        result.pendingMoneyChecks = false;
+
+        result.mandatoryStatusId = result.nextMandatoryStatusId;
+        result.mandatoryStatus = result.nextMandatoryStatus;
       }
 
-      if (result.serviceClosed == false &&
+      if (result.nextMandatoryStatusId! > 2 &&
+          result.list != null &&
+          result.type != "begin") {
+        print(
+            'entro a status mayor a 2 y activar boton y icono status soporte');
+        result.isEnableButton = true;
+        result.isEnableStatusSupport = true;
+        result.isEnableCheckList = false;
+        result.isEnableTripClosure = false;
+        result.pendingMoneyChecks = false;
+        result.mandatoryStatusId = result.nextMandatoryStatusId;
+        result.mandatoryStatus = result.nextMandatoryStatus;
+      }
+
+      if (result.statusId == 23 &&
+          result.mandatoryStatusId == 23 &&
           result.remainingEvidences > 0 &&
-          result.statusId == 23) {
+          result.remainingEvidences <= 3) {
+        print('entraste a bloquear service closed');
+        result.isEnableCheckList = false;
+        result.isEnableStatusSupport = false;
         result.serviceClosed = true;
+        result.pendingMoneyChecks = false;
+        result.mandatoryStatus = result.status;
+
+        result.mandatoryStatusId = result.mandatoryStatusId;
+        result.mandatoryStatus = result.mandatoryStatus;
       }
 
-      if (result.serviceClosed == true && result.remainingEvidences == 0) {
+      if (result.statusId == 23 &&
+          result.mandatoryStatusId == 23 &&
+          result.remainingEvidences == 0 &&
+          result.pendingMoneyChecks == false) {
+        print('entraste a bloquear viaticos');
+        result.isEnableCheckList = false;
+        result.isEnableStatusSupport = false;
         result.serviceClosed = false;
+        result.pendingMoneyChecks = false;
+        result.mandatoryStatus = result.status;
+
+        result.mandatoryStatusId = result.mandatoryStatusId;
+        result.mandatoryStatus = result.mandatoryStatus;
       }
 
-      print(inspect(result));
+      if (result.statusId == 23 &&
+          result.mandatoryStatusId == 23 &&
+          result.remainingEvidences == 0 &&
+          result.pendingMoneyChecks == true) {
+        print('entraste a bloquear viaticos');
+        result.isEnableCheckList = false;
+        result.isEnableStatusSupport = false;
+        result.serviceClosed = false;
+        result.pendingMoneyChecks = true;
+        result.mandatoryStatus = result.status;
+
+        result.mandatoryStatusId = result.mandatoryStatusId;
+        result.mandatoryStatus = result.mandatoryStatus;
+      }
+
+      inspect(result);
       return result;
     } else {
       throw Exception('Failed to load detail');
@@ -155,6 +228,7 @@ class Detail {
     final String token = prefs.getString('token') ?? '';
 
     Map data = {"service_id": serviceId, "status_id": statusId, "token": token};
+    print(data);
 
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}index.php?r=esegadi/estatuspost');
@@ -178,6 +252,8 @@ class Detail {
       "type": type,
       "token": token
     };
+
+    print(data);
 
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}index.php?r=esegadi/estatus-soportepost');

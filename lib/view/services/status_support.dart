@@ -22,12 +22,6 @@ class _CustomDialogState extends State<StatusSupport> {
 
   @override
   Widget build(BuildContext context) {
-    final arguments = (ModalRoute.of(context)?.settings.arguments ??
-        <String, dynamic>{}) as Map;
-
-    late int id = arguments['id'];
-    print(id);
-
     return Scaffold(
       appBar: AppBar(
         title: const Text('Status de soporte'),
@@ -136,6 +130,7 @@ class _CustomDialogState extends State<StatusSupport> {
           child: SizedBox(
             width: 400,
             child: ElevatedButton(
+              // ignore: dead_code
               onPressed: true ? () {} : null,
               //() => addOptionList(id),
               child: const Text('Continuar Ruta'),
@@ -143,22 +138,6 @@ class _CustomDialogState extends State<StatusSupport> {
           ),
         ),
       ],
-      /*<Widget>[
-                          Expanded(
-                            child: SizedBox(
-                              height: 50,
-                              child: ElevatedButton(
-                                onPressed: snapshot.data!.isEnableButton
-                                    ? () {
-                                        addStatus(
-                                            snapshot.data!.mandatoryStatusId!);
-                                      }
-                                    : null,
-                                child: Text(snapshot.data!.mandatoryStatus!),
-                              ),
-                            ),
-                          )
-                        ],*/
     );
   }
 
