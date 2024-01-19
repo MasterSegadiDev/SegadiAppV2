@@ -96,7 +96,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                   Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Container(
-                      height: 430,
+                      height: 530,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         border: Border.all(
@@ -378,18 +378,18 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                 child: iconTravelExpenses(
                                     snapshot.data!.pendingMoneyChecks),
                               ),
-                              const Expanded(
+                              Expanded(
                                 child: Column(
                                   children: <Widget>[
                                     IconButton(
-                                      icon: Icon(
+                                      icon: const Icon(
                                         FontAwesomeIcons.solidFilePdf,
                                         color: Colors.red,
                                       ),
                                       iconSize: 27.5,
-                                      onPressed: null,
+                                      onPressed: () => getPdf(id),
                                     ),
-                                    Text(
+                                    const Text(
                                       'Descargar Servicio',
                                       style: TextStyle(
                                           fontSize: 12, color: Colors.black),
@@ -926,5 +926,9 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
         ),
       ),
     );
+  }
+
+  getPdf(int id) async {
+    await Detail().getPdf(id);
   }
 }
