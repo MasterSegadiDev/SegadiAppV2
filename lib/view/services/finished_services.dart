@@ -40,7 +40,11 @@ class _FinishServiceList extends State<FinishServiceList> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Remisiones Finalizadas'),
+        title: const Text(
+          'Remisiones Finalizadas',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF2C522A),
       ),
       drawer: const DrawerScreen(),
@@ -202,19 +206,19 @@ class _FinishServiceList extends State<FinishServiceList> {
   }
 
   Future<List<ServicesFinished>> getServices() async {
-    int _id = 0;
-    String _token = "";
+    int id = 0;
+    String token = "";
 
     final prefs = await SharedPreferences.getInstance();
-    _id = prefs.getInt('id') ?? 0;
-    _token = prefs.getString('token') ?? '';
+    id = prefs.getInt('id') ?? 0;
+    token = prefs.getString('token') ?? '';
     var route = 'index.php';
 
     var response = await http
         .get(Uri.parse(baseURL + route).replace(queryParameters: {
           'r': 'esegadi/getterminadas',
-          'id': _id.toString(),
-          'token': _token,
+          'id': id.toString(),
+          'token': token,
         }))
         .timeout(const Duration(seconds: 90));
 

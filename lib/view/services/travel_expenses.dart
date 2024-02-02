@@ -46,6 +46,13 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
     listTravelExpenses = await TravelExpensesService().getTravelExpenses(id);
     setState(() {
       loading = false;
+      _loadData();
+    });
+  }
+
+  _loadData() async {
+    setState(() {
+      getDataOption(id);
     });
   }
 
@@ -61,7 +68,11 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
     double totalImport = 0;
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Viaticos'),
+        title: const Text(
+          'Viáticos',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF2C522A),
       ),
       body: Padding(
@@ -165,6 +176,8 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
   void _showBottomSheet(BuildContext context) {
     showModalBottomSheet(
       context: context,
+      isScrollControlled: true,
+      useSafeArea: true,
       builder: (context) => SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(0),
@@ -175,7 +188,7 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
               Padding(
                 padding: const EdgeInsets.all(10.0),
                 child: SizedBox(
-                  width: 380,
+                  //  width: 700,
                   child: Column(
                     children: [
                       DropdownButtonFormField(
@@ -275,7 +288,10 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
                                           20), // <-- Radius
                                     ),
                                     backgroundColor: const Color(0xFF2C522A)),
-                                child: const Text('Agregar'),
+                                child: const Text(
+                                  'Agregar',
+                                  style: TextStyle(color: Colors.white),
+                                ),
                               ),
                             ),
                           )

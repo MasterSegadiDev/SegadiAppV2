@@ -30,7 +30,6 @@ class ServiceViewModel extends ChangeNotifier {
   }
 
   getService() async {
-    print('obteniendo la lista de los servicios');
     setLoading(true);
     var response = await ServicesModel.getServices();
     if (response is Success) {

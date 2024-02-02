@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 import 'package:segadi/model/services/checklist.dart';
+import 'package:segadi/view/home/routes.dart';
 
 import 'package:segadi/view/home/sidebar.dart';
 import 'package:segadi/view/services/travel_expenses.dart';
@@ -75,11 +76,15 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle Remisión'),
+        title: const Text(
+          'Detalle Remisión',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF2C522A),
       ),
       backgroundColor: Colors.white,
-      drawer: const DrawerScreen(),
+      //drawer: const DrawerScreen(),
       body: FutureBuilder<DetailService>(
         future: detail,
         builder: (context, snapshot) {
@@ -90,357 +95,370 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             if (snapshot.data!.list != null) {
               listCked = true;
             }
+
             return Center(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Container(
-                      height: 530,
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        border: Border.all(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Container(
+                        height: 530,
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFF84A756),
+                          ),
                           color: const Color(0xFF84A756),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        color: const Color(0xFF84A756),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        children: [
-                          Column(
-                            children: [
-                              Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'Servicio: ${snapshot.data!.service}',
-                                  style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white),
+                        child: Column(
+                          children: [
+                            Column(
+                              children: [
+                                Align(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'Servicio: ${snapshot.data!.service}',
+                                    style: const TextStyle(
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
                                 ),
-                              ),
-                              const Row(children: [
-                                Text(
-                                  'Remitente',
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white),
-                                )
-                              ]),
-                              const Divider(
-                                height: 15.0,
-                                color: Colors.white,
-                              ),
-                              const Row(
-                                children: [
+                                const Row(children: [
                                   Text(
-                                    'Razon Social:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.senderBusinessName,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Télefono:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.senderPhoneNumber,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Contacto:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.senderName,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Domicilio:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ',
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${snapshot.data!.senderZipCode}',
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Divider(
-                                color: Colors.green,
-                                height: 15.0,
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Destinatario',
+                                    'Remitente',
                                     style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
                                   )
-                                ],
-                              ),
-                              const Divider(
-                                color: Colors.white,
-                                height: 15.0,
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Razón Social:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.recipientBusinessName,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Télefono:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.recipientPhoneNumber,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Contacto:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.recipientName,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Domicilio:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Container(
-                      height: 130,
-                      width: 380,
-                      color: Colors.white,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: checkListF(
-                                    snapshot.data!.isEnableCheckList),
-                              ),
-                              Expanded(
-                                child: iconStatus(
-                                    snapshot.data!.isEnableStatusSupport,
-                                    snapshot.data!.isEnableContinueRute),
-                              ),
-                              const Expanded(
-                                child: Column(
-                                  children: <Widget>[
-                                    IconButton(
-                                      icon: Icon(
-                                        FontAwesomeIcons.mapLocationDot,
-                                        color: Colors.blueAccent,
-                                      ),
-                                      iconSize: 27.5,
-                                      onPressed: null,
-                                    ),
+                                ]),
+                                const Divider(
+                                  height: 15.0,
+                                  color: Colors.white,
+                                ),
+                                const Row(
+                                  children: [
                                     Text(
-                                      'Ruta Sugerida',
+                                      'Razon Social:',
                                       style: TextStyle(
-                                          fontSize: 12, color: Colors.black),
-                                    )
-                                  ],
-                                ),
-                              ),
-                            ],
-                          ),
-                          Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: iconTripClosure(
-                                    snapshot.data!.serviceClosed,
-                                    snapshot.data!.id,
-                                    snapshot.data!.service),
-                              ),
-                              Expanded(
-                                child: iconTravelExpenses(
-                                    snapshot.data!.pendingMoneyChecks),
-                              ),
-                              Expanded(
-                                child: Column(
-                                  children: <Widget>[
-                                    IconButton(
-                                      icon: const Icon(
-                                        FontAwesomeIcons.solidFilePdf,
-                                        color: Colors.red,
-                                      ),
-                                      iconSize: 27.5,
-                                      onPressed: () => getPdf(id),
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
                                     ),
-                                    const Text(
-                                      'Descargar Servicio',
-                                      style: TextStyle(
-                                          fontSize: 12, color: Colors.black),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.senderBusinessName,
+                                      style:
+                                          const TextStyle(color: Colors.white),
                                     )
                                   ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Télefono:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.senderPhoneNumber,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Contacto:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.senderName,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Domicilio:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ',
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 14),
+                                    )
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${snapshot.data!.senderZipCode}',
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Divider(
+                                  color: Colors.green,
+                                  height: 15.0,
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Destinatario',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Divider(
+                                  color: Colors.white,
+                                  height: 15.0,
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Razón Social:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.recipientBusinessName,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Télefono:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.recipientPhoneNumber,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Contacto:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.recipientName,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Domicilio:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}',
+                                      textAlign: TextAlign.center,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      '${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}',
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: SizedBox(
-                      height: 40,
-                      width: 380,
-                      child: Column(
-                        children: [
-                          Row(
-                            children: <Widget>[
-                              Expanded(
-                                child: SizedBox(
-                                  height: 40,
-                                  child: ElevatedButton(
-                                    onPressed: snapshot.data!.isEnableButton
-                                        ? () {
-                                            addStatus(snapshot
-                                                .data!.mandatoryStatusId!);
-                                          }
-                                        : null,
-                                    style: ElevatedButton.styleFrom(
-                                        shape: RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.circular(
-                                              20), // <-- Radius
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Container(
+                        height: 130,
+                        width: 380,
+                        color: Colors.white,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: checkListF(
+                                      snapshot.data!.isEnableCheckList),
+                                ),
+                                Expanded(
+                                  child: iconStatus(
+                                      snapshot.data!.isEnableStatusSupport,
+                                      snapshot.data!.isEnableContinueRute),
+                                ),
+                                const Expanded(
+                                  child: Column(
+                                    children: <Widget>[
+                                      IconButton(
+                                        icon: Icon(
+                                          FontAwesomeIcons.mapLocationDot,
+                                          color: Colors.blueAccent,
                                         ),
-                                        backgroundColor:
-                                            const Color(0xFF2C522A)),
-                                    child:
-                                        Text(snapshot.data!.mandatoryStatus!),
+                                        iconSize: 27.5,
+                                        onPressed: null,
+                                      ),
+                                      Text(
+                                        'Ruta Sugerida',
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.black),
+                                      )
+                                    ],
                                   ),
                                 ),
-                              )
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                            Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: iconTripClosure(
+                                      snapshot.data!.serviceClosed,
+                                      snapshot.data!.id,
+                                      snapshot.data!.service),
+                                ),
+                                Expanded(
+                                  child: iconTravelExpenses(
+                                      snapshot.data!.pendingMoneyChecks),
+                                ),
+                                Expanded(
+                                  child: Column(
+                                    children: <Widget>[
+                                      IconButton(
+                                        icon: const Icon(
+                                          FontAwesomeIcons.solidFilePdf,
+                                          color: Colors.red,
+                                        ),
+                                        iconSize: 27.5,
+                                        onPressed: () => getPdf(id),
+                                      ),
+                                      const Text(
+                                        'Descargar Servicio',
+                                        style: TextStyle(
+                                            fontSize: 12, color: Colors.black),
+                                      )
+                                    ],
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  )
-                ],
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: SizedBox(
+                        height: 40,
+                        width: 380,
+                        child: Column(
+                          children: [
+                            Row(
+                              children: <Widget>[
+                                Expanded(
+                                  child: SizedBox(
+                                    height: 40,
+                                    child: ElevatedButton(
+                                      onPressed: snapshot.data!.isEnableButton
+                                          ? () {
+                                              addStatus(snapshot
+                                                  .data!.mandatoryStatusId!);
+                                            }
+                                          : null,
+                                      style: ElevatedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                                20), // <-- Radius
+                                          ),
+                                          backgroundColor:
+                                              const Color(0xFF2C522A)),
+                                      child:
+                                          Text(snapshot.data!.mandatoryStatus!),
+                                    ),
+                                  ),
+                                )
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    )
+                  ],
+                ),
               ),
             );
           } else if (snapshot.hasError) {
@@ -779,8 +797,16 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             onPressed: status
                 // ignore: dead_code
                 ? () {
-                    Navigator.pushNamed(context, '/trip_closure',
-                        arguments: {'id': id, 'serviceId': service});
+                    /*  Navigator.pushNamed(context, '/trip_closure',
+                        arguments: {'id': id, 'serviceId': service});*/
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => TripClosureScreen(
+                          id: id,
+                        ),
+                      ),
+                    );
                   }
                 : null,
           ),

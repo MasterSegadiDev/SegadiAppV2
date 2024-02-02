@@ -85,16 +85,13 @@ class Detail {
       if (result.statusId == 0 &&
           result.mandatoryStatusId == 0 &&
           result.list == null) {
-        print('entraste al check list');
         result.isEnableStatusSupport = false;
         result.isEnableTripClosure = false;
         result.pendingMoneyChecks = false;
         result.isEnableCheckList = true;
         result.mandatoryStatusId = result.nextMandatoryStatusId;
         result.mandatoryStatus = result.nextMandatoryStatus;
-      }
-
-      if (result.statusId == 0 &&
+      } else if (result.statusId == 0 &&
           result.mandatoryStatusId == 0 &&
           result.nextMandatoryStatusId == 2 &&
           result.list != null) {
@@ -107,9 +104,7 @@ class Detail {
 
         result.mandatoryStatusId = result.nextMandatoryStatusId;
         result.mandatoryStatus = result.nextMandatoryStatus;
-      }
-
-      if (result.nextMandatoryStatusId! > 2 &&
+      } else if (result.nextMandatoryStatusId! > 2 &&
           result.list != null &&
           result.type != "begin") {
         print(
@@ -121,13 +116,11 @@ class Detail {
         result.pendingMoneyChecks = false;
         result.mandatoryStatusId = result.nextMandatoryStatusId;
         result.mandatoryStatus = result.nextMandatoryStatus;
-      }
-
-      if (result.statusId == 23 &&
+      } else if (result.statusId == 23 &&
           result.mandatoryStatusId == 23 &&
-          result.remainingEvidences > 0 &&
-          result.remainingEvidences <= 3) {
-        print('entraste a bloquear service closed');
+          result.nextMandatoryStatusId == 0 &&
+          result.serviceClosed == false) {
+        print('entraste a bloquear service closed false');
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = false;
         result.serviceClosed = true;
@@ -136,14 +129,11 @@ class Detail {
 
         result.mandatoryStatusId = result.mandatoryStatusId;
         result.mandatoryStatus = result.mandatoryStatus;
-      }
-
-      if (result.statusId == 23 &&
+      } else if (result.statusId == 23 &&
           result.mandatoryStatusId == 23 &&
-          result.remainingEvidences == 0 &&
-          result.pendingMoneyChecks == false) {
-        print('entraste a bloquear viaticos con false');
-
+          result.nextMandatoryStatusId == 0 &&
+          result.serviceClosed == true) {
+        print('entraste a bloquear service closed true');
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;
@@ -152,9 +142,22 @@ class Detail {
 
         result.mandatoryStatusId = result.mandatoryStatusId;
         result.mandatoryStatus = result.mandatoryStatus;
-      }
+      } else if (result.statusId == 23 &&
+          result.mandatoryStatusId == 23 &&
+          result.remainingEvidences == 0 &&
+          result.serviceClosed == true &&
+          result.pendingMoneyChecks == false) {
+        print('entraste a bloquear viaticos con false');
 
-      if (result.statusId == 23 &&
+        result.isEnableCheckList = false;
+        result.isEnableStatusSupport = false;
+        result.serviceClosed = true;
+        result.pendingMoneyChecks = false;
+        result.mandatoryStatus = result.status;
+
+        result.mandatoryStatusId = result.mandatoryStatusId;
+        result.mandatoryStatus = result.mandatoryStatus;
+      } else if (result.statusId == 23 &&
           result.mandatoryStatusId == 23 &&
           result.remainingEvidences == 0 &&
           result.pendingMoneyChecks == true) {
@@ -268,14 +271,14 @@ class Detail {
   }
 
   static Future<http.Response> insertImageTripClosure(
-      int serviceId, String image, String serviceIdExtension) async {
+      int serviceId, String image, String extension) async {
     final prefs = await SharedPreferences.getInstance();
     final String token = prefs.getString('token') ?? '';
 
     Map data = {
       "service_id": serviceId,
       "token": token,
-      "document_name": serviceIdExtension,
+      "document_name": extension,
       "document_description": "uso de imagenes con show modal",
       "document_type": "POD",
       "document": image,
@@ -288,6 +291,9 @@ class Detail {
       headers: headers,
       body: body,
     );
+    if (response.statusCode == 200) {
+      print('se inserto la imagen');
+    }
     return response;
   }
 
@@ -306,5 +312,49 @@ class Detail {
     }));
     var data = jsonDecode(response.body.toString());
     print(data);
+  }
+
+  Future getEvidentias(serviceId) async {
+    final prefs = await SharedPreferences.getInstance();
+    var userId = prefs.getInt('id') ?? 0;
+    var token = prefs.getString('token') ?? '';
+    var route = 'index.php';
+
+    var response =
+        await http.get(Uri.parse(baseURL + route).replace(queryParameters: {
+      'r': 'esegadi/getevidenciasfaltantes',
+      'token': token,
+      'id': userId.toString(),
+      'service_id': serviceId.toString(),
+    }));
+
+    if (response.statusCode == 200) {
+      var data = jsonDecode(response.body.toString());
+      return data;
+    }
+  }
+
+  closeTravel(serviceId) async {
+    final prefs = await SharedPreferences.getInstance();
+
+    var token = prefs.getString('token') ?? '';
+
+    Map data = {
+      "service_id": serviceId,
+      "token": token,
+      "close": 1,
+    };
+
+    var body = json.encode(data);
+    var url = Uri.parse('${baseURL}index.php?r=esegadi/cierreevidenciaspost');
+    http.Response response = await http.post(
+      url,
+      headers: headers,
+      body: body,
+    );
+    if (response.statusCode == 200) {
+      print('se cerro la remision');
+    }
+    return response;
   }
 }

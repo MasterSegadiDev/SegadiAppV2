@@ -1,5 +1,8 @@
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 import 'package:segadi/model/user/UserInformation.dart';
+import 'package:segadi/view/home/routes.dart';
 import 'package:segadi/view_model/user/user_information.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -35,7 +38,7 @@ class _DrawerScreen extends State<DrawerScreen> {
   Widget build(BuildContext context) {
     return SafeArea(
       child: SizedBox(
-        width: 280,
+        width: 300,
         child: Drawer(
           backgroundColor: const Color(0xFF2C522A),
           //#84A756
@@ -114,7 +117,13 @@ class _DrawerScreen extends State<DrawerScreen> {
                       style: TextStyle(color: Colors.white),
                     ),
                     onTap: () {
-                      Navigator.pushNamed(context, '/services');
+                      // Navigator.pushNamed(context, '/services');
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ServicesScreen(),
+                        ),
+                      );
                     },
                   ),
                   ListTile(

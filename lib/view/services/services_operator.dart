@@ -41,7 +41,11 @@ class _ServicesScreen extends State<ServicesScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-          title: const Text('Remisiones Asignadas'),
+          title: const Text(
+            'Remisiones Asignadas',
+            style: TextStyle(color: Colors.white),
+          ),
+          iconTheme: const IconThemeData(color: Colors.white),
           backgroundColor: const Color(0xFF2C522A)),
       backgroundColor: Colors.white,
       drawer: const DrawerScreen(),

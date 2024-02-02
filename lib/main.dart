@@ -17,7 +17,6 @@ Future main() async {
 class MyApp extends StatelessWidget {
   const MyApp({Key? key}) : super(key: key);
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -32,9 +31,11 @@ class MyApp extends StatelessWidget {
             ),
         '/detail_service_finished': (context) =>
             const DetailServicesFinishedScreen(id: 0),
-        '/check_list': (context) => const CustomDialog(),
-        '/status_support': (context) => const StatusSupport(),
-        '/trip_closure': (context) => const TripClosureScreen(),
+        //'/check_list': (context) => const Custom(),
+
+        '/trip_closure': (context) => const TripClosureScreen(
+              id: 0,
+            ),
         '/travel_expenses': (context) => const TravelExpensesScreen(id: 0),
       },
     );

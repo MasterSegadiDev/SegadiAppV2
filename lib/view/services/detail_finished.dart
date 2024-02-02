@@ -48,7 +48,11 @@ class _DetailServicesFinishedScreen
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Detalle Remisión'),
+        title: const Text(
+          'Detalle Remision',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF2C522A),
       ),
       drawer: const DrawerScreen(),
@@ -63,7 +67,6 @@ class _DetailServicesFinishedScreen
                   Padding(
                     padding: const EdgeInsets.all(10.0),
                     child: Container(
-                      height: 600,
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         border: Border.all(
@@ -95,14 +98,10 @@ class _DetailServicesFinishedScreen
                                       color: Colors.white),
                                 )
                               ]),
-                              const Divider(
-                                height: 15.0,
-                                color: Colors.white,
-                              ),
                               const Row(
                                 children: [
                                   Text(
-                                    'Razon Social:',
+                                    'Razón Social:',
                                     style: TextStyle(
                                         fontSize: 14,
                                         fontWeight: FontWeight.bold,
@@ -175,10 +174,6 @@ class _DetailServicesFinishedScreen
                                   )
                                 ],
                               ),
-                              const Divider(
-                                color: Colors.green,
-                                height: 15.0,
-                              ),
                               const Row(
                                 children: [
                                   Text(
@@ -189,10 +184,6 @@ class _DetailServicesFinishedScreen
                                         color: Colors.white),
                                   )
                                 ],
-                              ),
-                              const Divider(
-                                color: Colors.white,
-                                height: 15.0,
                               ),
                               const Row(
                                 children: [
@@ -279,10 +270,6 @@ class _DetailServicesFinishedScreen
                                   ),
                                 ],
                               ),
-                              const Divider(
-                                color: Colors.green,
-                                height: 15.0,
-                              ),
                               const Row(
                                 children: [
                                   Text(
@@ -293,10 +280,6 @@ class _DetailServicesFinishedScreen
                                         color: Colors.white),
                                   )
                                 ],
-                              ),
-                              const Divider(
-                                color: Colors.white,
-                                height: 15.0,
                               ),
                               const Row(
                                 children: [

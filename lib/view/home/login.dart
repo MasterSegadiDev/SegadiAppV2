@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+
 import 'package:segadi/view_model/login_local_auth/auth_login.dart';
 import 'package:segadi/view_model/globals.dart';
 
@@ -19,6 +20,7 @@ class LoginScreen extends StatefulWidget {
 class _LoginScreenState extends State<LoginScreen> {
   String username = "";
   String password = "";
+  String name = "";
   String value = "";
   int id = 0;
   String token = "";
@@ -27,6 +29,7 @@ class _LoginScreenState extends State<LoginScreen> {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       username = prefs.getString('username') ?? '';
+      name = prefs.getString('name') ?? '';
       password = prefs.getString('password') ?? '';
       id = prefs.getInt('id') ?? 0;
       token = prefs.getString('token') ?? '';
@@ -56,8 +59,61 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(
                   height: 30,
                 ),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      'Bienvenido',
+                      style: TextStyle(
+                        color: Colors.black,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ],
+                ),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        color: Colors.black,
+                        fontSize: 14.0,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(
+                  height: 30,
+                ),
                 if (username.isNotEmpty && password.isNotEmpty) fingerPrint(),
                 if (username.isEmpty && password.isEmpty) formLoginButton(),
+                /*const Divider(
+                  height: 15.0,
+                  color: Colors.white,
+                ),
+                 Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const FormScreen(),
+                          ),
+                        );
+                      },
+                      child: Text(
+                        'Cambiar de usuario',
+                        style: TextStyle(
+                          color: Colors.black.withOpacity(0.7),
+                          fontSize: 14.0,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),*/
               ],
             ),
           ),
@@ -124,15 +180,15 @@ class _LoginScreenState extends State<LoginScreen> {
         Container(
           clipBehavior: Clip.antiAliasWithSaveLayer,
           width: double.infinity,
-          height: 60,
+          height: 50,
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(100),
           ),
           child: MaterialButton(
             onPressed: () => loginPressed(),
-            color: Colors.green,
+            color: const Color(0xFF2C522A),
             child: const Text(
-              'LOGIN',
+              'Login',
               style: TextStyle(
                 fontSize: 20,
                 color: Colors.white,
@@ -186,10 +242,14 @@ class _LoginScreenState extends State<LoginScreen> {
             padding: const EdgeInsets.only(top: 10, left: 9, bottom: 10),
             shape: const CircleBorder(),
             backgroundColor: Colors.green),
-        icon: Icon(icon, size: 50),
+        icon: Icon(
+          icon,
+          size: 50,
+          color: Colors.white,
+        ),
         label: Text(
           text,
-          style: const TextStyle(fontSize: 20),
+          style: const TextStyle(fontSize: 20, color: Colors.white),
         ),
         onPressed: onClicked,
       );

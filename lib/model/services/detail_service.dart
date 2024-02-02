@@ -10,7 +10,7 @@ DetailService detailServiceFromJson(String str) =>
 String detailServiceToJson(DetailService data) => json.encode(data.toJson());
 
 class DetailService {
-  final int id;
+  final int? id;
   final String service;
   final String senderBusinessName;
   final String senderName;
