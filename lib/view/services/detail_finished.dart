@@ -375,7 +375,10 @@ class _DetailServicesFinishedScreen
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
         elevation: 20.0,
-        child: const Icon(Icons.phone),
+        child: const Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
         onPressed: () {
           // FlutterPhoneDirectCaller.callNumber('+523311364928');
         },

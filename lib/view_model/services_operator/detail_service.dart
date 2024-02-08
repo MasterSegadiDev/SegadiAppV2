@@ -10,12 +10,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Detail {
   Future<DetailService>? getService(int id) async {
-    print(id);
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';
     var route = 'index.php';
-
+    print(id);
     var response =
         await http.get(Uri.parse(baseURL + route).replace(queryParameters: {
       'r': 'esegadi/getdetalle',
@@ -159,8 +158,8 @@ class Detail {
         result.mandatoryStatus = result.mandatoryStatus;
       } else if (result.statusId == 23 &&
           result.mandatoryStatusId == 23 &&
-          result.remainingEvidences == 0 &&
-          result.pendingMoneyChecks == true) {
+          result.serviceClosed == true &&
+          result.pendingMoneyChecks == false) {
         print('entraste para ver los viaticos');
 
         result.isEnableCheckList = false;
@@ -173,7 +172,6 @@ class Detail {
         result.mandatoryStatus = result.mandatoryStatus;
       }
 
-      inspect(result);
       return result;
     } else {
       throw Exception('Failed to load detail');
@@ -233,7 +231,6 @@ class Detail {
     final String token = prefs.getString('token') ?? '';
 
     Map data = {"service_id": serviceId, "status_id": statusId, "token": token};
-    print(data);
 
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}index.php?r=esegadi/estatuspost');
@@ -258,8 +255,6 @@ class Detail {
       "token": token
     };
 
-    print(data);
-
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}index.php?r=esegadi/estatus-soportepost');
     http.Response response = await http.post(
@@ -267,20 +262,21 @@ class Detail {
       headers: headers,
       body: body,
     );
+
     return response;
   }
 
   static Future<http.Response> insertImageTripClosure(
-      int serviceId, String image, String extension) async {
+      int id, String serviceId, String image, String extension) async {
     final prefs = await SharedPreferences.getInstance();
     final String token = prefs.getString('token') ?? '';
 
     Map data = {
-      "service_id": serviceId,
+      "service_id": id,
       "token": token,
-      "document_name": extension,
-      "document_description": "uso de imagenes con show modal",
-      "document_type": "POD",
+      "document_name": serviceId + extension,
+      "document_description": "Evidencia Operador",
+      "document_type": "POD Operador",
       "document": image,
     };
 
@@ -291,9 +287,7 @@ class Detail {
       headers: headers,
       body: body,
     );
-    if (response.statusCode == 200) {
-      print('se inserto la imagen');
-    }
+
     return response;
   }
 
@@ -311,7 +305,6 @@ class Detail {
       'service_id': serviceId.toString(),
     }));
     var data = jsonDecode(response.body.toString());
-    print(data);
   }
 
   Future getEvidentias(serviceId) async {
@@ -352,9 +345,7 @@ class Detail {
       headers: headers,
       body: body,
     );
-    if (response.statusCode == 200) {
-      print('se cerro la remision');
-    }
+
     return response;
   }
 }

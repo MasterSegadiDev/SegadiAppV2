@@ -7,8 +7,6 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/view/home/routes.dart';
 
-import 'package:segadi/view/home/sidebar.dart';
-import 'package:segadi/view/services/travel_expenses.dart';
 import 'package:segadi/view_model/globals.dart';
 import 'package:segadi/view_model/services_operator/detail_service.dart';
 import 'package:segadi/model/services/detail_service.dart';
@@ -36,8 +34,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
   final int id;
 
   late Future<DetailService>? detail;
-  //late Future<DetailService>? _detailService;
-  //bool loadingCheck = true;
+
   final int value = 0;
 
   int statusSupportId = 0;
@@ -62,6 +59,12 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
     if (response.statusCode == 200) {
       _loadData();
     }
+
+    if (response.statusCode == 500) {
+      // ignore: use_build_context_synchronously
+      errorSnackBar(context,
+          'Se ha producido un error interno al insertar el estatus obligatorio.');
+    }
   }
 
   _loadData() async {
@@ -77,7 +80,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Detalle Remisión',
+          'Detalle Remision',
           style: TextStyle(color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -229,7 +232,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   ],
                                 ),
                                 const Divider(
-                                  color: Colors.green,
+                                  color: Colors.transparent,
                                   height: 15.0,
                                 ),
                                 const Row(
@@ -446,8 +449,11 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                           ),
                                           backgroundColor:
                                               const Color(0xFF2C522A)),
-                                      child:
-                                          Text(snapshot.data!.mandatoryStatus!),
+                                      child: Text(
+                                        snapshot.data!.mandatoryStatus!,
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
                                     ),
                                   ),
                                 )
@@ -476,7 +482,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
       builder: (BuildContext context) {
         return AlertDialog(
           title: const Text(
-            '             Registrar Parada',
+            'Registrar Parada',
             style: TextStyle(color: Color(0xFF2C522A)),
           ),
           content: SizedBox(
@@ -484,7 +490,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             height: 300,
             child: GridView.count(
               crossAxisCount: 2,
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(10.0),
               childAspectRatio: 8.0 / 9.0,
               children: <Widget>[
                 GestureDetector(
@@ -594,7 +600,10 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                       borderRadius: BorderRadius.circular(20), // <-- Radius
                     ),
                     backgroundColor: const Color(0xFF2C522A)),
-                child: const Text('Continuar ruta'),
+                child: const Text(
+                  'Continuar ruta',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
           ],
         );
@@ -663,7 +672,10 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                         ),
                         backgroundColor:
                             const Color(0xFF2C522A)), //addOptionList(id),
-                    child: const Text('Registrar'),
+                    child: const Text(
+                      'Registrar',
+                      style: TextStyle(color: Colors.white),
+                    ),
                   ),
               ],
             );
@@ -793,18 +805,13 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
               color: Colors.green,
             ),
             iconSize: 27.5,
-            // onPressed: snapshot.data!.isEnableTripClosure
             onPressed: status
-                // ignore: dead_code
                 ? () {
-                    /*  Navigator.pushNamed(context, '/trip_closure',
-                        arguments: {'id': id, 'serviceId': service});*/
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => TripClosureScreen(
-                          id: id,
-                        ),
+                        builder: (context) =>
+                            TripClosureScreen(id: id, serviceId: service),
                       ),
                     );
                   }
@@ -846,7 +853,6 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
               color: Colors.green,
             ),
             iconSize: 27.5,
-            // onPressed: () => sendTravelExpenses(id),
             onPressed: status
                 ? () {
                     sendTravelExpenses(id);
@@ -886,6 +892,11 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
         _loadData();
       });
     }
+    if (response.statusCode == 500) {
+      // ignore: use_build_context_synchronously
+      errorSnackBar(context,
+          'Se ha producido un error interno al insertar el estatus de soporte inicial en el sistema.');
+    }
   }
 
   Future<void> _continueRute(int statusSupportId) async {
@@ -895,6 +906,12 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
       setState(() {
         _loadData();
       });
+    }
+
+    if (response.statusCode == 500) {
+      // ignore: use_build_context_synchronously
+      errorSnackBar(context,
+          'Se ha producido un error interno al insertar el estatus de soporte final al sistema.');
     }
   }
 
@@ -940,6 +957,11 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
       Navigator.of(context).pop();
       // ignore: use_build_context_synchronously
       Navigator.of(context).pop();
+    }
+
+    if (response.statusCode == 500) {
+      errorSnackBar(context,
+          'Se ha producido un error interno al registrar el check list .');
     }
   }
 

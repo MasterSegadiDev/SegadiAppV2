@@ -35,6 +35,7 @@ class MyApp extends StatelessWidget {
 
         '/trip_closure': (context) => const TripClosureScreen(
               id: 0,
+              serviceId: "",
             ),
         '/travel_expenses': (context) => const TravelExpensesScreen(id: 0),
       },

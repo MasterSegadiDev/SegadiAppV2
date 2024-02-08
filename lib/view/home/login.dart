@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:segadi/view/home/change_user.dart';
 
 import 'package:segadi/view_model/login_local_auth/auth_login.dart';
 import 'package:segadi/view_model/globals.dart';
@@ -88,11 +89,11 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 if (username.isNotEmpty && password.isNotEmpty) fingerPrint(),
                 if (username.isEmpty && password.isEmpty) formLoginButton(),
-                /*const Divider(
+                const Divider(
                   height: 15.0,
                   color: Colors.white,
                 ),
-                 Row(
+                Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextButton(
@@ -113,7 +114,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
-                ),*/
+                ),
               ],
             ),
           ),
@@ -121,7 +122,10 @@ class _LoginScreenState extends State<LoginScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
-        child: const Icon(Icons.phone),
+        child: const Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
         onPressed: () {
           // FlutterPhoneDirectCaller.callNumber('+523311364928');
         },

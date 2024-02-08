@@ -141,7 +141,10 @@ class _MainListHomePage extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
-        child: const Icon(Icons.phone),
+        child: const Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
         onPressed: () {
           // FlutterPhoneDirectCaller.callNumber('+523311364928');
         },

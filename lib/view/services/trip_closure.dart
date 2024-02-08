@@ -13,27 +13,30 @@ import 'package:http/http.dart' as http;
 
 class TripClosureScreen extends StatefulWidget {
   final int id;
+  final String serviceId;
 
   const TripClosureScreen({
     Key? key,
     required this.id,
+    required this.serviceId,
   }) : super(key: key);
 
   @override
   // ignore: library_private_types_in_public_api, no_logic_in_create_state
-  _TripClosureState createState() => _TripClosureState(id);
+  _TripClosureState createState() => _TripClosureState(id, serviceId);
 }
 
 class _TripClosureState extends State<TripClosureScreen> {
-  _TripClosureState(this.id);
+  _TripClosureState(this.id, this.serviceId);
   final int id;
+  final String serviceId;
 
   final ImagePicker imgpicker = ImagePicker();
   String imagepath = "";
 
   File? image;
   String imageEncode = "";
-  String serviceId = "";
+
   int? evidentias;
 
   String exts = "";
@@ -44,19 +47,14 @@ class _TripClosureState extends State<TripClosureScreen> {
 
   getEvidentias(int id) async {
     Map responseMap = await Detail().getEvidentias(id);
-    print(responseMap);
 
     setState(() {
       counter = responseMap["remaining_evidences"];
     });
-  }
-
-  void decrementCounter() {
-    if (counter > 0) {
-      setState(() {
-        counter--;
-      });
-      //getEvidentias(id);
+    if (counter == 0) {
+      closeTravel1(id);
+      _showMyDialog();
+      returnDetailScreen();
     }
   }
 
@@ -94,7 +92,6 @@ class _TripClosureState extends State<TripClosureScreen> {
 
   @override
   Widget build(BuildContext context) {
-    //final evidentias = Provider.of<ServiceViewModel>(context);
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -103,11 +100,11 @@ class _TripClosureState extends State<TripClosureScreen> {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         centerTitle: true,
-        bottom: const PreferredSize(
+        bottom: PreferredSize(
             preferredSize: Size.zero,
             child: Text(
-              'Remisión: ',
-              style: TextStyle(color: Colors.white, fontSize: 15),
+              'Remisión: $serviceId ',
+              style: const TextStyle(color: Colors.white, fontSize: 15),
             )),
         backgroundColor: const Color(0xFF2C522A),
       ),
@@ -118,7 +115,6 @@ class _TripClosureState extends State<TripClosureScreen> {
           mainAxisAlignment: MainAxisAlignment.center,
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            // ignore: unnecessary_null_comparison
             image == null
                 ? const Center()
                 : SizedBox(
@@ -127,7 +123,7 @@ class _TripClosureState extends State<TripClosureScreen> {
                     child: Image.file(image!),
                   ),
             Text(
-                'Para cerrar el viaje puedes capturar maximo ${counter} imagenes'),
+                'Para cerrar el viaje puedes capturar maximo $counter imagenes'),
             if (image != null)
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
@@ -145,7 +141,6 @@ class _TripClosureState extends State<TripClosureScreen> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
-
             TextButton(
               onPressed: () => captureImage(),
               child: const Icon(
@@ -206,7 +201,7 @@ class _TripClosureState extends State<TripClosureScreen> {
               ),
               child: const Text('+ Evidencias'),
               onPressed: () {
-                getValueFalse(id, imageEncode, exts);
+                getValueFalse(id, imageEncode, serviceId, exts);
               },
             ),
             TextButton(
@@ -215,7 +210,7 @@ class _TripClosureState extends State<TripClosureScreen> {
               ),
               child: const Text('Si'),
               onPressed: () {
-                getValueTrue(id, imageEncode, exts);
+                getValueTrue(id, imageEncode, serviceId, exts);
                 Navigator.of(context).pop();
               },
             ),
@@ -225,37 +220,45 @@ class _TripClosureState extends State<TripClosureScreen> {
     );
   }
 
-  getValueTrue(id, imageEncode, exts) async {
+  getValueTrue(id, imageEncode, serviceId, exts) async {
     http.Response response =
-        await Detail.insertImageTripClosure(id, imageEncode, exts);
+        await Detail.insertImageTripClosure(id, serviceId, imageEncode, exts);
 
     if (response.statusCode == 200) {
       closeTravel1(id);
-
-      // ignore: use_build_context_synchronously
-      Navigator.of(context, rootNavigator: true).pop();
-
-      // ignore: use_build_context_synchronously
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (BuildContext context) => DetailServicesScreen(
-            id: id,
-          ),
-        ),
-      );
+      _showMyDialog();
+      returnDetailScreen();
     }
   }
 
-  getValueFalse(id, imageEncode, exts) async {
+  getValueFalse(id, imageEncode, serviceId, exts) async {
     http.Response response =
-        await Detail.insertImageTripClosure(id, imageEncode, exts);
-    Navigator.of(context).pop();
+        await Detail.insertImageTripClosure(id, serviceId, imageEncode, exts);
+    if (response.statusCode == 200) {
+      setState(() {
+        image = null;
+        imageEncode = "";
+      });
+      getEvidentias(id);
+      Navigator.of(context).pop();
+    }
   }
 
   Future<http.Response> closeTravel1(id) async {
     http.Response response = await Detail().closeTravel(id);
 
     return response;
+  }
+
+  void returnDetailScreen() {
+    Navigator.of(context, rootNavigator: true).pop();
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (BuildContext context) => DetailServicesScreen(
+          id: id,
+        ),
+      ),
+    );
   }
 }

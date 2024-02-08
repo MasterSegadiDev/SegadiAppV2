@@ -38,8 +38,7 @@ class TravelExpensesService {
     var data = [];
 
     final response = await http.get(
-      Uri.parse("http://198.251.68.42/DesarrolloSEGADI/web/index.php")
-          .replace(queryParameters: {
+      Uri.parse('${baseURL}index.php').replace(queryParameters: {
         'r': 'esegadi/getcomprobaciones',
         'id': userId.toString(),
         'id_remision': id.toString(),

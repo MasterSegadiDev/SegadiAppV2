@@ -7,9 +7,10 @@ import 'package:segadi/view/services/detail_service.dart';
 
 import 'package:segadi/view/home/sidebar.dart';
 import 'package:segadi/model/services/services.dart';
-
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:segadi/view_model/globals.dart';
+import 'package:segadi/view_model/services_operator/assigned_services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:http/http.dart' as http;
 
 class ServicesScreen extends StatefulWidget {
@@ -28,13 +29,40 @@ class _ServicesScreen extends State<ServicesScreen> {
 
   @override
   void initState() {
-    super.initState();
-
     getServices().then((value) {
       setState(() {
         loading = false;
       });
     });
+  }
+
+  Future<List<Services>> getServices() async {
+    int id;
+    String token;
+
+    final prefs = await SharedPreferences.getInstance();
+    id = prefs.getInt('id') ?? 0;
+    token = prefs.getString('token') ?? '';
+    var route = 'index.php';
+
+    var response = await http
+        .get(Uri.parse(baseURL + route).replace(queryParameters: {
+          'r': 'esegadi/getactivas',
+          'id': id.toString(),
+          'token': token,
+        }))
+        .timeout(const Duration(seconds: 90));
+    var data = jsonDecode(response.body.toString());
+
+    if (response.statusCode == 200) {
+      for (Map<String, dynamic> index in data) {
+        services.add(Services.fromJson(index));
+      }
+
+      return services;
+    } else {
+      return services;
+    }
   }
 
   @override
@@ -187,7 +215,10 @@ class _ServicesScreen extends State<ServicesScreen> {
             ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
-        child: const Icon(Icons.phone),
+        child: const Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
         onPressed: () {
           // FlutterPhoneDirectCaller.callNumber('+523311364928');
         },
@@ -204,34 +235,5 @@ class _ServicesScreen extends State<ServicesScreen> {
         ),
       ),
     );
-  }
-
-  Future<List<Services>> getServices() async {
-    int id;
-    String token;
-
-    final prefs = await SharedPreferences.getInstance();
-    id = prefs.getInt('id') ?? 0;
-    token = prefs.getString('token') ?? '';
-    var route = 'index.php';
-
-    var response = await http
-        .get(Uri.parse(baseURL + route).replace(queryParameters: {
-          'r': 'esegadi/getactivas',
-          'id': id.toString(),
-          'token': token,
-        }))
-        .timeout(const Duration(seconds: 90));
-    var data = jsonDecode(response.body.toString());
-
-    if (response.statusCode == 200) {
-      for (Map<String, dynamic> index in data) {
-        services.add(Services.fromJson(index));
-      }
-
-      return services;
-    } else {
-      return services;
-    }
   }
 }

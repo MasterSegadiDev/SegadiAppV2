@@ -24,7 +24,6 @@ class User {
     var data = jsonDecode(response.body);
 
     var result = Photo.fromJson(data["photo"] as Map<String, dynamic>);
-    inspect(result);
 
     return result;
   }

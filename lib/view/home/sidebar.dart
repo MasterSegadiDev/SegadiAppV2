@@ -1,5 +1,3 @@
-import 'dart:developer';
-
 import 'package:flutter/material.dart';
 import 'package:segadi/model/user/UserInformation.dart';
 import 'package:segadi/view/home/routes.dart';
@@ -117,7 +115,6 @@ class _DrawerScreen extends State<DrawerScreen> {
                       style: TextStyle(color: Colors.white),
                     ),
                     onTap: () {
-                      // Navigator.pushNamed(context, '/services');
                       Navigator.push(
                         context,
                         MaterialPageRoute(
