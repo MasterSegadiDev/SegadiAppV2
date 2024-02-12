@@ -201,6 +201,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.7"
+  dio:
+    dependency: "direct main"
+    description:
+      name: dio
+      sha256: "7d328c4d898a61efc3cd93655a0955858e29a0aa647f0f9e02d59b3bb275e2e8"
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.6"
   encrypt:
     dependency: transitive
     description:
@@ -289,11 +297,27 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.1.0"
+  flowder:
+    dependency: "direct main"
+    description:
+      name: flowder
+      sha256: ec90f4fbd551e334f8d992088212b29ad257f0877dcdbffea4bfbdb9c800fb5a
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.2.0"
   flutter:
     dependency: "direct main"
     description: flutter
     source: sdk
     version: "0.0.0"
+  flutter_file_downloader:
+    dependency: "direct main"
+    description:
+      name: flutter_file_downloader
+      sha256: e36f1a23937c83b96003ecc48f3227acbd468a1ff26be87959cecd057222632a
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.2.1"
   flutter_lints:
     dependency: "direct dev"
     description:
@@ -584,6 +608,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.0"
+  open_file:
+    dependency: "direct main"
+    description:
+      name: open_file
+      sha256: a5a32d44acb7c899987d0999e1e3cbb0a0f1adebbf41ac813ec6d2d8faa0af20
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.3.2"
   package_config:
     dependency: transitive
     description:
@@ -608,6 +640,30 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.0.1"
+  path_provider:
+    dependency: "direct main"
+    description:
+      name: path_provider
+      sha256: b27217933eeeba8ff24845c34003b003b2b22151de3c908d0e679e8fe1aa078b
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.1.2"
+  path_provider_android:
+    dependency: transitive
+    description:
+      name: path_provider_android
+      sha256: "477184d672607c0a3bf68fbbf601805f92ef79c82b64b4d6eb318cbca4c48668"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.2.2"
+  path_provider_foundation:
+    dependency: transitive
+    description:
+      name: path_provider_foundation
+      sha256: "5a7999be66e000916500be4f15a3633ebceb8302719b47b9cc49ce924125350f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.3.2"
   path_provider_linux:
     dependency: transitive
     description:
@@ -632,6 +688,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.2.1"
+  percent_indicator:
+    dependency: "direct main"
+    description:
+      name: percent_indicator
+      sha256: c37099ad833a883c9d71782321cb65c3a848c21b6939b6185f0ff6640d05814c
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.2.3"
   petitparser:
     dependency: transitive
     description:

@@ -1,8 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:path_provider/path_provider.dart';
 
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/view/home/routes.dart';
@@ -33,6 +36,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
   _DetailServicesScreen(this.id);
   final int id;
 
+  String numRemision = "";
+
   late Future<DetailService>? detail;
 
   final int value = 0;
@@ -43,9 +48,12 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
 
   bool listCked = false;
 
+  late final String path;
+
   @override
   void initState() {
     super.initState();
+
     detail = Detail().getService(id);
     getCheckList().then((value) {
       setState(() {
@@ -98,6 +106,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             if (snapshot.data!.list != null) {
               listCked = true;
             }
+
+            numRemision = snapshot.data!.service;
 
             return Center(
               child: SingleChildScrollView(
@@ -157,8 +167,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   children: [
                                     Text(
                                       snapshot.data!.senderBusinessName,
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12),
                                     )
                                   ],
                                 ),
@@ -177,8 +187,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   children: [
                                     Text(
                                       snapshot.data!.senderPhoneNumber,
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12),
                                     )
                                   ],
                                 ),
@@ -197,8 +207,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   children: [
                                     Text(
                                       snapshot.data!.senderName,
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12),
                                     )
                                   ],
                                 ),
@@ -218,7 +228,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                     Text(
                                       '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ',
                                       style: const TextStyle(
-                                          color: Colors.white, fontSize: 14),
+                                          color: Colors.white, fontSize: 12),
                                     )
                                   ],
                                 ),
@@ -226,8 +236,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   children: [
                                     Text(
                                       '${snapshot.data!.senderZipCode}',
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12),
                                     )
                                   ],
                                 ),
@@ -253,7 +263,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                 const Row(
                                   children: [
                                     Text(
-                                      'Razón Social:',
+                                      'Razon Social:',
                                       style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
@@ -265,8 +275,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   children: [
                                     Text(
                                       snapshot.data!.recipientBusinessName,
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12),
                                     )
                                   ],
                                 ),
@@ -285,8 +295,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   children: [
                                     Text(
                                       snapshot.data!.recipientPhoneNumber,
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12),
                                     )
                                   ],
                                 ),
@@ -305,8 +315,8 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                   children: [
                                     Text(
                                       snapshot.data!.recipientName,
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12),
                                     )
                                   ],
                                 ),
@@ -323,20 +333,28 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                 ),
                                 Row(
                                   children: [
-                                    Text(
+                                    /* Text(
                                       '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}',
                                       textAlign: TextAlign.center,
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12),
+                                    ),*/
+                                    FittedBox(
+                                        fit: BoxFit.fitWidth,
+                                        child: Text(
+                                          '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}',
+                                          style: const TextStyle(
+                                              color: Colors.white,
+                                              fontSize: 12),
+                                        )),
                                   ],
                                 ),
                                 Row(
                                   children: [
                                     Text(
                                       '${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}',
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      style: const TextStyle(
+                                          color: Colors.white, fontSize: 12),
                                     ),
                                   ],
                                 ),
@@ -960,6 +978,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
     }
 
     if (response.statusCode == 500) {
+      // ignore: use_build_context_synchronously
       errorSnackBar(context,
           'Se ha producido un error interno al registrar el check list .');
     }
@@ -977,6 +996,20 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
   }
 
   getPdf(int id) async {
-    await Detail().getPdf(id);
+    var res = await Detail().getPdf(id);
+
+    if (res == null) {
+      // ignore: use_build_context_synchronously
+      warningSnackBar(context, 'La remision a un no tiene el CFDI creado');
+    } else {
+      String rest = res["url"];
+
+      String name = "CFDI Remision: $numRemision";
+      FileDownloader.downloadFile(
+        url: rest,
+        name: name,
+        notificationType: NotificationType.all,
+      );
+    }
   }
 }

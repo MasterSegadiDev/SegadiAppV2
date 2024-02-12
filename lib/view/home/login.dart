@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
-import 'package:segadi/view/home/change_user.dart';
 
 import 'package:segadi/view_model/login_local_auth/auth_login.dart';
 import 'package:segadi/view_model/globals.dart';
@@ -58,7 +57,7 @@ class _LoginScreenState extends State<LoginScreen> {
               children: [
                 Image.asset("assets/images/logo1.png"),
                 const SizedBox(
-                  height: 30,
+                  height: 15,
                 ),
                 const Row(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -85,15 +84,17 @@ class _LoginScreenState extends State<LoginScreen> {
                   ],
                 ),
                 const SizedBox(
-                  height: 30,
+                  height: 15,
                 ),
-                if (username.isNotEmpty && password.isNotEmpty) fingerPrint(),
-                if (username.isEmpty && password.isEmpty) formLoginButton(),
+                //if (username.isNotEmpty && password.isNotEmpty) fingerPrint(),
+                //if (username.isEmpty && password.isEmpty) formLoginButton(),
+                formLoginButton(),
+                fingerPrint(),
                 const Divider(
                   height: 15.0,
                   color: Colors.white,
                 ),
-                Row(
+                /* Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     TextButton(
@@ -114,7 +115,7 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                     ),
                   ],
-                ),
+                ),*/
               ],
             ),
           ),
@@ -162,21 +163,6 @@ class _LoginScreenState extends State<LoginScreen> {
           onChanged: (value) {
             password = value;
           },
-        ),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            TextButton(
-              onPressed: () {},
-              child: Text(
-                'Has olvidado tu contraseña ?',
-                style: TextStyle(
-                  color: Colors.black.withOpacity(0.7),
-                  fontSize: 12.0,
-                ),
-              ),
-            ),
-          ],
         ),
         const SizedBox(
           height: 15,
@@ -245,7 +231,7 @@ class _LoginScreenState extends State<LoginScreen> {
             minimumSize: const Size.fromHeight(60),
             padding: const EdgeInsets.only(top: 10, left: 9, bottom: 10),
             shape: const CircleBorder(),
-            backgroundColor: Colors.green),
+            backgroundColor: const Color(0xFF2C522A)),
         icon: Icon(
           icon,
           size: 50,
@@ -261,26 +247,56 @@ class _LoginScreenState extends State<LoginScreen> {
   loginPressed() async {
     if (username.isNotEmpty) {
       if (password.isNotEmpty) {
-        http.Response response = await AuthServices.login(username, password);
-        Map responseMap = jsonDecode(response.body);
+        final prefs = await SharedPreferences.getInstance();
+        var usernameStorage = prefs.getString('username') ?? '';
+        var passwordStorage = prefs.getString('password') ?? '';
 
-        if (response.statusCode == 200) {
+        if (username == usernameStorage && password == passwordStorage) {
+          http.Response response = await AuthServices.login(username, password);
+          Map responseMap = jsonDecode(response.body);
+
+          if (response.statusCode == 200) {
+            final prefs = await SharedPreferences.getInstance();
+            // prefs.setInt('id', responseMap["user"]['id']);
+
+            // prefs.setString('username', username);
+            // prefs.setString('password', password);
+
+            prefs.setString('name', responseMap["user"]['name']);
+            prefs.setString('email', responseMap["user"]['email']);
+            prefs.setString('token', responseMap['token']);
+
+            // ignore: use_build_context_synchronously
+            Navigator.pushNamed(context, '/home_page');
+          } else if (response.statusCode == 401) {
+            // ignore: use_build_context_synchronously
+            errorSnackBar(context, responseMap['error_message']);
+          }
+        } else {
           final prefs = await SharedPreferences.getInstance();
-          prefs.setInt('id', responseMap["user"]['id']);
+          await prefs.clear();
 
-          prefs.setString('username', username);
-          prefs.setString('password', password);
+          http.Response response = await AuthServices.login(username, password);
+          print(response.statusCode);
+          Map responseMap = jsonDecode(response.body);
 
-          prefs.setString('name', responseMap["user"]['name']);
-          prefs.setString('email', responseMap["user"]['email']);
-          prefs.setString('token', responseMap['token']);
+          if (response.statusCode == 200) {
+            final prefs = await SharedPreferences.getInstance();
+            prefs.setInt('id', responseMap["user"]['id']);
 
-          // ignore: use_build_context_synchronously
-          Navigator.pushNamed(context, '/home_page');
-        }
-        if (response.statusCode == 401) {
-          // ignore: use_build_context_synchronously
-          errorSnackBar(context, responseMap['error_message']);
+            prefs.setString('username', username);
+            prefs.setString('password', password);
+
+            prefs.setString('name', responseMap["user"]['name']);
+            prefs.setString('email', responseMap["user"]['email']);
+            prefs.setString('token', responseMap['token']);
+
+            // ignore: use_build_context_synchronously
+            Navigator.pushNamed(context, '/home_page');
+          } else if (response.statusCode == 401) {
+            // ignore: use_build_context_synchronously
+            errorSnackBar(context, responseMap['error_message']);
+          }
         }
       } else {
         errorSnackBar(context, 'El campo Contraseña es requerido');

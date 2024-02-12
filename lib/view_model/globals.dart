@@ -35,6 +35,28 @@ errorSnackBar(BuildContext context, String text) {
   );
 }
 
+warningSnackBar(BuildContext context, String text) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Hay un problema"),
+      content: Text(text),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(ctx).pop();
+          },
+          child: Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(14),
+            child: const Text("OK"),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 successSnackBar(BuildContext context, String text) {
   showDialog(
     context: context,

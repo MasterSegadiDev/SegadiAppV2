@@ -53,8 +53,19 @@ class _TripClosureState extends State<TripClosureScreen> {
     });
     if (counter == 0) {
       closeTravel1(id);
-      _showMyDialog();
-      returnDetailScreen();
+      //_showMyDialog();
+      //returnDetailScreen();
+      // ignore: use_build_context_synchronously
+      Navigator.of(context, rootNavigator: true).pop();
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext context) => DetailServicesScreen(
+            id: id,
+          ),
+        ),
+      );
     }
   }
 
@@ -226,8 +237,19 @@ class _TripClosureState extends State<TripClosureScreen> {
 
     if (response.statusCode == 200) {
       closeTravel1(id);
-      _showMyDialog();
-      returnDetailScreen();
+      // _showMyDialog();
+      // returnDetailScreen();
+      // ignore: use_build_context_synchronously
+      Navigator.of(context, rootNavigator: true).pop();
+      // ignore: use_build_context_synchronously
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+          builder: (BuildContext context) => DetailServicesScreen(
+            id: id,
+          ),
+        ),
+      );
     }
   }
 
