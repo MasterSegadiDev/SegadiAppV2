@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:segadi/model/user/UserInformation.dart';
 import 'package:segadi/view_model/globals.dart';

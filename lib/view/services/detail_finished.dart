@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/model/services/detail_finished.dart';
 import 'package:segadi/view/home/sidebar.dart';
+import 'package:segadi/view_model/login_local_auth/auth_login.dart';
 
 import 'package:segadi/view_model/services_operator/detail_finished.dart';
 
@@ -61,6 +63,7 @@ class _DetailServicesFinishedScreen
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             serviceId = snapshot.data!.id;
+            // var userRoll = 'NO';
             return Center(
               child: Column(
                 children: [
@@ -270,93 +273,108 @@ class _DetailServicesFinishedScreen
                                   ),
                                 ],
                               ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Comisiones',
-                                    style: TextStyle(
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Comisión Total:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.paymentTotal,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Total Asignado:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.allowanceTotal,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Viaticos Comprobados:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.allowanceChecked,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Diferencia de viaticos:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.allowanceDifference,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
+                              if (snapshot.data!.userRoll == false)
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Comisiones',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                              if (snapshot.data!.userRoll == false)
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Comisión Total:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              if (snapshot.data!.userRoll == false)
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.paymentTotal.toString(),
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              if (snapshot.data!.userRoll == false)
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Total Asignado:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              if (snapshot.data!.userRoll == false)
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.allowanceTotal.toString(),
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              if (snapshot.data!.userRoll == false)
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Viaticos Comprobados:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              if (snapshot.data!.userRoll == false)
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.allowanceChecked
+                                          .toString(),
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              if (snapshot.data!.userRoll == false)
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Diferencia de viaticos:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                              if (snapshot.data!.userRoll == false)
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.allowanceDifference
+                                          .toString(),
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    ),
+                                  ],
+                                ),
                             ],
                           ),
                         ],
@@ -380,9 +398,21 @@ class _DetailServicesFinishedScreen
           color: Colors.white,
         ),
         onPressed: () {
-          // FlutterPhoneDirectCaller.callNumber('+523311364928');
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+          alert();
         },
       ),
     );
+  }
+
+  // ignore: non_constant_identifier_names
+  Widget Comitions(snapshot) {
+    return const Column(
+      children: [],
+    );
+  }
+
+  void alert() async {
+    await AuthServices.alert();
   }
 }

@@ -5,11 +5,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:segadi/view/services/detail_service.dart';
+import 'package:segadi/view_model/login_local_auth/auth_login.dart';
 import 'dart:io';
 
 import '../../view_model/services_operator/detail_service.dart';
 
 import 'package:http/http.dart' as http;
+
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 
 class TripClosureScreen extends StatefulWidget {
   final int id;
@@ -58,14 +61,12 @@ class _TripClosureState extends State<TripClosureScreen> {
       // ignore: use_build_context_synchronously
       Navigator.of(context, rootNavigator: true).pop();
       // ignore: use_build_context_synchronously
-      Navigator.pushReplacement(
+      /*Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-          builder: (BuildContext context) => DetailServicesScreen(
-            id: id,
-          ),
+          builder: (BuildContext context) => DetailServicesScreen(id: id),
         ),
-      );
+      );*/
     }
   }
 
@@ -170,29 +171,10 @@ class _TripClosureState extends State<TripClosureScreen> {
           color: Colors.white,
         ),
         onPressed: () {
-          // FlutterPhoneDirectCaller.callNumber('+523311364928');
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+          alert();
         },
       ),
-    );
-  }
-
-  Future<void> _showMyDialog() async {
-    return showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (BuildContext context) {
-        return const AlertDialog(
-          title: Text('Cierre de viaje exitoso'),
-          content: SingleChildScrollView(
-            child: ListBody(
-              children: <Widget>[
-                Text(
-                    'Has enviado las evidencias necesarias para comprobar tu cierre de viaje'),
-              ],
-            ),
-          ),
-        );
-      },
     );
   }
 
@@ -243,6 +225,7 @@ class _TripClosureState extends State<TripClosureScreen> {
       Navigator.of(context, rootNavigator: true).pop();
       // ignore: use_build_context_synchronously
       Navigator.pushReplacement(
+        // ignore: use_build_context_synchronously
         context,
         MaterialPageRoute(
           builder: (BuildContext context) => DetailServicesScreen(
@@ -260,8 +243,11 @@ class _TripClosureState extends State<TripClosureScreen> {
       setState(() {
         image = null;
         imageEncode = "";
+        imagepath = "";
+        exts = "";
       });
       getEvidentias(id);
+      // ignore: use_build_context_synchronously
       Navigator.of(context).pop();
     }
   }
@@ -272,15 +258,7 @@ class _TripClosureState extends State<TripClosureScreen> {
     return response;
   }
 
-  void returnDetailScreen() {
-    Navigator.of(context, rootNavigator: true).pop();
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (BuildContext context) => DetailServicesScreen(
-          id: id,
-        ),
-      ),
-    );
+  void alert() async {
+    await AuthServices.alert();
   }
 }

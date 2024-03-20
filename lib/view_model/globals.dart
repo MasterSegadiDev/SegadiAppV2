@@ -1,11 +1,7 @@
 import 'package:flutter/material.dart';
 
-const String baseURL = 'http://198.251.68.42/DesarrolloSEGADI/web/';
-//const String baseURL = 'http://198.251.68.42/SEGADI/web/';
-
-// ignore: constant_identifier_names
-const String REFERRAL_LIST =
-    "http://198.251.68.42/DesarrolloSEGADI/web/index.php";
+//const String baseURL = 'http://198.251.68.42/DesarrolloSEGADI/web/';
+const String baseURL = 'http://198.251.68.42/SEGADI/web/';
 
 //const String baseURL = 'http://10.0.2.2:8000/api/';
 const Map<String, String> headers = {
@@ -17,7 +13,7 @@ errorSnackBar(BuildContext context, String text) {
   showDialog(
     context: context,
     builder: (ctx) => AlertDialog(
-      title: const Text("Error"),
+      title: const Text("Ha ocurrido un error inesperado"),
       content: Text(text),
       actions: <Widget>[
         TextButton(

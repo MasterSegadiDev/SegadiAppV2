@@ -9,6 +9,8 @@ import 'package:segadi/view_model/globals.dart';
 import 'package:segadi/view_model/login_local_auth/biometric_authentication.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+
 class LoginScreen extends StatefulWidget {
   const LoginScreen({Key? key}) : super(key: key);
 
@@ -25,12 +27,17 @@ class _LoginScreenState extends State<LoginScreen> {
   int id = 0;
   String token = "";
 
+  //String usernamePrefs = "";
+  //String passwordPrefs = "";
+
+  late bool _passwordVisible;
+
   void _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
-      username = prefs.getString('username') ?? '';
+      //  usernamePrefs = prefs.getString('username') ?? '';
       name = prefs.getString('name') ?? '';
-      password = prefs.getString('password') ?? '';
+      //  passwordPrefs = prefs.getString('password') ?? '';
       id = prefs.getInt('id') ?? 0;
       token = prefs.getString('token') ?? '';
     });
@@ -40,6 +47,7 @@ class _LoginScreenState extends State<LoginScreen> {
   void initState() {
     super.initState();
     _loadPreferences();
+    _passwordVisible = false;
   }
 
   @override
@@ -47,6 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF2C522A),
+        iconTheme: const IconThemeData(color: Color(0xFF2C522A)),
       ),
       backgroundColor: Colors.white,
       body: Padding(
@@ -86,36 +95,12 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(
                   height: 15,
                 ),
-                //if (username.isNotEmpty && password.isNotEmpty) fingerPrint(),
-                //if (username.isEmpty && password.isEmpty) formLoginButton(),
                 formLoginButton(),
                 fingerPrint(),
                 const Divider(
                   height: 15.0,
                   color: Colors.white,
                 ),
-                /* Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const FormScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'Cambiar de usuario',
-                        style: TextStyle(
-                          color: Colors.black.withOpacity(0.7),
-                          fontSize: 14.0,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),*/
               ],
             ),
           ),
@@ -128,7 +113,9 @@ class _LoginScreenState extends State<LoginScreen> {
           color: Colors.white,
         ),
         onPressed: () {
-          // FlutterPhoneDirectCaller.callNumber('+523311364928');
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+          //FlutterPhoneDirectCaller.callNumber('+523318817103');
+          alert();
         },
       ),
     );
@@ -152,13 +139,29 @@ class _LoginScreenState extends State<LoginScreen> {
           height: 20,
         ),
         TextFormField(
-          keyboardType: TextInputType.visiblePassword,
-          obscureText: true,
-          decoration: const InputDecoration(
-            labelText: 'Contraseña',
-            border: OutlineInputBorder(),
-            prefixIcon: Icon(Icons.lock),
-            suffixIcon: Icon(Icons.remove_red_eye),
+          keyboardType: TextInputType.text,
+          //controller: _userPasswordController,
+          obscureText: !_passwordVisible, //This will obscure text dynamically
+          decoration: InputDecoration(
+            //labelText: 'Usuario',
+            border: const OutlineInputBorder(),
+            prefixIcon: const Icon(Icons.lock),
+
+            hintText: 'Contraseña',
+            // Here is key idea
+            suffixIcon: IconButton(
+              icon: Icon(
+                // Based on passwordVisible state choose the icon
+                _passwordVisible ? Icons.visibility : Icons.visibility_off,
+                color: Theme.of(context).primaryColorDark,
+              ),
+              onPressed: () {
+                // Update the state i.e. toogle the state of passwordVisible variable
+                setState(() {
+                  _passwordVisible = !_passwordVisible;
+                });
+              },
+            ),
           ),
           onChanged: (value) {
             password = value;
@@ -200,26 +203,42 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget buildAuthenticate(BuildContext context) => buildButton(
-        text: '',
-        icon: Icons.fingerprint,
-        onClicked: () async {
-          final isAuthenticated = await localAuth.authenticate();
+      text: '',
+      icon: Icons.fingerprint,
+      onClicked: () async {
+        final isAuthenticated = await localAuth.authenticate();
 
-          if (isAuthenticated) {
+        if (isAuthenticated) {
+          final prefs = await SharedPreferences.getInstance();
+          var usernamePrefs = prefs.getString('username') ?? '';
+          var passwordPrefs = prefs.getString('password') ?? '';
+
+          if (usernamePrefs.isEmpty || passwordPrefs.isEmpty) {
+            String text =
+                'Necesitas iniciar session con tu usuario y contraseña';
+            errorSnackBar(context, text);
+          } else {
             http.Response response =
-                await AuthServices.login(username, password);
+                await AuthServices.login(usernamePrefs, passwordPrefs);
             Map responseMap = jsonDecode(response.body);
 
-            if (response.statusCode == 200) {
+            if (response.statusCode == 401) {
+              String text =
+                  "Necesitas loguearte con tu usuario y contraseña primero";
+              // ignore: use_build_context_synchronously
+              errorSnackBar(context, text);
+            } else if (response.statusCode == 200) {
               final prefs = await SharedPreferences.getInstance();
               prefs.setString('token', responseMap['token']);
               prefs.setInt('id', responseMap['user']['id']);
+              prefs.setString(
+                  'user_roll', responseMap['user']['empleado_permisionario']);
               // ignore: use_build_context_synchronously
               Navigator.pushNamed(context, '/home_page');
             }
           }
-        },
-      );
+        }
+      });
 
   Widget buildButton({
     required String text,
@@ -257,14 +276,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
           if (response.statusCode == 200) {
             final prefs = await SharedPreferences.getInstance();
-            // prefs.setInt('id', responseMap["user"]['id']);
-
-            // prefs.setString('username', username);
-            // prefs.setString('password', password);
 
             prefs.setString('name', responseMap["user"]['name']);
             prefs.setString('email', responseMap["user"]['email']);
             prefs.setString('token', responseMap['token']);
+            prefs.setString(
+                'user_roll', responseMap['user']['empleado_permisionario']);
 
             // ignore: use_build_context_synchronously
             Navigator.pushNamed(context, '/home_page');
@@ -273,11 +290,8 @@ class _LoginScreenState extends State<LoginScreen> {
             errorSnackBar(context, responseMap['error_message']);
           }
         } else {
-          final prefs = await SharedPreferences.getInstance();
-          await prefs.clear();
-
           http.Response response = await AuthServices.login(username, password);
-          print(response.statusCode);
+
           Map responseMap = jsonDecode(response.body);
 
           if (response.statusCode == 200) {
@@ -290,7 +304,10 @@ class _LoginScreenState extends State<LoginScreen> {
             prefs.setString('name', responseMap["user"]['name']);
             prefs.setString('email', responseMap["user"]['email']);
             prefs.setString('token', responseMap['token']);
-
+            prefs.setString(
+                'user_roll', responseMap['user']['empleado_permisionario']);
+            //username.isEmpty;
+            //password.isEmpty;
             // ignore: use_build_context_synchronously
             Navigator.pushNamed(context, '/home_page');
           } else if (response.statusCode == 401) {
@@ -304,5 +321,9 @@ class _LoginScreenState extends State<LoginScreen> {
     } else {
       errorSnackBar(context, 'El campo Usuario es requerido');
     }
+  }
+
+  void alert() async {
+    await AuthServices.alert();
   }
 }

@@ -171,7 +171,7 @@ class _DrawerScreen extends State<DrawerScreen> {
                   color: Colors.white,
                 ),
                 onTap: () {
-                  Navigator.pushNamed(context, '/');
+                  logout(context);
                 },
               ),
             ],
@@ -179,5 +179,9 @@ class _DrawerScreen extends State<DrawerScreen> {
         ),
       ),
     );
+  }
+
+  logout(context) async {
+    Navigator.pushNamed(context, '/');
   }
 }

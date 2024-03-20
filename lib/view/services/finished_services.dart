@@ -1,10 +1,12 @@
 import 'dart:convert';
 
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:segadi/view/home/routes.dart';
 import 'package:segadi/view/home/sidebar.dart';
 import 'package:segadi/model/services/services_finished.dart';
+import 'package:segadi/view_model/login_local_auth/auth_login.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:segadi/view_model/globals.dart';
@@ -191,7 +193,8 @@ class _FinishServiceList extends State<FinishServiceList> {
           color: Colors.white,
         ),
         onPressed: () {
-          // FlutterPhoneDirectCaller.callNumber('+523311364928');
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+          alert();
         },
       ),
     );
@@ -236,5 +239,9 @@ class _FinishServiceList extends State<FinishServiceList> {
     } else {
       return services;
     }
+  }
+
+  void alert() async {
+    await AuthServices.alert();
   }
 }

@@ -30,10 +30,11 @@ class DetailFinished {
   String recipientCountry;
   String recipientState;
   int recipientZipCode;
-  String paymentTotal;
-  String allowanceTotal;
-  String allowanceChecked;
-  String allowanceDifference;
+  String? paymentTotal; //revisar
+  String? allowanceTotal;
+  String? allowanceChecked;
+  String? allowanceDifference;
+  bool userRoll;
 
   DetailFinished({
     required this.id,
@@ -60,6 +61,7 @@ class DetailFinished {
     required this.allowanceTotal,
     required this.allowanceChecked,
     required this.allowanceDifference,
+    required this.userRoll,
   });
 
   factory DetailFinished.fromJson(Map<String, dynamic> json) => DetailFinished(
@@ -87,6 +89,7 @@ class DetailFinished {
         allowanceTotal: json["allowance_total"],
         allowanceChecked: json["allowance_checked"],
         allowanceDifference: json["allowance_difference"],
+        userRoll: false,
       );
 
   Map<String, dynamic> toJson() => {

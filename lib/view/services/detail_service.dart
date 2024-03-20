@@ -1,16 +1,15 @@
 import 'dart:async';
 import 'dart:convert';
-import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:path_provider/path_provider.dart';
 
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/view/home/routes.dart';
 
 import 'package:segadi/view_model/globals.dart';
+
 import 'package:segadi/view_model/services_operator/detail_service.dart';
 import 'package:segadi/model/services/detail_service.dart';
 import 'package:http/http.dart' as http;
@@ -116,7 +115,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                     Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Container(
-                        height: 530,
+                        //height: 530,
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           border: Border.all(
@@ -367,7 +366,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                     Padding(
                       padding: const EdgeInsets.all(10.0),
                       child: Container(
-                        height: 130,
+                        //height: 100,
                         width: 380,
                         color: Colors.white,
                         child: Column(
@@ -391,7 +390,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                           FontAwesomeIcons.mapLocationDot,
                                           color: Colors.blueAccent,
                                         ),
-                                        iconSize: 27.5,
+                                        iconSize: 25.5,
                                         onPressed: null,
                                       ),
                                       Text(
@@ -424,7 +423,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
                                           FontAwesomeIcons.solidFilePdf,
                                           color: Colors.red,
                                         ),
-                                        iconSize: 27.5,
+                                        iconSize: 25.5,
                                         onPressed: () => getPdf(id),
                                       ),
                                       const Text(
@@ -744,7 +743,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
               FontAwesomeIcons.clipboardList,
               color: Colors.blue,
             ),
-            iconSize: 27.5,
+            iconSize: 25.5,
             onPressed: () => _dialogCircleCheck((context)),
           ),
           const Text(
@@ -760,7 +759,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             icon: Icon(
               FontAwesomeIcons.clipboardList,
             ),
-            iconSize: 27.5,
+            iconSize: 25.5,
             onPressed: null,
           ),
           Text(
@@ -781,7 +780,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
               FontAwesomeIcons.locationDot,
               color: Colors.red,
             ),
-            iconSize: 27.5,
+            iconSize: 25.5,
             onPressed: status
                 ? () {
                     _dialogBuilderEnbled(context, buttonStatus);
@@ -822,7 +821,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
               FontAwesomeIcons.circleCheck,
               color: Colors.green,
             ),
-            iconSize: 27.5,
+            iconSize: 25.5,
             onPressed: status
                 ? () {
                     Navigator.push(
@@ -848,7 +847,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             icon: Icon(
               FontAwesomeIcons.circleCheck,
             ),
-            iconSize: 27.5,
+            iconSize: 25.5,
             // onPressed: snapshot.data!.isEnableTripClosure
             onPressed: null,
           ),
@@ -870,7 +869,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
               FontAwesomeIcons.fileInvoiceDollar,
               color: Colors.green,
             ),
-            iconSize: 27.5,
+            iconSize: 25.5,
             onPressed: status
                 ? () {
                     sendTravelExpenses(id);
@@ -890,7 +889,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             icon: Icon(
               FontAwesomeIcons.fileInvoiceDollar,
             ),
-            iconSize: 27.5,
+            iconSize: 25.5,
             // onPressed: () => sendTravelExpenses(id),
             onPressed: null,
           ),

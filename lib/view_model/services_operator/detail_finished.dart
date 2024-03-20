@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:developer';
 
 import 'package:segadi/model/services/detail_finished.dart';
 import 'package:segadi/view_model/globals.dart';
@@ -11,6 +12,7 @@ class Detail {
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';
+    var userRollPrefs = prefs.getString('user_roll') ?? '';
     var route = 'index.php';
 
     var response =
@@ -22,7 +24,13 @@ class Detail {
     }));
 
     if (response.statusCode == 200) {
+      inspect(response.body);
       var result = DetailFinished.fromJson(json.decode(response.body));
+
+      if (userRollPrefs == 'Si') {
+        result.userRoll = true;
+      }
+      inspect(result);
 
       return result;
     } else {

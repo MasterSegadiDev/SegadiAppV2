@@ -2,7 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:segadi/view/home/sidebar.dart';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:segadi/view_model/login_local_auth/auth_login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+
+import 'package:http/http.dart' as http;
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -146,9 +151,14 @@ class _MainListHomePage extends State<HomeScreen> {
           color: Colors.white,
         ),
         onPressed: () {
-          // FlutterPhoneDirectCaller.callNumber('+523311364928');
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+          alert();
         },
       ),
     );
+  }
+
+  void alert() async {
+    await AuthServices.alert();
   }
 }

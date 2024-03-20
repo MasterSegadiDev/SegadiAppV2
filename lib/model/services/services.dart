@@ -11,14 +11,15 @@ String servicesToJson(List<Services> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class Services {
-  final int id;
-  final String service;
-  final String client;
-  final String origin;
-  final String destination;
-  final String loadDate;
-  final String unloadDate;
-  final String documenter;
+  int id;
+  String service;
+  String client;
+  String origin;
+  String destination;
+  String loadDate;
+  String unloadDate;
+  String documenter;
+  String? status;
 
   Services({
     required this.id,
@@ -29,6 +30,7 @@ class Services {
     required this.loadDate,
     required this.unloadDate,
     required this.documenter,
+    this.status,
   });
 
   factory Services.fromJson(Map<String, dynamic> json) => Services(
@@ -40,6 +42,7 @@ class Services {
         loadDate: json["load_date"],
         unloadDate: json["unload_date"],
         documenter: json["documenter"],
+        status: json["status"] ?? 'Sin Estatus',
       );
 
   Map<String, dynamic> toJson() => {
@@ -51,5 +54,6 @@ class Services {
         "load_date": loadDate,
         "unload_date": unloadDate,
         "documenter": documenter,
+        "status": status,
       };
 }

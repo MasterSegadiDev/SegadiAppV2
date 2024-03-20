@@ -1,6 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
-import 'dart:ffi';
 
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/model/services/detail_service.dart';
@@ -11,7 +9,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class Detail {
   Future<DetailService>? getService(int id) async {
-    print(id);
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     var token = prefs.getString('token') ?? '';
@@ -103,8 +100,6 @@ class Detail {
               result.mandatoryStatusId == 0 &&
               result.nextMandatoryStatusId == 2 &&
               result.list != null) {
-        print(
-            'entraste a activar el boton estatus obligatorio para el inicio de ruta');
         result.isEnableButton = true;
         result.isEnableStatusSupport = false;
         result.isEnableCheckList = false;
@@ -118,8 +113,6 @@ class Detail {
       } else if (result.nextMandatoryStatusId! > 2 &&
           result.list != null &&
           result.type != "begin") {
-        print(
-            'entro a status mayor a 2(inicio de ruta ) para activar icono status soporte');
         result.isEnableButton = true;
         result.isEnableStatusSupport = true;
         result.isEnableCheckList = false;
@@ -134,8 +127,6 @@ class Detail {
           result.mandatoryStatusId == 23 &&
           result.nextMandatoryStatusId == 0 &&
           result.serviceClosed == false) {
-        print(
-            'entraste a activar el icono cierr de viaje por que a un no se cierra el viaje pero puede que haya evidencias');
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = false;
         result.serviceClosed = true;
@@ -151,8 +142,6 @@ class Detail {
           result.nextMandatoryStatusId == 0 &&
           result.serviceClosed == true &&
           result.pendingMoneyChecks == true) {
-        print(
-            'entraste a bloquear cierre de viaje, por que ya se cerro el viaje, pero la remision no tiene viaticos');
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;
@@ -168,9 +157,6 @@ class Detail {
           result.remainingEvidences == 0 &&
           result.serviceClosed == true &&
           result.pendingMoneyChecks == false) {
-        print(
-            'entraste a bloquear icono cierre de viaje y bloquear icono viaticos');
-
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;
@@ -186,8 +172,6 @@ class Detail {
           result.nextMandatoryStatusId == 0 &&
           result.serviceClosed == true &&
           result.pendingMoneyChecks == true) {
-        print('entraste para ver los viaticos asignados');
-
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;
@@ -201,8 +185,6 @@ class Detail {
           result.nextMandatoryStatusId == 0 &&
           result.serviceClosed == true &&
           result.pendingMoneyChecks == false) {
-        print('entraste para ver los viaticos asignados');
-
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;
@@ -212,7 +194,7 @@ class Detail {
         result.mandatoryStatusId = result.mandatoryStatusId;
         result.mandatoryStatus = result.mandatoryStatus;
       }
-      inspect(result);
+
       return result;
     } else {
       throw Exception('Failed to load detail');
@@ -389,7 +371,6 @@ class Detail {
       headers: headers,
       body: body,
     );
-
     return response;
   }
 }

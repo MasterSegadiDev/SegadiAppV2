@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:segadi/helper/navigator.dart';
+
 import 'package:segadi/view/home/routes.dart';
 
 Future main() async {
@@ -21,7 +23,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      navigatorKey: NavigationService.instance.navigationKey,
       title: 'Segadi',
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.green),
+        useMaterial3: true,
+      ),
+      // home: const LoginScreen(),
       routes: {
         '/': (context) => const LoginScreen(),
         '/home_page': (context) => const HomeScreen(),
