@@ -1,0 +1,104 @@
+// ignore_for_file: prefer_interpolation_to_compose_strings
+
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:segadi/model/login/user_login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class LoginViewModel extends ChangeNotifier {
+  final AuthService _authService = AuthService();
+  final storage = const FlutterSecureStorage();
+
+  String name = '';
+
+  LoginViewModel() {
+    _loadFromPrefs();
+  }
+
+  Future<void> _loadFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    name = prefs.getString('name') ?? '';
+    notifyListeners();
+  }
+
+  Future<void> removeAllPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+  }
+
+  String _username = '';
+  String _password = '';
+
+  String token = '';
+
+  bool _isLoading = false;
+  String? _errorMessage;
+
+  String get username => _username;
+  String get password => _password;
+  bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
+
+  set username(String value) {
+    _username = value;
+    notifyListeners();
+  }
+
+  set password(String value) {
+    _password = value;
+    notifyListeners();
+  }
+
+  Future<void> login() async {
+    _isLoading = true;
+    _errorMessage = null;
+    notifyListeners();
+
+    if (_username.isEmpty) {
+      _isLoading = false;
+
+      _errorMessage = 'El campo usuario es requerido ';
+    } else if (_password.isEmpty) {
+      _isLoading = false;
+
+      _errorMessage = 'El campo password es requerido ';
+    } else if (_username.isNotEmpty && _password.isNotEmpty) {
+      http.Response response = await _authService.login(_username, _password);
+
+      if (response.body.isNotEmpty) {
+        _errorMessage = null;
+
+        Map responseMap = json.decode(response.body);
+        if (responseMap['token'] == null) {
+          _isLoading = false;
+          _errorMessage = 'No tienes acceso a la aplicacion movil';
+        }
+        if (responseMap['token'] != null) {
+          _isLoading = false;
+          token = responseMap['token'];
+
+          final prefs = await SharedPreferences.getInstance();
+          prefs.setInt('id', responseMap["user"]['id']);
+          prefs.setString('name', responseMap["user"]['name']);
+
+          //prefs.setString('token', responseMap['token']);
+          prefs.setString(
+              'user_roll', responseMap['user']['empleado_permisionario']);
+
+          //to save token, i'm use secure storage with encode base 64
+          String? encodeUsername = base64.encode(utf8.encode(_username));
+          String? encodePassword = base64.encode(utf8.encode(_password));
+          
+          await storage.write(key: 'token', value: token);
+          await storage.write(key: 'username', value: encodeUsername);
+          await storage.write(key: 'password', value: encodePassword);
+
+        }
+      }
+    }
+    notifyListeners();
+  }
+}

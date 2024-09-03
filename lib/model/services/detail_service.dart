@@ -4,6 +4,11 @@
 
 import 'dart:convert';
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:segadi/view_model/globals.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
 DetailService detailServiceFromJson(String str) =>
     DetailService.fromJson(json.decode(str));
 
@@ -11,25 +16,25 @@ String detailServiceToJson(DetailService data) => json.encode(data.toJson());
 
 class DetailService {
   final int? id;
-  final String service;
-  final String senderBusinessName;
-  final String senderName;
-  final String senderPhoneNumber;
-  final String senderStreet;
-  final String senderOutdoorNumber;
-  final String senderInteriorNumber;
-  final String senderCountry;
-  final String senderState;
-  final int senderZipCode;
-  final String recipientBusinessName;
-  final String recipientName;
-  final String recipientPhoneNumber;
-  final String recipientStreet;
-  final String recipientOutdoorNumber;
-  final String recipientInteriorNumber;
-  final String recipientCountry;
-  final String recipientState;
-  final int recipientZipCode;
+  final String? service;
+  final String? senderBusinessName;
+  final String? senderName;
+  final String? senderPhoneNumber;
+  final String? senderStreet;
+  final String? senderOutdoorNumber;
+  final String? senderInteriorNumber;
+  final String? senderCountry;
+  final String? senderState;
+  final int? senderZipCode;
+  final String? recipientBusinessName;
+  final String? recipientName;
+  final String? recipientPhoneNumber;
+  final String? recipientStreet;
+  final String? recipientOutdoorNumber;
+  final String? recipientInteriorNumber;
+  final String? recipientCountry;
+  final String? recipientState;
+  final int? recipientZipCode;
   int? statusId;
   String? status;
   final String? type;
@@ -37,59 +42,59 @@ class DetailService {
   String? mandatoryStatus;
   int? nextMandatoryStatusId;
   String? nextMandatoryStatus;
-  bool isEnableButton;
+  bool? isEnableButton;
   bool? statusSupport;
-  int statusSupportId;
+  int? statusSupportId;
   Map<String, bool>? list;
-  bool isEnableCheckList;
-  bool isEnableTripClosure;
-  bool isEnableRouteFinished;
-  bool isEnableStatusSupport;
-  bool isEnableContinueRute;
-  bool serviceClosed;
-  final int remainingEvidences;
-  bool pendingMoneyChecks;
+  bool? isEnableCheckList;
+  bool? isEnableTripClosure;
+  bool? isEnableRouteFinished;
+  bool? isEnableStatusSupport;
+  bool? isEnableContinueRute;
+  bool? serviceClosed;
+  final int? remainingEvidences;
+  bool? pendingMoneyChecks;
 
   DetailService({
-    required this.id,
-    required this.service,
-    required this.senderBusinessName,
-    required this.senderName,
-    required this.senderPhoneNumber,
-    required this.senderStreet,
-    required this.senderOutdoorNumber,
-    required this.senderInteriorNumber,
-    required this.senderCountry,
-    required this.senderState,
-    required this.senderZipCode,
-    required this.recipientBusinessName,
-    required this.recipientName,
-    required this.recipientPhoneNumber,
-    required this.recipientStreet,
-    required this.recipientOutdoorNumber,
-    required this.recipientInteriorNumber,
-    required this.recipientCountry,
-    required this.recipientState,
-    required this.recipientZipCode,
-    required this.statusId,
-    required this.status,
-    required this.type,
-    required this.mandatoryStatusId,
-    required this.mandatoryStatus,
-    required this.nextMandatoryStatusId,
-    required this.nextMandatoryStatus,
-    required this.isEnableButton,
+    this.id,
+    this.service,
+    this.senderBusinessName,
+    this.senderName,
+    this.senderPhoneNumber,
+    this.senderStreet,
+    this.senderOutdoorNumber,
+    this.senderInteriorNumber,
+    this.senderCountry,
+    this.senderState,
+    this.senderZipCode,
+    this.recipientBusinessName,
+    this.recipientName,
+    this.recipientPhoneNumber,
+    this.recipientStreet,
+    this.recipientOutdoorNumber,
+    this.recipientInteriorNumber,
+    this.recipientCountry,
+    this.recipientState,
+    this.recipientZipCode,
+    this.statusId,
+    this.status,
+    this.type,
+    this.mandatoryStatusId,
+    this.mandatoryStatus,
+    this.nextMandatoryStatusId,
+    this.nextMandatoryStatus,
+    this.isEnableButton,
     this.statusSupport,
-    required this.statusSupportId,
+    this.statusSupportId,
     this.list,
-    required this.isEnableCheckList,
-    required this.isEnableTripClosure,
-    required this.isEnableRouteFinished,
-    required this.isEnableStatusSupport,
-    required this.serviceClosed,
-    required this.remainingEvidences,
-    required this.pendingMoneyChecks,
-    required this.isEnableContinueRute,
+    this.isEnableCheckList,
+    this.isEnableTripClosure,
+    this.isEnableRouteFinished,
+    this.isEnableStatusSupport,
+    this.serviceClosed,
+    this.remainingEvidences,
+    this.pendingMoneyChecks,
+    this.isEnableContinueRute,
   });
 
   factory DetailService.fromJson(Map<String, dynamic> json) => DetailService(
@@ -177,4 +182,33 @@ class DetailService {
         "pending_money_checks": pendingMoneyChecks,
         "is_enable_continue_rute": isEnableContinueRute,
       };
+}
+
+class DetailServices {
+  final storage = const FlutterSecureStorage();
+  Future<DetailService> getDetail(id) async {
+    late String? token;
+
+    final prefs = await SharedPreferences.getInstance();
+    var userId = prefs.getInt('id') ?? 0;
+    token = await storage.read(key: 'token');
+    var route = 'index.php';
+
+    var response = await http.get(
+      Uri.parse(baseURL + route).replace(
+        queryParameters: {
+          'r': 'esegadi/getdetalle',
+          'id_remision': id.toString(),
+          'token': token,
+          'id': userId.toString(),
+        },
+      ),
+    );
+    if (response.statusCode == 200) {
+      var body = json.decode(response.body);
+      return DetailService.fromJson(body);
+    } else {
+      throw Exception('Failed to load service');
+    }
+  }
 }

@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 
@@ -65,219 +66,38 @@ class _DetailServicesFinishedScreen
             serviceId = snapshot.data!.id;
             // var userRoll = 'NO';
             return Center(
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.all(10.0),
-                    child: Container(
-                      padding: const EdgeInsets.all(10),
-                      decoration: BoxDecoration(
-                        border: Border.all(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(10.0),
+                      child: Container(
+                        padding: const EdgeInsets.all(10),
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFF84A756),
+                          ),
                           color: const Color(0xFF84A756),
+                          borderRadius: BorderRadius.circular(10),
                         ),
-                        color: const Color(0xFF84A756),
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Column(
-                        children: [
-                          Column(
-                            children: [
-                              Align(
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'Servicio: ${snapshot.data!.service}',
-                                  style: const TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white),
-                                ),
-                              ),
-                              const Row(children: [
-                                Text(
-                                  'Remitente',
-                                  style: TextStyle(
-                                      fontSize: 20,
-                                      fontWeight: FontWeight.bold,
-                                      color: Colors.white),
-                                )
-                              ]),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Razón Social:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.senderBusinessName,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Télefono:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.senderPhoneNumber,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Contacto:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.senderName,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Domicilio:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ${snapshot.data!.senderZipCode}',
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Destinatario',
-                                    style: TextStyle(
+                        child: Column(
+                          children: [
+                            Column(
+                              children: [
+                                Align(
+                                  alignment: Alignment.center,
+                                  child: Text(
+                                    'Servicio: ${snapshot.data!.service}',
+                                    style: const TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Razón Social:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
                                   ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.recipientBusinessName,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Télefono:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.recipientPhoneNumber,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Contacto:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    snapshot.data!.recipientName,
-                                    style: const TextStyle(color: Colors.white),
-                                  )
-                                ],
-                              ),
-                              const Row(
-                                children: [
-                                  Text(
-                                    'Domicilio:',
-                                    style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}',
-                                    textAlign: TextAlign.center,
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}',
-                                    style: const TextStyle(color: Colors.white),
-                                  ),
-                                ],
-                              ),
-                              if (snapshot.data!.userRoll == false)
+                                ),
                                 const Row(
                                   children: [
                                     Text(
-                                      'Comisiones',
+                                      'Remitente',
                                       style: TextStyle(
                                           fontSize: 20,
                                           fontWeight: FontWeight.bold,
@@ -285,11 +105,14 @@ class _DetailServicesFinishedScreen
                                     )
                                   ],
                                 ),
-                              if (snapshot.data!.userRoll == false)
+                                const Divider(
+                                  height: 15.0,
+                                  color: Colors.white,
+                                ),
                                 const Row(
                                   children: [
                                     Text(
-                                      'Comisión Total:',
+                                      'Razón Social:',
                                       style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
@@ -297,21 +120,20 @@ class _DetailServicesFinishedScreen
                                     ),
                                   ],
                                 ),
-                              if (snapshot.data!.userRoll == false)
-                                Row(
-                                  children: [
-                                    Text(
-                                      snapshot.data!.paymentTotal.toString(),
-                                      style:
-                                          const TextStyle(color: Colors.white),
-                                    ),
-                                  ],
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 20,
+                                  child: AutoSizeText(
+                                    snapshot.data!.senderBusinessName,
+                                    style: const TextStyle(
+                                        fontSize: 14, color: Colors.white),
+                                    maxLines: 2,
+                                  ),
                                 ),
-                              if (snapshot.data!.userRoll == false)
                                 const Row(
                                   children: [
                                     Text(
-                                      'Total Asignado:',
+                                      'Télefono:',
                                       style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
@@ -319,21 +141,19 @@ class _DetailServicesFinishedScreen
                                     ),
                                   ],
                                 ),
-                              if (snapshot.data!.userRoll == false)
                                 Row(
                                   children: [
                                     Text(
-                                      snapshot.data!.allowanceTotal.toString(),
+                                      snapshot.data!.senderPhoneNumber,
                                       style:
                                           const TextStyle(color: Colors.white),
-                                    ),
+                                    )
                                   ],
                                 ),
-                              if (snapshot.data!.userRoll == false)
                                 const Row(
                                   children: [
                                     Text(
-                                      'Viaticos Comprobados:',
+                                      'Contacto:',
                                       style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
@@ -341,22 +161,19 @@ class _DetailServicesFinishedScreen
                                     ),
                                   ],
                                 ),
-                              if (snapshot.data!.userRoll == false)
                                 Row(
                                   children: [
                                     Text(
-                                      snapshot.data!.allowanceChecked
-                                          .toString(),
+                                      snapshot.data!.senderName,
                                       style:
                                           const TextStyle(color: Colors.white),
-                                    ),
+                                    )
                                   ],
                                 ),
-                              if (snapshot.data!.userRoll == false)
                                 const Row(
                                   children: [
                                     Text(
-                                      'Diferencia de viaticos:',
+                                      'Domicilio:',
                                       style: TextStyle(
                                           fontSize: 14,
                                           fontWeight: FontWeight.bold,
@@ -364,24 +181,252 @@ class _DetailServicesFinishedScreen
                                     ),
                                   ],
                                 ),
-                              if (snapshot.data!.userRoll == false)
-                                Row(
+                                // Row(
+                                //   children: [
+                                //     Text(
+                                //       '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ${snapshot.data!.senderZipCode}',
+                                //       style: const TextStyle(color: Colors.white),
+                                //     )
+                                //   ],
+                                // ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 20,
+                                  child: AutoSizeText(
+                                    '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ${snapshot.data!.senderZipCode}',
+                                    style: const TextStyle(
+                                        fontSize: 14, color: Colors.white),
+                                    maxLines: 2,
+                                  ),
+                                ),
+                                const Divider(
+                                  height: 15.0,
+                                  color: Colors.transparent,
+                                ),
+                                const Row(
                                   children: [
                                     Text(
-                                      snapshot.data!.allowanceDifference
-                                          .toString(),
-                                      style:
-                                          const TextStyle(color: Colors.white),
+                                      'Destinatario',
+                                      style: TextStyle(
+                                          fontSize: 20,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Divider(
+                                  height: 15.0,
+                                  color: Colors.white,
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Razón Social:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
                                     ),
                                   ],
                                 ),
-                            ],
-                          ),
-                        ],
+
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 20,
+                                  child: AutoSizeText(
+                                    snapshot.data!.recipientBusinessName,
+                                    style: const TextStyle(
+                                        fontSize: 14, color: Colors.white),
+                                    maxLines: 2,
+                                  ),
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Télefono:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.recipientPhoneNumber,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Contacto:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  children: [
+                                    Text(
+                                      snapshot.data!.recipientName,
+                                      style:
+                                          const TextStyle(color: Colors.white),
+                                    )
+                                  ],
+                                ),
+                                const Row(
+                                  children: [
+                                    Text(
+                                      'Domicilio:',
+                                      style: TextStyle(
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.bold,
+                                          color: Colors.white),
+                                    ),
+                                  ],
+                                ),
+                                // Row(
+                                //   children: [
+                                //     Text(
+                                //       "${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}",
+                                //       style: const TextStyle(color: Colors.white),
+                                //     ),
+                                //   ],
+                                // ),
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 20,
+                                  child: AutoSizeText(
+                                    '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}',
+                                    style: const TextStyle(color: Colors.white),
+                                    maxLines: 2,
+                                  ),
+                                ),
+                                const Divider(
+                                  height: 15.0,
+                                  color: Colors.transparent,
+                                ),
+                                if (snapshot.data!.userRoll == false)
+                                  const Row(
+                                    children: [
+                                      Text(
+                                        'Comisiones',
+                                        style: TextStyle(
+                                            fontSize: 20,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
+                                      )
+                                    ],
+                                  ),
+                                const Divider(
+                                  height: 15.0,
+                                  color: Colors.white,
+                                ),
+                                if (snapshot.data!.userRoll == false)
+                                  const Row(
+                                    children: [
+                                      Text(
+                                        'Comisión Total:',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                if (snapshot.data!.userRoll == false)
+                                  Row(
+                                    children: [
+                                      Text(
+                                        snapshot.data!.paymentTotal.toString(),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                if (snapshot.data!.userRoll == false)
+                                  const Row(
+                                    children: [
+                                      Text(
+                                        'Total Asignado:',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                if (snapshot.data!.userRoll == false)
+                                  Row(
+                                    children: [
+                                      Text(
+                                        snapshot.data!.allowanceTotal
+                                            .toString(),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                if (snapshot.data!.userRoll == false)
+                                  const Row(
+                                    children: [
+                                      Text(
+                                        'Viaticos Comprobados:',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                if (snapshot.data!.userRoll == false)
+                                  Row(
+                                    children: [
+                                      Text(
+                                        snapshot.data!.allowanceChecked
+                                            .toString(),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                if (snapshot.data!.userRoll == false)
+                                  const Row(
+                                    children: [
+                                      Text(
+                                        'Diferencia de viaticos:',
+                                        style: TextStyle(
+                                            fontSize: 14,
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                                if (snapshot.data!.userRoll == false)
+                                  Row(
+                                    children: [
+                                      Text(
+                                        snapshot.data!.allowanceDifference
+                                            .toString(),
+                                        style: const TextStyle(
+                                            color: Colors.white),
+                                      ),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
             );
           } else if (snapshot.hasError) {

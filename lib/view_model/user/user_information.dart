@@ -20,10 +20,10 @@ class User {
       'token': token,
     }));
 
+
     var data = jsonDecode(response.body);
-
+  
     var result = Photo.fromJson(data["photo"] as Map<String, dynamic>);
-
     return result;
   }
 }

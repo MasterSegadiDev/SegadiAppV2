@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:segadi/model/user/UserInformation.dart';
-import 'package:segadi/view/home/routes.dart';
 import 'package:segadi/view_model/user/user_information.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -14,14 +13,14 @@ class DrawerScreen extends StatefulWidget {
 
 class _DrawerScreen extends State<DrawerScreen> {
   var name = "";
-  var email = "";
+  var username = "";
   late Future<Photo>? detail;
 
   void _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
     setState(() {
       name = prefs.getString('name') ?? '';
-      email = prefs.getString('email') ?? '';
+      username = prefs.getString('username') ?? '';
     });
   }
 
@@ -47,7 +46,7 @@ class _DrawerScreen extends State<DrawerScreen> {
                   color: Color(0xFF2C522A),
                 ),
                 accountName: Text(name),
-                accountEmail: Text(email),
+                // accountName: Text(username),
                 currentAccountPicture: CircleAvatar(
                   backgroundColor: Colors.white,
                   child: FutureBuilder<Photo>(
@@ -63,12 +62,20 @@ class _DrawerScreen extends State<DrawerScreen> {
                           ),
                         );
                       } else if (snapshot.hasError) {
-                        return Text("${snapshot.error}");
+                        return ClipOval(
+                          child: Image.asset(
+                            "assets/images/user_not_found.png",
+                            fit: BoxFit.cover,
+                            width: 90,
+                            height: 90,
+                          ),
+                        );
                       }
                       return const CircularProgressIndicator();
                     },
                   ),
                 ),
+                accountEmail: null,
               ),
               ListTile(
                 leading: const Icon(
@@ -115,12 +122,12 @@ class _DrawerScreen extends State<DrawerScreen> {
                       style: TextStyle(color: Colors.white),
                     ),
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const ServicesScreen(),
-                        ),
-                      );
+                      // Navigator.push(
+                      //   context,
+                      //   MaterialPageRoute(
+                      //     builder: (context) => const ServicesScreen(),
+                      //   ),
+                      // );
                     },
                   ),
                   ListTile(
@@ -147,7 +154,9 @@ class _DrawerScreen extends State<DrawerScreen> {
                   'Expendiente',
                   style: TextStyle(color: Colors.white),
                 ),
-                onTap: () {},
+                onTap: () {
+                  Navigator.pushNamed(context, '/user');
+                },
               ),
               const ListTile(
                 leading: Icon(
@@ -182,6 +191,7 @@ class _DrawerScreen extends State<DrawerScreen> {
   }
 
   logout(context) async {
-    Navigator.pushNamed(context, '/');
+    Navigator.of(context)
+        .pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
   }
 }

@@ -1,40 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:segadi/view/home/sidebar.dart';
 
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:segadi/view_model/login_local_auth/auth_login.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
-
-import 'package:http/http.dart' as http;
-
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({Key? key}) : super(key: key);
-
-  @override
-  // ignore: library_private_types_in_public_api
-  _MainListHomePage createState() => _MainListHomePage();
-}
-
-class _MainListHomePage extends State<HomeScreen> {
-  var name = "";
-  void _loadPreferences() async {
-    final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      var name = prefs.getString('name') ?? '';
-      var email = prefs.getString('email') ?? '';
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadPreferences();
-  }
+class HomeScreen extends StatelessWidget {
+  const HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -83,7 +58,9 @@ class _MainListHomePage extends State<HomeScreen> {
               ),
             ),
             GestureDetector(
-              onTap: () {},
+              onTap: () {
+                Navigator.popAndPushNamed(context, '/user');
+              },
               child: const Card(
                 color: Color(0xFF84A756),
                 shadowColor: Colors.transparent,
@@ -152,13 +129,9 @@ class _MainListHomePage extends State<HomeScreen> {
         ),
         onPressed: () {
           FlutterPhoneDirectCaller.callNumber('+523311364928');
-          alert();
         },
       ),
     );
   }
 
-  void alert() async {
-    await AuthServices.alert();
-  }
 }

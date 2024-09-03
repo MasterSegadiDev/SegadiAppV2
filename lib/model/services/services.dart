@@ -1,8 +1,9 @@
-// To parse this JSON data, do
-//
-//     final services = servicesFromJson(jsonString);
-
 import 'dart:convert';
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:segadi/view_model/globals.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
 
 List<Services> servicesFromJson(String str) =>
     List<Services>.from(json.decode(str).map((x) => Services.fromJson(x)));
@@ -56,4 +57,41 @@ class Services {
         "documenter": documenter,
         "status": status,
       };
+}
+
+class ItemService {
+  final storage = const FlutterSecureStorage();
+
+  Future<List<Services>> fetchItems() async {
+    late int id;
+    late String? token;
+    List<Services> services = [];
+
+    final prefs = await SharedPreferences.getInstance();
+    id = prefs.getInt('id') ?? 0;
+    token = await storage.read(key: 'token');
+    var route = 'index.php';
+
+    var response = await http.get(
+      Uri.parse(baseURL + route).replace(
+        queryParameters: {
+          'r': 'esegadi/getactivas',
+          'id': id.toString(),
+          'token': token,
+        },
+      ),
+    );
+
+    var data = jsonDecode(response.body.toString());
+
+    if (response.statusCode == 200) {
+      for (Map<String, dynamic> index in data) {
+        services.add(Services.fromJson(index));
+      }
+
+      return services;
+    } else {
+      return services;
+    }
+  }
 }

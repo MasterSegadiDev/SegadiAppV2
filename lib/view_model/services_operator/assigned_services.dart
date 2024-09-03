@@ -1,39 +1,36 @@
-import 'dart:convert';
-
+import 'package:flutter/material.dart';
 import 'package:segadi/model/services/services.dart';
 
-import 'package:segadi/view_model/globals.dart';
+class ServicesViewModel extends ChangeNotifier {
+  final ItemService _itemService = ItemService();
 
-import 'package:shared_preferences/shared_preferences.dart';
+  List<Services> _items = [];
+  final bool _isLoading = false;
 
-import 'package:http/http.dart' as http;
+  List<Services> get items => _items;
+  bool get isLoading => _isLoading;
 
-class ServicesModel {
-  List<Services> services = [];
-
-  getServices() async {
-    final prefs = await SharedPreferences.getInstance();
-    var id = prefs.getInt('id') ?? 0;
-    var token = prefs.getString('token') ?? '';
-    var route = 'index.php';
-
-    var response = await http
-        .get(Uri.parse(baseURL + route).replace(queryParameters: {
-          'r': 'esegadi/getactivas',
-          'id': id.toString(),
-          'token': token,
-        }))
-        .timeout(const Duration(seconds: 90));
-    var data = jsonDecode(response.body.toString());
-
-    if (response.statusCode == 200) {
-      for (Map<String, dynamic> index in data) {
-        services.add(Services.fromJson(index));
-      }
-
-      return services;
-    } else {
-      return services;
-    }
+  ServicesViewModel() {
+    onRefresh();
   }
+
+  Future<void> fetchItems() async {
+    //_isLoading = true;
+    //_items.clear();
+    //notifyListeners();
+
+    _items = await _itemService.fetchItems();
+    
+
+    //_isLoading = false;
+    notifyListeners();
+  }
+
+  Future onRefresh() async {
+    _items.clear();
+    await _itemService.fetchItems();
+    notifyListeners();
+  }
+
+  
 }

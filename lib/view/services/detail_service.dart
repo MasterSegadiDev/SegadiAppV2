@@ -1,89 +1,1020 @@
-import 'dart:async';
-import 'dart:convert';
+// import 'dart:async';
+// import 'dart:convert';
+
+// import 'package:auto_size_text/auto_size_text.dart';
+// import 'package:flutter/material.dart';
+// import 'package:flutter_file_downloader/flutter_file_downloader.dart';
+// import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+// import 'package:segadi/model/services/checklist.dart';
+// import 'package:segadi/view/home/routes.dart';
+
+// import 'package:segadi/view_model/globals.dart';
+
+// import 'package:segadi/view_model/services_operator/detail_service.dart';
+// import 'package:segadi/model/services/detail_service.dart';
+// import 'package:http/http.dart' as http;
+// import 'package:shared_preferences/shared_preferences.dart';
+
+// class DetailServicesScreen extends StatefulWidget {
+//   final int id;
+//   // final bool detailFinished;
+//   // final Map response;
+//   const DetailServicesScreen({
+//     Key? key,
+//     required this.id,
+//   }) : super(key: key);
+
+//   @override
+//   // ignore: library_private_types_in_public_api, no_logic_in_create_state
+//   _DetailServicesScreen createState() =>
+//       // ignore: no_logic_in_create_state
+//       _DetailServicesScreen(id);
+// }
+
+// class _DetailServicesScreen extends State<DetailServicesScreen> {
+//   _DetailServicesScreen(this.id);
+//   final int id;
+
+//   String numRemision = "";
+
+//   late Future<DetailService>? detail;
+
+//   final int value = 0;
+
+//   int statusSupportId = 0;
+
+//   bool loading = true;
+
+//   bool listCked = false;
+
+//   late final String path;
+
+//   @override
+//   void initState() {
+//     super.initState();
+
+//     detail = Detail().getService(id);
+//     getCheckList().then((value) {
+//       setState(() {
+//         loading = false;
+//       });
+//     });
+//   }
+
+//   void addStatus(statusId) async {
+//     http.Response response = await Detail.addStatus(id, statusId);
+//     if (response.statusCode == 200) {
+//       _loadData();
+//     }
+
+//     if (response.statusCode == 500) {
+//       // ignore: use_build_context_synchronously
+//       errorSnackBar(context,
+//           'Se ha producido un error interno al insertar el estatus obligatorio.');
+//     }
+//   }
+
+//   _loadData() async {
+//     detail = Detail().getService(id);
+
+//     setState(() {
+//       detail = detail;
+//     });
+//   }
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return Scaffold(
+//       appBar: AppBar(
+//         title: const Text(
+//           'Detalle Remision',
+//           style: TextStyle(color: Colors.white),
+//         ),
+//         iconTheme: const IconThemeData(color: Colors.white),
+//         backgroundColor: const Color(0xFF2C522A),
+//       ),
+//       backgroundColor: Colors.white,
+//       //drawer: const DrawerScreen(),
+//       body: FutureBuilder<DetailService>(
+//         future: detail,
+//         builder: (context, snapshot) {
+//           if (snapshot.hasData) {
+//             if (snapshot.data!.statusSupportId > 0) {
+//               statusSupportId = snapshot.data!.statusSupportId;
+//             }
+//             if (snapshot.data!.list != null) {
+//               listCked = true;
+//             }
+
+//             numRemision = snapshot.data!.service;
+
+//             return Center(
+//               child: SingleChildScrollView(
+//                 child: Column(
+//                   children: [
+//                     Padding(
+//                       padding: const EdgeInsets.all(10.0),
+//                       child: Container(
+//                         //height: 530,
+//                         padding: const EdgeInsets.all(10),
+//                         decoration: BoxDecoration(
+//                           border: Border.all(
+//                             color: const Color(0xFF84A756),
+//                           ),
+//                           color: const Color(0xFF84A756),
+//                           borderRadius: BorderRadius.circular(10),
+//                         ),
+//                         child: Column(
+//                           children: [
+//                             Column(
+//                               children: [
+//                                 Align(
+//                                   alignment: Alignment.center,
+//                                   child: Text(
+//                                     'Servicio: ${snapshot.data!.service}',
+//                                     style: const TextStyle(
+//                                         fontSize: 20,
+//                                         fontWeight: FontWeight.bold,
+//                                         color: Colors.white),
+//                                   ),
+//                                 ),
+//                                 const Row(children: [
+//                                   Text(
+//                                     'Remitente',
+//                                     style: TextStyle(
+//                                         fontSize: 20,
+//                                         fontWeight: FontWeight.bold,
+//                                         color: Colors.white),
+//                                   )
+//                                 ]),
+//                                 const Divider(
+//                                   height: 15.0,
+//                                   color: Colors.white,
+//                                 ),
+//                                 const Row(
+//                                   children: [
+//                                     Text(
+//                                       'Razon Social:',
+//                                       style: TextStyle(
+//                                           fontSize: 14,
+//                                           fontWeight: FontWeight.bold,
+//                                           color: Colors.white),
+//                                     ),
+//                                   ],
+//                                 ),
+//                                 // Row(
+//                                 //   children: [
+//                                 //     Text(
+//                                 //       snapshot.data!.senderBusinessName,
+//                                 //       style: const TextStyle(
+//                                 //           color: Colors.white, fontSize: 12),
+//                                 //     )
+//                                 //   ],
+//                                 // ),
+//                                 SizedBox(
+//                                   width: double.infinity,
+//                                   height: 20,
+//                                   child: AutoSizeText(
+//                                     snapshot.data!.senderBusinessName,
+//                                     style: const TextStyle(
+//                                         fontSize: 14, color: Colors.white),
+//                                     maxLines: 2,
+//                                   ),
+//                                 ),
+//                                 const Row(
+//                                   children: [
+//                                     Text(
+//                                       'Télefono:',
+//                                       style: TextStyle(
+//                                           fontSize: 14,
+//                                           fontWeight: FontWeight.bold,
+//                                           color: Colors.white),
+//                                     ),
+//                                   ],
+//                                 ),
+//                                 Row(
+//                                   children: [
+//                                     Text(
+//                                       snapshot.data!.senderPhoneNumber,
+//                                       style: const TextStyle(
+//                                           color: Colors.white, fontSize: 12),
+//                                     )
+//                                   ],
+//                                 ),
+//                                 const Row(
+//                                   children: [
+//                                     Text(
+//                                       'Contacto:',
+//                                       style: TextStyle(
+//                                           fontSize: 14,
+//                                           fontWeight: FontWeight.bold,
+//                                           color: Colors.white),
+//                                     ),
+//                                   ],
+//                                 ),
+//                                 Row(
+//                                   children: [
+//                                     Text(
+//                                       snapshot.data!.senderName,
+//                                       style: const TextStyle(
+//                                           color: Colors.white, fontSize: 12),
+//                                     )
+//                                   ],
+//                                 ),
+//                                 const Row(
+//                                   children: [
+//                                     Text(
+//                                       'Domicilio:',
+//                                       style: TextStyle(
+//                                           fontSize: 14,
+//                                           fontWeight: FontWeight.bold,
+//                                           color: Colors.white),
+//                                     ),
+//                                   ],
+//                                 ),
+//                                 SizedBox(
+//                                   width: double.infinity,
+//                                   height: 20,
+//                                   child: AutoSizeText(
+//                                     '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ${snapshot.data!.senderZipCode}',
+//                                     style: const TextStyle(
+//                                         fontSize: 14, color: Colors.white),
+//                                     maxLines: 2,
+//                                   ),
+//                                 ),
+
+//                                 const Divider(
+//                                   color: Colors.transparent,
+//                                   height: 15.0,
+//                                 ),
+//                                 const Row(
+//                                   children: [
+//                                     Text(
+//                                       'Destinatario',
+//                                       style: TextStyle(
+//                                           fontSize: 20,
+//                                           fontWeight: FontWeight.bold,
+//                                           color: Colors.white),
+//                                     )
+//                                   ],
+//                                 ),
+//                                 const Divider(
+//                                   color: Colors.white,
+//                                   height: 15.0,
+//                                 ),
+//                                 const Row(
+//                                   children: [
+//                                     Text(
+//                                       'Razon Social:',
+//                                       style: TextStyle(
+//                                           fontSize: 14,
+//                                           fontWeight: FontWeight.bold,
+//                                           color: Colors.white),
+//                                     ),
+//                                   ],
+//                                 ),
+
+//                                 SizedBox(
+//                                   width: double.infinity,
+//                                   height: 20,
+//                                   child: AutoSizeText(
+//                                     snapshot.data!.recipientBusinessName,
+//                                     style: const TextStyle(
+//                                         fontSize: 14, color: Colors.white),
+//                                     maxLines: 2,
+//                                   ),
+//                                 ),
+//                                 const Row(
+//                                   children: [
+//                                     Text(
+//                                       'Télefono:',
+//                                       style: TextStyle(
+//                                           fontSize: 14,
+//                                           fontWeight: FontWeight.bold,
+//                                           color: Colors.white),
+//                                     ),
+//                                   ],
+//                                 ),
+//                                 Row(
+//                                   children: [
+//                                     Text(
+//                                       snapshot.data!.recipientPhoneNumber,
+//                                       style: const TextStyle(
+//                                           color: Colors.white, fontSize: 12),
+//                                     )
+//                                   ],
+//                                 ),
+//                                 const Row(
+//                                   children: [
+//                                     Text(
+//                                       'Contacto:',
+//                                       style: TextStyle(
+//                                           fontSize: 14,
+//                                           fontWeight: FontWeight.bold,
+//                                           color: Colors.white),
+//                                     ),
+//                                   ],
+//                                 ),
+//                                 Row(
+//                                   children: [
+//                                     Text(
+//                                       snapshot.data!.recipientName,
+//                                       style: const TextStyle(
+//                                           color: Colors.white, fontSize: 12),
+//                                     )
+//                                   ],
+//                                 ),
+//                                 const Row(
+//                                   children: [
+//                                     Text(
+//                                       'Domicilio:',
+//                                       style: TextStyle(
+//                                           fontSize: 14,
+//                                           fontWeight: FontWeight.bold,
+//                                           color: Colors.white),
+//                                     ),
+//                                   ],
+//                                 ),
+//                                 SizedBox(
+//                                   width: double.infinity,
+//                                   height: 20,
+//                                   child: AutoSizeText(
+//                                     '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}',
+//                                     style: const TextStyle(
+//                                         fontSize: 14, color: Colors.white),
+//                                     maxLines: 2,
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                     Padding(
+//                       padding: const EdgeInsets.all(10.0),
+//                       child: Container(
+//                         //height: 100,
+//                         width: 380,
+//                         color: Colors.white,
+//                         child: Column(
+//                           children: [
+//                             Row(
+//                               children: <Widget>[
+//                                 Expanded(
+//                                   child: checkListF(
+//                                       snapshot.data!.isEnableCheckList),
+//                                 ),
+//                                 Expanded(
+//                                   child: iconStatus(
+//                                       snapshot.data!.isEnableStatusSupport,
+//                                       snapshot.data!.isEnableContinueRute),
+//                                 ),
+//                                 const Expanded(
+//                                   child: Column(
+//                                     children: <Widget>[
+//                                       IconButton(
+//                                         icon: Icon(
+//                                           FontAwesomeIcons.mapLocationDot,
+//                                           color: Colors.blueAccent,
+//                                         ),
+//                                         iconSize: 25.5,
+//                                         onPressed: null,
+//                                       ),
+//                                       Text(
+//                                         'Ruta Sugerida',
+//                                         style: TextStyle(
+//                                             fontSize: 12, color: Colors.black),
+//                                       )
+//                                     ],
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                             Row(
+//                               children: <Widget>[
+//                                 Expanded(
+//                                   child: iconTripClosure(
+//                                       snapshot.data!.serviceClosed,
+//                                       snapshot.data!.id,
+//                                       snapshot.data!.service),
+//                                 ),
+//                                 Expanded(
+//                                   child: iconTravelExpenses(
+//                                       snapshot.data!.pendingMoneyChecks),
+//                                 ),
+//                                 Expanded(
+//                                   child: Column(
+//                                     children: <Widget>[
+//                                       IconButton(
+//                                         icon: const Icon(
+//                                           FontAwesomeIcons.solidFilePdf,
+//                                           color: Colors.red,
+//                                         ),
+//                                         iconSize: 25.5,
+//                                         onPressed: () => getPdf(id),
+//                                       ),
+//                                       const Text(
+//                                         'Descargar Servicio',
+//                                         style: TextStyle(
+//                                             fontSize: 12, color: Colors.black),
+//                                       )
+//                                     ],
+//                                   ),
+//                                 ),
+//                               ],
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     ),
+//                     Padding(
+//                       padding: const EdgeInsets.all(10.0),
+//                       child: SizedBox(
+//                         height: 40,
+//                         width: 380,
+//                         child: Column(
+//                           children: [
+//                             Row(
+//                               children: <Widget>[
+//                                 Expanded(
+//                                   child: SizedBox(
+//                                     height: 40,
+//                                     child: ElevatedButton(
+//                                       onPressed: snapshot.data!.isEnableButton
+//                                           ? () {
+//                                               addStatus(snapshot
+//                                                   .data!.mandatoryStatusId!);
+//                                             }
+//                                           : null,
+//                                       style: ElevatedButton.styleFrom(
+//                                           shape: RoundedRectangleBorder(
+//                                             borderRadius: BorderRadius.circular(
+//                                                 20), // <-- Radius
+//                                           ),
+//                                           backgroundColor:
+//                                               const Color(0xFF2C522A)),
+//                                       child: Text(
+//                                         snapshot.data!.mandatoryStatus!,
+//                                         style: const TextStyle(
+//                                             color: Colors.white),
+//                                       ),
+//                                     ),
+//                                   ),
+//                                 )
+//                               ],
+//                             ),
+//                           ],
+//                         ),
+//                       ),
+//                     )
+//                   ],
+//                 ),
+//               ),
+//             );
+//           } else if (snapshot.hasError) {
+//             return Text("${snapshot.error}");
+//           }
+//           return const CircularProgressIndicator();
+//         },
+//       ),
+//     );
+//   }
+
+//   Future<void> _dialogBuilderEnbled(BuildContext context, buttonStatus) {
+//     return showDialog<void>(
+//       context: context,
+//       builder: (BuildContext context) {
+//         return AlertDialog(
+//           title: const Text(
+//             'Registrar Parada',
+//             style: TextStyle(color: Color(0xFF2C522A)),
+//           ),
+//           content: SizedBox(
+//             width: 300,
+//             height: 300,
+//             child: GridView.count(
+//               crossAxisCount: 2,
+//               padding: const EdgeInsets.all(10.0),
+//               childAspectRatio: 8.0 / 9.0,
+//               children: <Widget>[
+//                 GestureDetector(
+//                   onTap: () async {
+//                     addStatusSupport(value: 24);
+//                     Navigator.of(context).pop();
+//                   },
+//                   child: const Card(
+//                     child: Column(
+//                       children: <Widget>[
+//                         Padding(
+//                           padding: EdgeInsets.only(top: 50),
+//                           child: SizedBox(
+//                             child: Image(
+//                               width: 50,
+//                               height: 50,
+//                               color: Colors.blue,
+//                               image: AssetImage("assets/images/toilet.png"),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//                 GestureDetector(
+//                   onTap: () async {
+//                     addStatusSupport(value: 22);
+//                     Navigator.of(context).pop();
+//                   },
+//                   child: const Card(
+//                     child: Column(
+//                       children: <Widget>[
+//                         Padding(
+//                           padding: EdgeInsets.only(top: 50),
+//                           child: SizedBox(
+//                             child: Image(
+//                               width: 50,
+//                               height: 50,
+//                               color: Colors.orange,
+//                               image: AssetImage("assets/images/restaurant.png"),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//                 GestureDetector(
+//                   onTap: () async {
+//                     addStatusSupport(value: 38);
+//                     Navigator.of(context).pop();
+//                   },
+//                   child: const Card(
+//                     child: Column(
+//                       children: <Widget>[
+//                         Padding(
+//                           padding: EdgeInsets.only(top: 50),
+//                           child: SizedBox(
+//                             child: Image(
+//                               width: 50,
+//                               height: 50,
+//                               color: Colors.black,
+//                               image: AssetImage("assets/images/sleeping.png"),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//                 GestureDetector(
+//                   onTap: () async {
+//                     addStatusSupport(value: 39);
+//                     Navigator.of(context).pop();
+//                   },
+//                   child: const Card(
+//                     child: Column(
+//                       children: <Widget>[
+//                         Padding(
+//                           padding: EdgeInsets.only(top: 50),
+//                           child: SizedBox(
+//                             child: Image(
+//                               width: 50,
+//                               height: 50,
+//                               color: Colors.greenAccent,
+//                               image: AssetImage("assets/images/gas.png"),
+//                             ),
+//                           ),
+//                         ),
+//                       ],
+//                     ),
+//                   ),
+//                 ),
+//               ],
+//             ),
+//           ),
+//           actions: [
+//             if (buttonStatus == true)
+//               ElevatedButton(
+//                 onPressed: () {
+//                   _continueRute(statusSupportId);
+//                   Navigator.of(context).pop();
+//                 },
+//                 style: ElevatedButton.styleFrom(
+//                     shape: RoundedRectangleBorder(
+//                       borderRadius: BorderRadius.circular(20), // <-- Radius
+//                     ),
+//                     backgroundColor: const Color(0xFF2C522A)),
+//                 child: const Text(
+//                   'Continuar ruta',
+//                   style: TextStyle(color: Colors.white),
+//                 ),
+//               ),
+//           ],
+//         );
+//       },
+//     );
+//   }
+
+//   //check list
+//   // ignore: non_constant_identifier_names
+//   List<CheckList> service_list = [];
+
+//   final List<bool> _isChecked = [];
+//   bool canUpload = false;
+
+//   Map<dynamic, dynamic> sumMap = {};
+//   //check list
+
+//   Future<void> _dialogCircleCheck(BuildContext context) {
+//     return showDialog(
+//       context: context,
+//       builder: (context) {
+//         return StatefulBuilder(
+//           builder: (context, setState) {
+//             return AlertDialog(
+//               title: const Text("Check List"),
+//               content: SizedBox(
+//                 width: 350,
+//                 child: loading == true
+//                     ? const Center(
+//                         child: SizedBox(
+//                           width: 30,
+//                           height: 30,
+//                           child: CircularProgressIndicator(),
+//                         ),
+//                       )
+//                     : ListView.builder(
+//                         shrinkWrap: true,
+//                         itemCount: service_list.length,
+//                         itemBuilder: (context, index) {
+//                           return CheckboxListTile(
+//                             title: Text(service_list[index].option),
+//                             value: _isChecked[index],
+//                             onChanged: (val) {
+//                               setState(() {
+//                                 _isChecked[index] = val!;
+//                                 canUpload = true;
+//                                 sumMap[service_list[index].id.toString()] =
+//                                     canUpload;
+//                               });
+//                             },
+//                           );
+//                         },
+//                       ),
+//               ),
+//               actions: [
+//                 if (listCked == false)
+//                   ElevatedButton(
+//                     onPressed: canUpload
+//                         ? () {
+//                             confirmationCheckList(context, id);
+//                           }
+//                         : null,
+//                     style: ElevatedButton.styleFrom(
+//                         shape: RoundedRectangleBorder(
+//                           borderRadius: BorderRadius.circular(20), // <-- Radius
+//                         ),
+//                         backgroundColor:
+//                             const Color(0xFF2C522A)), //addOptionList(id),
+//                     child: const Text(
+//                       'Registrar',
+//                       style: TextStyle(color: Colors.white),
+//                     ),
+//                   ),
+//               ],
+//             );
+//           },
+//         );
+//       },
+//     );
+//   }
+
+//   Future<void> confirmationCheckList(BuildContext context, id) {
+//     return showDialog<void>(
+//       context: context,
+//       builder: (BuildContext context) {
+//         return AlertDialog(
+//           //title: const Text(''),
+//           content: const Text('¿Esta seguro de guardar este check list?'),
+//           actions: <Widget>[
+//             TextButton(
+//               style: TextButton.styleFrom(
+//                 textStyle: Theme.of(context).textTheme.labelLarge,
+//               ),
+//               child: const Text('No'),
+//               onPressed: () {
+//                 Navigator.of(context).pop();
+//               },
+//             ),
+//             TextButton(
+//               style: TextButton.styleFrom(
+//                 textStyle: Theme.of(context).textTheme.labelLarge,
+//               ),
+//               child: const Text('Si'),
+//               onPressed: () {
+//                 addOptionList(id);
+//               },
+//             ),
+//           ],
+//         );
+//       },
+//     );
+//   }
+
+//   checkListF(status) {
+//     if (status == true) {
+//       return Column(
+//         children: <Widget>[
+//           IconButton(
+//             icon: const Icon(
+//               FontAwesomeIcons.clipboardList,
+//               color: Colors.blue,
+//             ),
+//             iconSize: 25.5,
+//             onPressed: () => _dialogCircleCheck((context)),
+//           ),
+//           const Text(
+//             'Check List',
+//             style: TextStyle(fontSize: 12, color: Colors.black),
+//           )
+//         ],
+//       );
+//     } else {
+//       return const Column(
+//         children: <Widget>[
+//           IconButton(
+//             icon: Icon(
+//               FontAwesomeIcons.clipboardList,
+//             ),
+//             iconSize: 25.5,
+//             onPressed: null,
+//           ),
+//           Text(
+//             'Check List',
+//             style: TextStyle(fontSize: 12, color: Colors.black),
+//           )
+//         ],
+//       );
+//     }
+//   }
+
+//   iconStatus(status, buttonStatus) {
+//     if (status == true) {
+//       return Column(
+//         children: <Widget>[
+//           IconButton(
+//             icon: const Icon(
+//               FontAwesomeIcons.locationDot,
+//               color: Colors.red,
+//             ),
+//             iconSize: 25.5,
+//             onPressed: status
+//                 ? () {
+//                     _dialogBuilderEnbled(context, buttonStatus);
+//                   }
+//                 : null,
+//           ),
+//           const Text(
+//             'Status de Soporte',
+//             style: TextStyle(fontSize: 12, color: Colors.black),
+//           )
+//         ],
+//       );
+//     } else {
+//       return const Column(
+//         children: <Widget>[
+//           IconButton(
+//             icon: Icon(
+//               FontAwesomeIcons.locationDot,
+//             ),
+//             iconSize: 27.5,
+//             onPressed: null,
+//           ),
+//           Text(
+//             'Status de Soporte',
+//             style: TextStyle(fontSize: 12, color: Colors.black),
+//           )
+//         ],
+//       );
+//     }
+//   }
+
+//   iconTripClosure(status, id, service) {
+//     if (status == true) {
+//       return Column(
+//         children: <Widget>[
+//           IconButton(
+//             icon: const Icon(
+//               FontAwesomeIcons.circleCheck,
+//               color: Colors.green,
+//             ),
+//             iconSize: 25.5,
+//             onPressed: status
+//                 ? () {
+//                     Navigator.push(
+//                       context,
+//                       MaterialPageRoute(
+//                         builder: (context) =>
+//                             TripClosureScreen(id: id, serviceId: service),
+//                       ),
+//                     );
+//                   }
+//                 : null,
+//           ),
+//           const Text(
+//             'Cierre de viaje',
+//             style: TextStyle(fontSize: 12, color: Colors.black),
+//           )
+//         ],
+//       );
+//     } else {
+//       return const Column(
+//         children: <Widget>[
+//           IconButton(
+//             icon: Icon(
+//               FontAwesomeIcons.circleCheck,
+//             ),
+//             iconSize: 25.5,
+//             // onPressed: snapshot.data!.isEnableTripClosure
+//             onPressed: null,
+//           ),
+//           Text(
+//             'Cierre de viaje',
+//             style: TextStyle(fontSize: 12, color: Colors.black),
+//           )
+//         ],
+//       );
+//     }
+//   }
+
+//   iconTravelExpenses(status) {
+//     if (status == true) {
+//       return Column(
+//         children: <Widget>[
+//           IconButton(
+//             icon: const Icon(
+//               FontAwesomeIcons.fileInvoiceDollar,
+//               color: Colors.green,
+//             ),
+//             iconSize: 25.5,
+//             onPressed: status
+//                 ? () {
+//                     sendTravelExpenses(id);
+//                   }
+//                 : null,
+//           ),
+//           const Text(
+//             ' Viaticos',
+//             style: TextStyle(fontSize: 12, color: Colors.black),
+//           )
+//         ],
+//       );
+//     } else {
+//       return const Column(
+//         children: <Widget>[
+//           IconButton(
+//             icon: Icon(
+//               FontAwesomeIcons.fileInvoiceDollar,
+//             ),
+//             iconSize: 25.5,
+//             // onPressed: () => sendTravelExpenses(id),
+//             onPressed: null,
+//           ),
+//           Text(
+//             ' Viaticos',
+//             style: TextStyle(fontSize: 12, color: Colors.black),
+//           )
+//         ],
+//       );
+//     }
+//   }
+
+//   Future<void> addStatusSupport({required int value}) async {
+//     http.Response response = await Detail.addStatusSupport(id, value, 'begin');
+//     if (response.statusCode == 200) {
+//       setState(() {
+//         _loadData();
+//       });
+//     }
+//     if (response.statusCode == 500) {
+//       // ignore: use_build_context_synchronously
+//       errorSnackBar(context,
+//           'Se ha producido un error interno al insertar el estatus de soporte inicial en el sistema.');
+//     }
+//   }
+
+//   Future<void> _continueRute(int statusSupportId) async {
+//     http.Response response =
+//         await Detail.addStatusSupport(id, statusSupportId, 'end');
+//     if (response.statusCode == 200) {
+//       setState(() {
+//         _loadData();
+//       });
+//     }
+
+//     if (response.statusCode == 500) {
+//       // ignore: use_build_context_synchronously
+//       errorSnackBar(context,
+//           'Se ha producido un error interno al insertar el estatus de soporte final al sistema.');
+//     }
+//   }
+
+//   Future<List<CheckList>> getCheckList() async {
+//     String token;
+
+//     final prefs = await SharedPreferences.getInstance();
+//     token = prefs.getString('token') ?? '';
+//     var route = 'index.php';
+
+//     var response = await http
+//         .get(Uri.parse(baseURL + route).replace(queryParameters: {
+//           'r': 'esegadi/get-puntosrevision',
+//           'token': token,
+//         }))
+//         .timeout(const Duration(seconds: 90));
+//     var data = jsonDecode(response.body.toString());
+
+//     if (response.statusCode == 200) {
+//       for (Map<String, dynamic> index in data) {
+//         service_list.add(CheckList.fromJson(index));
+//       }
+//       // ignore: unused_local_variable
+//       for (var idx in service_list) {
+//         _isChecked.add(false);
+//       }
+
+//       return service_list;
+//     } else {
+//       return service_list;
+//     }
+//   }
+
+//   addOptionList(int id) async {
+//     http.Response response = await Detail.addOption(id, sumMap);
+
+//     if (response.statusCode == 200) {
+//       setState(() {
+//         _loadData();
+//       });
+
+//       // ignore: use_build_context_synchronously
+//       Navigator.of(context).pop();
+//       // ignore: use_build_context_synchronously
+//       Navigator.of(context).pop();
+//     }
+
+//     if (response.statusCode == 500) {
+//       // ignore: use_build_context_synchronously
+//       errorSnackBar(context,
+//           'Se ha producido un error interno al registrar el check list .');
+//     }
+//   }
+
+//   sendTravelExpenses(int id) async {
+//     Navigator.push(
+//       context,
+//       MaterialPageRoute(
+//         builder: (context) => TravelExpensesScreen(
+//           id: id,
+//         ),
+//       ),
+//     );
+//   }
+
+//   getPdf(int id) async {
+//     var res = await Detail().getPdf(id);
+
+//     if (res == null) {
+//       // ignore: use_build_context_synchronously
+//       warningSnackBar(context, 'La remision a un no tiene el CFDI creado');
+//     } else {
+//       String rest = res["url"];
+
+//       String name = "CFDI Remision: $numRemision";
+//       FileDownloader.downloadFile(
+//         url: rest,
+//         name: name,
+//         notificationType: NotificationType.all,
+//       );
+//     }
+//   }
+// }
 
 import 'package:flutter/material.dart';
-import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
-import 'package:segadi/model/services/checklist.dart';
-import 'package:segadi/view/home/routes.dart';
-
-import 'package:segadi/view_model/globals.dart';
-
+import 'package:provider/provider.dart';
 import 'package:segadi/view_model/services_operator/detail_service.dart';
-import 'package:segadi/model/services/detail_service.dart';
-import 'package:http/http.dart' as http;
-import 'package:shared_preferences/shared_preferences.dart';
 
-class DetailServicesScreen extends StatefulWidget {
-  final int id;
-  // final bool detailFinished;
-  // final Map response;
-  const DetailServicesScreen({
-    Key? key,
-    required this.id,
-  }) : super(key: key);
-
-  @override
-  // ignore: library_private_types_in_public_api, no_logic_in_create_state
-  _DetailServicesScreen createState() =>
-      // ignore: no_logic_in_create_state
-      _DetailServicesScreen(id);
-}
-
-class _DetailServicesScreen extends State<DetailServicesScreen> {
-  _DetailServicesScreen(this.id);
-  final int id;
-
-  String numRemision = "";
-
-  late Future<DetailService>? detail;
-
-  final int value = 0;
-
-  int statusSupportId = 0;
-
-  bool loading = true;
-
-  bool listCked = false;
-
-  late final String path;
-
-  @override
-  void initState() {
-    super.initState();
-
-    detail = Detail().getService(id);
-    getCheckList().then((value) {
-      setState(() {
-        loading = false;
-      });
-    });
-  }
-
-  void addStatus(statusId) async {
-    http.Response response = await Detail.addStatus(id, statusId);
-    if (response.statusCode == 200) {
-      _loadData();
-    }
-
-    if (response.statusCode == 500) {
-      // ignore: use_build_context_synchronously
-      errorSnackBar(context,
-          'Se ha producido un error interno al insertar el estatus obligatorio.');
-    }
-  }
-
-  _loadData() async {
-    detail = Detail().getService(id);
-
-    setState(() {
-      detail = detail;
-    });
-  }
+class DetailServiceScreen extends StatelessWidget {
+  const DetailServiceScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final viewModel = Provider.of<DetailViewModel>(context);
+
+    // Usar viewModel...
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -94,644 +1025,348 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
         backgroundColor: const Color(0xFF2C522A),
       ),
       backgroundColor: Colors.white,
-      //drawer: const DrawerScreen(),
-      body: FutureBuilder<DetailService>(
-        future: detail,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            if (snapshot.data!.statusSupportId > 0) {
-              statusSupportId = snapshot.data!.statusSupportId;
-            }
-            if (snapshot.data!.list != null) {
-              listCked = true;
-            }
-
-            numRemision = snapshot.data!.service;
-
-            return Center(
-              child: SingleChildScrollView(
-                child: Column(
-                  children: [
-                    Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Container(
-                        //height: 530,
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: const Color(0xFF84A756),
-                          ),
+      body: viewModel.item == null
+          ? const Center(child: CircularProgressIndicator())
+          : SingleChildScrollView(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      //height: 530,
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        border: Border.all(
                           color: const Color(0xFF84A756),
-                          borderRadius: BorderRadius.circular(10),
                         ),
-                        child: Column(
-                          children: [
-                            Column(
-                              children: [
-                                Align(
-                                  alignment: Alignment.center,
-                                  child: Text(
-                                    'Servicio: ${snapshot.data!.service}',
-                                    style: const TextStyle(
-                                        fontSize: 20,
+                        color: const Color(0xFF84A756),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: Column(
+                        children: [
+                          Column(
+                            children: [
+                              Align(
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'Servicio: ${viewModel.item!.service}',
+                                  style: const TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                ),
+                              ),
+                              const Row(children: [
+                                Text(
+                                  'Remitente',
+                                  style: TextStyle(
+                                      fontSize: 20,
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.white),
+                                )
+                              ]),
+                              const Divider(
+                                height: 15.0,
+                                color: Colors.white,
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Razon Social:',
+                                    style: TextStyle(
+                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
                                   ),
-                                ),
-                                const Row(children: [
+                                ],
+                              ),
+                              Row(
+                                children: [
                                   Text(
-                                    'Remitente',
+                                    viewModel.item!.senderBusinessName
+                                        .toString(),
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Télefono:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    viewModel.item!.senderPhoneNumber
+                                        .toString(),
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Contacto:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    viewModel.item!.senderName.toString(),
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Domicilio:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${viewModel.item!.senderStreet} ${viewModel.item!.senderOutdoorNumber} ',
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  )
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${viewModel.item!.senderZipCode}',
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  )
+                                ],
+                              ),
+                              const Divider(
+                                color: Colors.transparent,
+                                height: 15.0,
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Destinatario',
                                     style: TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
                                   )
-                                ]),
-                                const Divider(
-                                  height: 15.0,
-                                  color: Colors.white,
-                                ),
-                                const Row(
-                                  children: [
-                                    Text(
-                                      'Razon Social:',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      snapshot.data!.senderBusinessName,
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    )
-                                  ],
-                                ),
-                                const Row(
-                                  children: [
-                                    Text(
-                                      'Télefono:',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      snapshot.data!.senderPhoneNumber,
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    )
-                                  ],
-                                ),
-                                const Row(
-                                  children: [
-                                    Text(
-                                      'Contacto:',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      snapshot.data!.senderName,
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    )
-                                  ],
-                                ),
-                                const Row(
-                                  children: [
-                                    Text(
-                                      'Domicilio:',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ',
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    )
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      '${snapshot.data!.senderZipCode}',
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    )
-                                  ],
-                                ),
-                                const Divider(
-                                  color: Colors.transparent,
-                                  height: 15.0,
-                                ),
-                                const Row(
-                                  children: [
-                                    Text(
-                                      'Destinatario',
-                                      style: TextStyle(
-                                          fontSize: 20,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    )
-                                  ],
-                                ),
-                                const Divider(
-                                  color: Colors.white,
-                                  height: 15.0,
-                                ),
-                                const Row(
-                                  children: [
-                                    Text(
-                                      'Razon Social:',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      snapshot.data!.recipientBusinessName,
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    )
-                                  ],
-                                ),
-                                const Row(
-                                  children: [
-                                    Text(
-                                      'Télefono:',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      snapshot.data!.recipientPhoneNumber,
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    )
-                                  ],
-                                ),
-                                const Row(
-                                  children: [
-                                    Text(
-                                      'Contacto:',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      snapshot.data!.recipientName,
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    )
-                                  ],
-                                ),
-                                const Row(
-                                  children: [
-                                    Text(
-                                      'Domicilio:',
-                                      style: TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.bold,
-                                          color: Colors.white),
-                                    ),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    /* Text(
+                                ],
+                              ),
+                              const Divider(
+                                color: Colors.white,
+                                height: 15.0,
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Razon Social:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    viewModel.item!.recipientBusinessName
+                                        .toString(),
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Télefono:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    viewModel.item!.recipientPhoneNumber
+                                        .toString(),
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Contacto:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    viewModel.item!.recipientName.toString(),
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
+                                  )
+                                ],
+                              ),
+                              const Row(
+                                children: [
+                                  Text(
+                                    'Domicilio:',
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white),
+                                  ),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  /* Text(
                                       '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}',
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
                                           color: Colors.white, fontSize: 12),
                                     ),*/
-                                    FittedBox(
-                                        fit: BoxFit.fitWidth,
-                                        child: Text(
-                                          '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}',
-                                          style: const TextStyle(
-                                              color: Colors.white,
-                                              fontSize: 12),
-                                        )),
-                                  ],
-                                ),
-                                Row(
-                                  children: [
-                                    Text(
-                                      '${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}',
-                                      style: const TextStyle(
-                                          color: Colors.white, fontSize: 12),
-                                    ),
-                                  ],
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: Container(
-                        //height: 100,
-                        width: 380,
-                        color: Colors.white,
-                        child: Column(
-                          children: [
-                            Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: checkListF(
-                                      snapshot.data!.isEnableCheckList),
-                                ),
-                                Expanded(
-                                  child: iconStatus(
-                                      snapshot.data!.isEnableStatusSupport,
-                                      snapshot.data!.isEnableContinueRute),
-                                ),
-                                const Expanded(
-                                  child: Column(
-                                    children: <Widget>[
-                                      IconButton(
-                                        icon: Icon(
-                                          FontAwesomeIcons.mapLocationDot,
-                                          color: Colors.blueAccent,
-                                        ),
-                                        iconSize: 25.5,
-                                        onPressed: null,
-                                      ),
-                                      Text(
-                                        'Ruta Sugerida',
-                                        style: TextStyle(
-                                            fontSize: 12, color: Colors.black),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                            Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: iconTripClosure(
-                                      snapshot.data!.serviceClosed,
-                                      snapshot.data!.id,
-                                      snapshot.data!.service),
-                                ),
-                                Expanded(
-                                  child: iconTravelExpenses(
-                                      snapshot.data!.pendingMoneyChecks),
-                                ),
-                                Expanded(
-                                  child: Column(
-                                    children: <Widget>[
-                                      IconButton(
-                                        icon: const Icon(
-                                          FontAwesomeIcons.solidFilePdf,
-                                          color: Colors.red,
-                                        ),
-                                        iconSize: 25.5,
-                                        onPressed: () => getPdf(id),
-                                      ),
-                                      const Text(
-                                        'Descargar Servicio',
-                                        style: TextStyle(
-                                            fontSize: 12, color: Colors.black),
-                                      )
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.all(10.0),
-                      child: SizedBox(
-                        height: 40,
-                        width: 380,
-                        child: Column(
-                          children: [
-                            Row(
-                              children: <Widget>[
-                                Expanded(
-                                  child: SizedBox(
-                                    height: 40,
-                                    child: ElevatedButton(
-                                      onPressed: snapshot.data!.isEnableButton
-                                          ? () {
-                                              addStatus(snapshot
-                                                  .data!.mandatoryStatusId!);
-                                            }
-                                          : null,
-                                      style: ElevatedButton.styleFrom(
-                                          shape: RoundedRectangleBorder(
-                                            borderRadius: BorderRadius.circular(
-                                                20), // <-- Radius
-                                          ),
-                                          backgroundColor:
-                                              const Color(0xFF2C522A)),
+                                  FittedBox(
+                                      fit: BoxFit.fitWidth,
                                       child: Text(
-                                        snapshot.data!.mandatoryStatus!,
+                                        '${viewModel.item!.recipientStreet} ${viewModel.item!.recipientOutdoorNumber}',
                                         style: const TextStyle(
-                                            color: Colors.white),
-                                      ),
-                                    ),
+                                            color: Colors.white, fontSize: 12),
+                                      )),
+                                ],
+                              ),
+                              Row(
+                                children: [
+                                  Text(
+                                    '${viewModel.item!.recipientZipCode} ${viewModel.item!.recipientState}',
+                                    style: const TextStyle(
+                                        color: Colors.white, fontSize: 12),
                                   ),
-                                )
-                              ],
-                            ),
-                          ],
-                        ),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
-                    )
-                  ],
-                ),
-              ),
-            );
-          } else if (snapshot.hasError) {
-            return Text("${snapshot.error}");
-          }
-          return const CircularProgressIndicator();
-        },
-      ),
-    );
-  }
-
-  Future<void> _dialogBuilderEnbled(BuildContext context, buttonStatus) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text(
-            'Registrar Parada',
-            style: TextStyle(color: Color(0xFF2C522A)),
-          ),
-          content: SizedBox(
-            width: 300,
-            height: 300,
-            child: GridView.count(
-              crossAxisCount: 2,
-              padding: const EdgeInsets.all(10.0),
-              childAspectRatio: 8.0 / 9.0,
-              children: <Widget>[
-                GestureDetector(
-                  onTap: () async {
-                    addStatusSupport(value: 24);
-                    Navigator.of(context).pop();
-                  },
-                  child: const Card(
-                    child: Column(
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(top: 50),
-                          child: SizedBox(
-                            child: Image(
-                              width: 50,
-                              height: 50,
-                              color: Colors.blue,
-                              image: AssetImage("assets/images/toilet.png"),
-                            ),
-                          ),
-                        ),
-                      ],
                     ),
                   ),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    addStatusSupport(value: 22);
-                    Navigator.of(context).pop();
-                  },
-                  child: const Card(
-                    child: Column(
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(top: 50),
-                          child: SizedBox(
-                            child: Image(
-                              width: 50,
-                              height: 50,
-                              color: Colors.orange,
-                              image: AssetImage("assets/images/restaurant.png"),
-                            ),
+                  Padding(
+                    padding: const EdgeInsets.all(10.0),
+                    child: Container(
+                      //height: 100,
+                      width: 380,
+                      color: Colors.white,
+                      child: Column(
+                        children: [
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: checkListF(
+                                    viewModel.item!.isEnableCheckList),
+                              ),
+                              Expanded(
+                                child: iconStatus(
+                                    viewModel.item!.isEnableStatusSupport,
+                                    viewModel.item!.isEnableContinueRute),
+                              ),
+                              const Expanded(
+                                child: Column(
+                                  children: <Widget>[
+                                    IconButton(
+                                      icon: Icon(
+                                        FontAwesomeIcons.mapLocationDot,
+                                        color: Colors.blueAccent,
+                                      ),
+                                      iconSize: 25.5,
+                                      onPressed: null,
+                                    ),
+                                    Text(
+                                      'Ruta Sugerida',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.black),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    addStatusSupport(value: 38);
-                    Navigator.of(context).pop();
-                  },
-                  child: const Card(
-                    child: Column(
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(top: 50),
-                          child: SizedBox(
-                            child: Image(
-                              width: 50,
-                              height: 50,
-                              color: Colors.black,
-                              image: AssetImage("assets/images/sleeping.png"),
-                            ),
+                          Row(
+                            children: <Widget>[
+                              Expanded(
+                                child: iconTripClosure(
+                                    viewModel.item!.serviceClosed,
+                                    viewModel.item!.id,
+                                    viewModel.item!.service),
+                              ),
+                              Expanded(
+                                child: iconTravelExpenses(
+                                    viewModel.item!.pendingMoneyChecks),
+                              ),
+                              Expanded(
+                                child: Column(
+                                  children: <Widget>[
+                                    IconButton(
+                                      icon: const Icon(
+                                        FontAwesomeIcons.solidFilePdf,
+                                        color: Colors.red,
+                                      ),
+                                      iconSize: 25.5,
+                                      onPressed: () => {}, //getPdf(id),
+                                    ),
+                                    const Text(
+                                      'Descargar Servicio',
+                                      style: TextStyle(
+                                          fontSize: 12, color: Colors.black),
+                                    )
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                GestureDetector(
-                  onTap: () async {
-                    addStatusSupport(value: 39);
-                    Navigator.of(context).pop();
-                  },
-                  child: const Card(
-                    child: Column(
-                      children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(top: 50),
-                          child: SizedBox(
-                            child: Image(
-                              width: 50,
-                              height: 50,
-                              color: Colors.greenAccent,
-                              image: AssetImage("assets/images/gas.png"),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            if (buttonStatus == true)
-              ElevatedButton(
-                onPressed: () {
-                  _continueRute(statusSupportId);
-                  Navigator.of(context).pop();
-                },
-                style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20), // <-- Radius
-                    ),
-                    backgroundColor: const Color(0xFF2C522A)),
-                child: const Text(
-                  'Continuar ruta',
-                  style: TextStyle(color: Colors.white),
-                ),
-              ),
-          ],
-        );
-      },
-    );
-  }
-
-  //check list
-  // ignore: non_constant_identifier_names
-  List<CheckList> service_list = [];
-
-  final List<bool> _isChecked = [];
-  bool canUpload = false;
-
-  Map<dynamic, dynamic> sumMap = {};
-  //check list
-
-  Future<void> _dialogCircleCheck(BuildContext context) {
-    return showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setState) {
-            return AlertDialog(
-              title: const Text("Check List"),
-              content: SizedBox(
-                width: 350,
-                child: loading == true
-                    ? const Center(
-                        child: SizedBox(
-                          width: 30,
-                          height: 30,
-                          child: CircularProgressIndicator(),
-                        ),
-                      )
-                    : ListView.builder(
-                        shrinkWrap: true,
-                        itemCount: service_list.length,
-                        itemBuilder: (context, index) {
-                          return CheckboxListTile(
-                            title: Text(service_list[index].option),
-                            value: _isChecked[index],
-                            onChanged: (val) {
-                              setState(() {
-                                _isChecked[index] = val!;
-                                canUpload = true;
-                                sumMap[service_list[index].id.toString()] =
-                                    canUpload;
-                              });
-                            },
-                          );
-                        },
+                        ],
                       ),
-              ),
-              actions: [
-                if (listCked == false)
-                  ElevatedButton(
-                    onPressed: canUpload
-                        ? () {
-                            confirmationCheckList(context, id);
-                          }
-                        : null,
-                    style: ElevatedButton.styleFrom(
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(20), // <-- Radius
-                        ),
-                        backgroundColor:
-                            const Color(0xFF2C522A)), //addOptionList(id),
-                    child: const Text(
-                      'Registrar',
-                      style: TextStyle(color: Colors.white),
                     ),
                   ),
-              ],
-            );
-          },
-        );
-      },
+                ],
+              ),
+            ),
     );
-  }
 
-  Future<void> confirmationCheckList(BuildContext context, id) {
-    return showDialog<void>(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          //title: const Text(''),
-          content: const Text('¿Esta seguro de guardar este check list?'),
-          actions: <Widget>[
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('No'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            TextButton(
-              style: TextButton.styleFrom(
-                textStyle: Theme.of(context).textTheme.labelLarge,
-              ),
-              child: const Text('Si'),
-              onPressed: () {
-                addOptionList(id);
-              },
-            ),
-          ],
-        );
-      },
-    );
+    // Usar viewModel...
   }
 
   checkListF(status) {
@@ -739,13 +1374,13 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
       return Column(
         children: <Widget>[
           IconButton(
-            icon: const Icon(
-              FontAwesomeIcons.clipboardList,
-              color: Colors.blue,
-            ),
-            iconSize: 25.5,
-            onPressed: () => _dialogCircleCheck((context)),
-          ),
+              icon: const Icon(
+                FontAwesomeIcons.clipboardList,
+                color: Colors.blue,
+              ),
+              iconSize: 25.5,
+              onPressed: () => {} //_dialogCircleCheck((context)),
+              ),
           const Text(
             'Check List',
             style: TextStyle(fontSize: 12, color: Colors.black),
@@ -783,7 +1418,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             iconSize: 25.5,
             onPressed: status
                 ? () {
-                    _dialogBuilderEnbled(context, buttonStatus);
+                    //_dialogBuilderEnbled(context, buttonStatus);
                   }
                 : null,
           ),
@@ -824,13 +1459,13 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             iconSize: 25.5,
             onPressed: status
                 ? () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (context) =>
-                            TripClosureScreen(id: id, serviceId: service),
-                      ),
-                    );
+                    // Navigator.push(
+                    //   context,
+                    //   MaterialPageRoute(
+                    //     builder: (context) =>
+                    //         TripClosureScreen(id: id, serviceId: service),
+                    //   ),
+                    // );
                   }
                 : null,
           ),
@@ -872,7 +1507,7 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             iconSize: 25.5,
             onPressed: status
                 ? () {
-                    sendTravelExpenses(id);
+                    // sendTravelExpenses(id);
                   }
                 : null,
           ),
@@ -898,116 +1533,6 @@ class _DetailServicesScreen extends State<DetailServicesScreen> {
             style: TextStyle(fontSize: 12, color: Colors.black),
           )
         ],
-      );
-    }
-  }
-
-  Future<void> addStatusSupport({required int value}) async {
-    http.Response response = await Detail.addStatusSupport(id, value, 'begin');
-    if (response.statusCode == 200) {
-      setState(() {
-        _loadData();
-      });
-    }
-    if (response.statusCode == 500) {
-      // ignore: use_build_context_synchronously
-      errorSnackBar(context,
-          'Se ha producido un error interno al insertar el estatus de soporte inicial en el sistema.');
-    }
-  }
-
-  Future<void> _continueRute(int statusSupportId) async {
-    http.Response response =
-        await Detail.addStatusSupport(id, statusSupportId, 'end');
-    if (response.statusCode == 200) {
-      setState(() {
-        _loadData();
-      });
-    }
-
-    if (response.statusCode == 500) {
-      // ignore: use_build_context_synchronously
-      errorSnackBar(context,
-          'Se ha producido un error interno al insertar el estatus de soporte final al sistema.');
-    }
-  }
-
-  Future<List<CheckList>> getCheckList() async {
-    String token;
-
-    final prefs = await SharedPreferences.getInstance();
-    token = prefs.getString('token') ?? '';
-    var route = 'index.php';
-
-    var response = await http
-        .get(Uri.parse(baseURL + route).replace(queryParameters: {
-          'r': 'esegadi/get-puntosrevision',
-          'token': token,
-        }))
-        .timeout(const Duration(seconds: 90));
-    var data = jsonDecode(response.body.toString());
-
-    if (response.statusCode == 200) {
-      for (Map<String, dynamic> index in data) {
-        service_list.add(CheckList.fromJson(index));
-      }
-      // ignore: unused_local_variable
-      for (var idx in service_list) {
-        _isChecked.add(false);
-      }
-
-      return service_list;
-    } else {
-      return service_list;
-    }
-  }
-
-  addOptionList(int id) async {
-    http.Response response = await Detail.addOption(id, sumMap);
-
-    if (response.statusCode == 200) {
-      setState(() {
-        _loadData();
-      });
-
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
-      // ignore: use_build_context_synchronously
-      Navigator.of(context).pop();
-    }
-
-    if (response.statusCode == 500) {
-      // ignore: use_build_context_synchronously
-      errorSnackBar(context,
-          'Se ha producido un error interno al registrar el check list .');
-    }
-  }
-
-  sendTravelExpenses(int id) async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => TravelExpensesScreen(
-          id: id,
-        ),
-      ),
-    );
-  }
-
-  getPdf(int id) async {
-    var res = await Detail().getPdf(id);
-
-    if (res == null) {
-      // ignore: use_build_context_synchronously
-      warningSnackBar(context, 'La remision a un no tiene el CFDI creado');
-    } else {
-      String rest = res["url"];
-
-      String name = "CFDI Remision: $numRemision";
-      FileDownloader.downloadFile(
-        url: rest,
-        name: name,
-        notificationType: NotificationType.all,
       );
     }
   }
