@@ -1,8 +1,8 @@
-// To parse this JSON data, do
-//
-//     final checkList = checkListFromJson(jsonString);
-
 import 'dart:convert';
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:segadi/view_model/globals.dart';
+import 'package:http/http.dart' as http;
 
 List<CheckList> checkListFromJson(String str) =>
     List<CheckList>.from(json.decode(str).map((x) => CheckList.fromJson(x)));
@@ -11,14 +11,16 @@ String checkListToJson(List<CheckList> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class CheckList {
-  int id;
-  String option;
-  int sequence;
+  int? id;
+  String? option;
+  int? sequence;
+  bool isChecked;
 
   CheckList({
-    required this.id,
-    required this.option,
-    required this.sequence,
+    this.id,
+    this.option,
+    this.sequence,
+    this.isChecked = false,
   });
 
   factory CheckList.fromJson(Map<String, dynamic> json) => CheckList(
@@ -32,4 +34,62 @@ class CheckList {
         "option": option,
         "sequence": sequence,
       };
+}
+
+class NewCheckList {
+  final storage = const FlutterSecureStorage();
+  Future<List<CheckList>> fetchItems() async {
+    String? token;
+    List<CheckList> serviceList = [];
+
+    token = await storage.read(key: 'token');
+    var route = 'index.php';
+
+    var response = await http.get(
+      Uri.parse(baseURL + route).replace(
+        queryParameters: {
+          'r': 'esegadi/get-puntosrevision',
+          'token': token,
+        },
+      ),
+    );
+
+    var data = jsonDecode(response.body.toString());
+    print(response.statusCode);
+    if (response.statusCode == 200) {
+      for (Map<String, dynamic> index in data) {
+        serviceList.add(CheckList.fromJson(index));
+      }
+
+      return serviceList;
+    } else {
+      throw Exception('Failed to load check list');
+    }
+  }
+
+  Future<http.Response> saveCheckList(int id, List checkList) async {
+    String? token;
+    token = await storage.read(key: 'token');
+
+    Map data = {
+      "service": {"service_id": id, "list": checkList},
+      "token": token
+    };
+    var body = json.encode(data);
+  
+
+    var url = Uri.parse('${baseURL}index.php?r=esegadi/checklistpost');
+    http.Response response = await http.post(
+      url,
+      headers: headers,
+      body: body,
+    );
+
+    if (response.statusCode == 200) {
+      return response;
+    } else {
+      throw Exception(
+          'Ha ocurrido un error, el check list no se pudo registrar');
+    }
+  }
 }

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:segadi/model/services/services.dart';
 
 class ServicesViewModel extends ChangeNotifier {
-  final ItemService _itemService = ItemService();
+  final Services _itemService = Services();
 
   List<Services> _items = [];
   final bool _isLoading = false;
@@ -10,20 +10,17 @@ class ServicesViewModel extends ChangeNotifier {
   List<Services> get items => _items;
   bool get isLoading => _isLoading;
 
-  ServicesViewModel() {
-    onRefresh();
-  }
+  // ServicesViewModel() {
+  //   onRefresh();
+  // }
 
-  Future<void> fetchItems() async {
-    //_isLoading = true;
-    //_items.clear();
-    //notifyListeners();
-
-    _items = await _itemService.fetchItems();
-    
-
-    //_isLoading = false;
-    notifyListeners();
+  Future fetchItems() async {
+    try {
+      _items = await _itemService.fetchItems();
+      notifyListeners();
+    } catch (e) {
+      print(e);
+    }
   }
 
   Future onRefresh() async {
@@ -31,6 +28,4 @@ class ServicesViewModel extends ChangeNotifier {
     await _itemService.fetchItems();
     notifyListeners();
   }
-
-  
 }

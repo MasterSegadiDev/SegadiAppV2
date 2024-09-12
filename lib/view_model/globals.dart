@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
 
+import 'package:flutter/material.dart';
 const String baseURL = 'http://198.251.68.42/DesarrolloSEGADI/web/';
 //const String baseURL = 'http://198.251.68.42/SEGADI/web/';
 
@@ -8,6 +8,9 @@ const Map<String, String> headers = {
   'Content-Type': 'application/json',
   'Accept': 'application/json'
 };
+
+late int serviceDetailId;
+//const String get serviceDetailId => _serviceDetailId;
 
 errorSnackBar(BuildContext context, String text) {
   showDialog(
@@ -74,3 +77,5 @@ successSnackBar(BuildContext context, String text) {
     ),
   );
 }
+
+

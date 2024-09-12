@@ -21,8 +21,6 @@ class ApiProvider {
         return responseJson;
       }
     } catch (e) {
-      //bad practice to print error use logger
-      // print(e);
       rethrow;
     }
   }
@@ -40,8 +38,6 @@ class ApiProvider {
         return true;
       }
     } catch (e) {
-      //bad practice to print error use logger
-      // print(e);
       rethrow;
     }
   }
@@ -59,8 +55,6 @@ class ApiProvider {
         return true;
       }
     } catch (e) {
-      //bad practice to print error use logger
-      // print(e);
       rethrow;
     }
   }
@@ -73,8 +67,6 @@ class ApiProvider {
         return true;
       }
     } catch (e) {
-      //bad practice to print error use logger
-      // print(e);
       rethrow;
     }
   }

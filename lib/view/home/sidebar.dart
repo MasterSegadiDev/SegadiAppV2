@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:segadi/model/user/UserInformation.dart';
+import 'package:segadi/view/home/home.dart';
 import 'package:segadi/view_model/user/user_information.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -98,7 +99,13 @@ class _DrawerScreen extends State<DrawerScreen> {
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {
-                  Navigator.pushNamed(context, '/home_page');
+                  Navigator.of(context).pop();
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const HomeScreen(),
+                    ),
+                  );
                 },
               ),
               ExpansionTile(
@@ -155,7 +162,7 @@ class _DrawerScreen extends State<DrawerScreen> {
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {
-                  Navigator.pushNamed(context, '/user');
+                  // Navigator.pushNamed(context, '/user');
                 },
               ),
               const ListTile(

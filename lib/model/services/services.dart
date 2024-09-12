@@ -12,25 +12,25 @@ String servicesToJson(List<Services> data) =>
     json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class Services {
-  int id;
-  String service;
-  String client;
-  String origin;
-  String destination;
-  String loadDate;
-  String unloadDate;
-  String documenter;
+  int? id;
+  String? service;
+  String? client;
+  String? origin;
+  String? destination;
+  String? loadDate;
+  String? unloadDate;
+  String? documenter;
   String? status;
 
   Services({
-    required this.id,
-    required this.service,
-    required this.client,
-    required this.origin,
-    required this.destination,
-    required this.loadDate,
-    required this.unloadDate,
-    required this.documenter,
+    this.id,
+    this.service,
+    this.client,
+    this.origin,
+    this.destination,
+    this.loadDate,
+    this.unloadDate,
+    this.documenter,
     this.status,
   });
 
@@ -57,9 +57,7 @@ class Services {
         "documenter": documenter,
         "status": status,
       };
-}
 
-class ItemService {
   final storage = const FlutterSecureStorage();
 
   Future<List<Services>> fetchItems() async {
@@ -82,14 +80,9 @@ class ItemService {
       ),
     );
 
-    var data = jsonDecode(response.body.toString());
-
     if (response.statusCode == 200) {
-      for (Map<String, dynamic> index in data) {
-        services.add(Services.fromJson(index));
-      }
-
-      return services;
+      List<dynamic> data = json.decode(response.body);
+      return data.map((json) => Services.fromJson(json)).toList();
     } else {
       return services;
     }

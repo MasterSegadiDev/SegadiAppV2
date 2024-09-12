@@ -8,7 +8,6 @@ class LoginView extends StatefulWidget {
   const LoginView({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _LoginScreenState createState() => _LoginScreenState();
 }
 
@@ -134,13 +133,9 @@ class _LoginScreenState extends State<LoginView> {
                     await loginViewModel.login();
                     if (loginViewModel.errorMessage != null) {
                       scaffoldMessengerError(
-                          // ignore: use_build_context_synchronously
-                          context,
-                          loginViewModel.errorMessage!);
+                          context, loginViewModel.errorMessage!);
                     } else {
-                      // ignore: use_build_context_synchronously
                       scaffoldMessengerSuccess(context);
-                      // ignore: use_build_context_synchronously
                       Future.delayed(const Duration(seconds: 2), () {
                         Navigator.pushNamed(context, '/home_page');
                       });
@@ -172,15 +167,15 @@ class _LoginScreenState extends State<LoginView> {
       onPressed: () async {
         await biometricViewModel.authenticate();
         if (biometricViewModel.isAuthenticatedWithToken) {
-          // ignore: use_build_context_synchronously
+        
           scaffoldMessengerSuccess(context);
-          // ignore: use_build_context_synchronously
+         
           Future.delayed(const Duration(seconds: 2), () {
             Navigator.pushNamed(context, '/home_page');
           });
         } else {
           scaffoldMessengerError(
-              // ignore: use_build_context_synchronously
+             
               context,
               'Inicia sesion con tu Usuario y Contraseña');
         }

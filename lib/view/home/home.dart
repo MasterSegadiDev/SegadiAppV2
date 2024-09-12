@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:segadi/view/home/sidebar.dart';
+import 'package:segadi/view/services/services_operator.dart';
 
 
 class HomeScreen extends StatelessWidget {
@@ -28,7 +29,13 @@ class HomeScreen extends StatelessWidget {
           children: <Widget>[
             GestureDetector(
               onTap: () {
-                Navigator.popAndPushNamed(context, '/services');
+                
+                 Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ServiceListView(),
+                  ),
+                );
               },
               child: const Card(
                 color: Color(0xFF84A756),

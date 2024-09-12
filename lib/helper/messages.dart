@@ -10,6 +10,16 @@ scaffoldMessengerSuccess(BuildContext context) {
   );
 }
 
+scaffoldMessengerSuccessEvidentia(BuildContext context, String message) {
+  return ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      backgroundColor: Colors.green,
+      content: Text('${message}'),
+      behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
+
 scaffoldMessengerWarning(BuildContext context, String text) {
   return ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(

@@ -1,263 +1,228 @@
-// import 'dart:async';
-// import 'dart:convert';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:io';
 
-// import 'package:flutter/material.dart';
-// import 'package:flutter/services.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:segadi/view/services/detail_service.dart';
-// import 'package:segadi/view_model/login_local_auth/auth_login.dart';
-// import 'dart:io';
+import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:image_picker/image_picker.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:provider/provider.dart';
+import 'package:segadi/helper/messages.dart';
+import 'package:segadi/model/services/detail_service.dart';
+import 'package:segadi/view_model/services_operator/detail_service.dart';
+import 'package:segadi/view_model/services_operator/trip_closure.dart';
 
-// import '../../view_model/services_operator/detail_service.dart';
+class TripClosureScreen extends StatefulWidget {
+  const TripClosureScreen({Key? key}) : super(key: key);
 
-// import 'package:http/http.dart' as http;
+  @override
+  _TripClosureState createState() => _TripClosureState();
+}
 
-// import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+class _TripClosureState extends State<TripClosureScreen> {
+  final ImagePicker imgpicker = ImagePicker();
+  String imagepath = "";
 
-// class TripClosureScreen extends StatefulWidget {
-//   final int id;
-//   final String serviceId;
+  File? image;
+  String imageEncode = "";
 
-//   const TripClosureScreen({
-//     Key? key,
-//     required this.id,
-//     required this.serviceId,
-//   }) : super(key: key);
+  int? evidentias;
 
-//   @override
-//   // ignore: library_private_types_in_public_api, no_logic_in_create_state
-//   _TripClosureState createState() => _TripClosureState(id, serviceId);
-// }
+  String exts = "";
+  bool addImage = true;
 
-// class _TripClosureState extends State<TripClosureScreen> {
-//   _TripClosureState(this.id, this.serviceId);
-//   final int id;
-//   final String serviceId;
+  String? getFileExtension(String imagepath) {
+    try {
+      return ".${imagepath.split('.').last}";
+    } catch (e) {
+      return null;
+    }
+  }
 
-//   final ImagePicker imgpicker = ImagePicker();
-//   String imagepath = "";
+  Future captureImage() async {
+    try {
+      var pickedFile =
+          await ImagePicker().pickImage(source: ImageSource.camera);
+      if (pickedFile != null) {
+        imagepath = pickedFile.path;
+        exts = getFileExtension(imagepath)!;
+        File? imagefile = File(imagepath);
+        //setState(() => image = imagefile);
+        Uint8List imagebytes = await imagefile.readAsBytes();
+        String base64string = base64.encode(imagebytes);
+        imageEncode = base64string;
+      }
+    } on PlatformException catch (e) {
+      return e;
+    }
+  }
 
-//   File? image;
-//   String imageEncode = "";
+  @override
+  void initState() {
+    super.initState();
+  }
 
-//   int? evidentias;
+  @override
+  Widget build(BuildContext context) {
+    final viewModelTripClosure = Provider.of<TripClosureViewModel>(context);
 
-//   String exts = "";
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Cierre del viaje',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        centerTitle: true,
+        bottom: PreferredSize(
+            preferredSize: Size.zero,
+            child: Text(
+              'Remisión: ${viewModelTripClosure.tripClosure.serviceId} ',
+              style: const TextStyle(color: Colors.white, fontSize: 15),
+            )),
+        backgroundColor: const Color(0xFF2C522A),
+      ),
+      body: Align(
+        alignment: Alignment.center,
+        child: Column(
+          mainAxisSize: MainAxisSize.max,
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            if (viewModelTripClosure.imageFile == null)
+              const Center()
+            else
+              SizedBox(
+                height: 300,
+                width: 200,
+                child: Image.file(File(viewModelTripClosure.imagepath)),
+              ),
+            Text(
+                'Para cerrar el viaje puedes capturar maximo ${viewModelTripClosure.numberTotalEvidentias} imagenes'),
+            if (viewModelTripClosure.imageFile != null)
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  backgroundColor: const Color(0xFF2C522A),
+                ),
+                onPressed: () {
+                  closeTravel(context);
+                },
+                child: const Text(
+                  'Enviar Evidencia ',
+                  style: TextStyle(color: Colors.white),
+                ),
+              ),
+            TextButton(
+              onPressed: () => viewModelTripClosure.captureImage(),
+              child: const Icon(
+                Icons.camera_alt,
+                color: Color(0xFF2C522A),
+                size: 50,
+              ),
+            ),
+          ],
+        ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        child: const Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
+        onPressed: () {
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+        },
+      ),
+    );
+  }
 
-//   int counter = 0;
-//   String numRemision = "";
-//   bool addImage = true;
+  Future<void> closeTravel(BuildContext context) {
+    final viewModelTripClosure =
+        Provider.of<TripClosureViewModel>(context, listen: false);
 
-//   // getEvidentias(int id) async {
-//   //   Map responseMap = await DetailViewModel().getEvidentias(id);
+    return showDialog<void>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Cierre del viaje'),
+          content: const Text(
+            '¿Quieres cerrar el viaje con la imagen captura?',
+          ),
+          actions: <Widget>[
+            Padding(
+              padding: EdgeInsets.all(2.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(100),
+                  ),
+                  fixedSize: const Size(250, double.infinity),
+                ),
+                onPressed: () async {
+                  await viewModelTripClosure.saveImage(
+                    viewModelTripClosure.tripClosure.id!,
+                    viewModelTripClosure.tripClosure.serviceId!,
+                    viewModelTripClosure.tripClosure.closeTravel = false,
+                  );
 
-//   //   setState(() {
-//   //     counter = responseMap["remaining_evidences"];
-//   //   });
-//   //   if (counter == 0) {
-//   //     closeTravel1(id);
-//   //     //_showMyDialog();
-//   //     //returnDetailScreen();
-//   //     // ignore: use_build_context_synchronously
-//   //     Navigator.of(context, rootNavigator: true).pop();
-//   //     // ignore: use_build_context_synchronously
-//   //     /*Navigator.pushReplacement(
-//   //       context,
-//   //       MaterialPageRoute(
-//   //         builder: (BuildContext context) => DetailServicesScreen(id: id),
-//   //       ),
-//   //     );*/
-//   //   }
-//   // }
+                  if (viewModelTripClosure.isServiceClosed == false) {
+                    Navigator.of(context).pop();
+                    scaffoldMessengerSuccessEvidentia(
+                        context, viewModelTripClosure.successMessage!);
+                  } else if (viewModelTripClosure.isServiceClosed == true) {
+                    scaffoldMessengerSuccessEvidentia(
+                        context, viewModelTripClosure.successMessage!);
 
-//   String? getFileExtension(String imagepath) {
-//     try {
-//       return ".${imagepath.split('.').last}";
-//     } catch (e) {
-//       return null;
-//     }
-//   }
+                    Future.delayed(const Duration(seconds: 2), () {
+                      final detailServiceModel = DetailService(
+                          id: viewModelTripClosure.tripClosure.id);
+                      Provider.of<DetailViewModel>(context, listen: false)
+                          .setNewDetail(detailServiceModel);
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                    });
+                  }
+                },
+                child: const Text('Agregar mas evidencias'),
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.all(2.0),
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    fixedSize: const Size(250, double.infinity)),
+                onPressed: () async {
+                  await viewModelTripClosure.saveImage(
+                    viewModelTripClosure.tripClosure.id!,
+                    viewModelTripClosure.tripClosure.serviceId!,
+                    viewModelTripClosure.tripClosure.closeTravel = true,
+                  );
+                  if (viewModelTripClosure.isServiceClosed == true) {
+                    scaffoldMessengerSuccessEvidentia(
+                        context, viewModelTripClosure.successMessage!);
 
-//   Future captureImage() async {
-//     try {
-//       var pickedFile =
-//           await ImagePicker().pickImage(source: ImageSource.camera);
-//       if (pickedFile != null) {
-//         imagepath = pickedFile.path;
-//         exts = getFileExtension(imagepath)!;
-//         File? imagefile = File(imagepath);
-//         setState(() => image = imagefile);
-//         Uint8List imagebytes = await imagefile.readAsBytes();
-//         String base64string = base64.encode(imagebytes);
-//         imageEncode = base64string;
-//       }
-//     } on PlatformException catch (e) {
-//       return e;
-//     }
-//   }
-
-//   @override
-//   void initState() {
-//     super.initState();
-//     //getEvidentias(id);
-//   }
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: const Text(
-//           'Cierre del viaje',
-//           style: TextStyle(color: Colors.white),
-//         ),
-//         iconTheme: const IconThemeData(color: Colors.white),
-//         centerTitle: true,
-//         bottom: PreferredSize(
-//             preferredSize: Size.zero,
-//             child: Text(
-//               'Remisión: $serviceId ',
-//               style: const TextStyle(color: Colors.white, fontSize: 15),
-//             )),
-//         backgroundColor: const Color(0xFF2C522A),
-//       ),
-//       body: Align(
-//         alignment: Alignment.center,
-//         child: Column(
-//           mainAxisSize: MainAxisSize.max,
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           crossAxisAlignment: CrossAxisAlignment.center,
-//           children: [
-//             image == null
-//                 ? const Center()
-//                 : SizedBox(
-//                     height: 300,
-//                     width: 200,
-//                     child: Image.file(image!),
-//                   ),
-//             Text(
-//                 'Para cerrar el viaje puedes capturar maximo $counter imagenes'),
-//             if (image != null)
-//               ElevatedButton(
-//                 style: ElevatedButton.styleFrom(
-//                     shape: RoundedRectangleBorder(
-//                       borderRadius: BorderRadius.circular(20),
-//                     ),
-//                     backgroundColor: const Color(0xFF2C522A)),
-//                 onPressed: addImage
-//                     ? () {
-//                         closeTravel(context, id, imageEncode, exts);
-//                       }
-//                     : null,
-//                 child: const Text(
-//                   'Enviar Evidencia ',
-//                   style: TextStyle(color: Colors.white),
-//                 ),
-//               ),
-//             TextButton(
-//               onPressed: () => captureImage(),
-//               child: const Icon(
-//                 Icons.camera_alt,
-//                 color: Color(0xFF2C522A),
-//                 size: 50,
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//       floatingActionButton: FloatingActionButton(
-//         backgroundColor: Colors.red,
-//         child: const Icon(
-//           Icons.phone,
-//           color: Colors.white,
-//         ),
-//         onPressed: () {
-//           FlutterPhoneDirectCaller.callNumber('+523311364928');
-//           alert();
-//         },
-//       ),
-//     );
-//   }
-
-//   Future<void> closeTravel(BuildContext context, id, imageEncode, exts) {
-//     return showDialog<void>(
-//       context: context,
-//       builder: (BuildContext context) {
-//         return AlertDialog(
-//           title: const Text(''),
-//           content: const Text(
-//             '¿Quieres cerrar el viaje con la imagen captura?',
-//           ),
-//           actions: <Widget>[
-//             TextButton(
-//               style: TextButton.styleFrom(
-//                 textStyle: Theme.of(context).textTheme.labelLarge,
-//               ),
-//               child: const Text('+ Evidencias'),
-//               onPressed: () {
-//                 getValueFalse(id, imageEncode, serviceId, exts);
-//               },
-//             ),
-//             TextButton(
-//               style: TextButton.styleFrom(
-//                 textStyle: Theme.of(context).textTheme.labelLarge,
-//               ),
-//               child: const Text('Si'),
-//               onPressed: () {
-//                 getValueTrue(id, imageEncode, serviceId, exts);
-//                 Navigator.of(context).pop();
-//               },
-//             ),
-//           ],
-//         );
-//       },
-//     );
-//   }
-
-//   getValueTrue(id, imageEncode, serviceId, exts) async {
-//     http.Response response = await DetailViewModel.insertImageTripClosure(id, serviceId, imageEncode, exts);
-
-//     if (response.statusCode == 200) {
-//       closeTravel1(id);
-//       // _showMyDialog();
-//       // returnDetailScreen();
-//       // ignore: use_build_context_synchronously
-//       Navigator.of(context, rootNavigator: true).pop();
-//       // ignore: use_build_context_synchronously
-//       Navigator.pushReplacement(
-//         // ignore: use_build_context_synchronously
-//         context,
-//         MaterialPageRoute(
-//           builder: (BuildContext context) => DetailServiceScreen(
-//             id: id,
-//           ),
-//         ),
-//       );
-//     }
-//   }
-
-//   getValueFalse(id, imageEncode, serviceId, exts) async {
-//     http.Response response =
-//         await DetailViewModel.insertImageTripClosure(id, serviceId, imageEncode, exts);
-//     if (response.statusCode == 200) {
-//       setState(() {
-//         image = null;
-//         imageEncode = "";
-//         imagepath = "";
-//         exts = "";
-//       });
-//       getEvidentias(id);
-//       // ignore: use_build_context_synchronously
-//       Navigator.of(context).pop();
-//     }
-//   }
-
-//   Future<http.Response> closeTravel1(id) async {
-//     http.Response response = await DetailViewModel().closeTravel(id);
-
-//     return response;
-//   }
-
-//   void alert() async {
-//     await AuthServices.alert();
-//   }
-// }
+                    Future.delayed(const Duration(seconds: 2), () {
+                      final detailServiceModel = DetailService(
+                          id: viewModelTripClosure.tripClosure.id);
+                      Provider.of<DetailViewModel>(context, listen: false)
+                          .setNewDetail(detailServiceModel);
+                      Navigator.of(context).pop();
+                      Navigator.of(context).pop();
+                    });
+                  }
+                },
+                child: const Text('Cerrar viaje'),
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+}

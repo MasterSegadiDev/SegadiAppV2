@@ -31,321 +31,169 @@ class ServiceListView extends StatelessWidget {
           backgroundColor: const Color(0xFF2C522A)),
       backgroundColor: Colors.white,
       drawer: const DrawerScreen(),
-      body: RefreshIndicator(
-        onRefresh: _handleRefresh,
-        child: ListView.builder(
-          padding: const EdgeInsets.all(10),
-          itemCount: serviceViewModel.items.length,
-          itemBuilder: (context, index) {
-            final item = serviceViewModel.items[index];
+      body: Consumer<ServicesViewModel>(
+        builder: (context, serviceViewModel, child) {
+          return RefreshIndicator(
+            onRefresh: _handleRefresh,
+            child: ListView.builder(
+              padding: const EdgeInsets.all(10),
+              itemCount: serviceViewModel.items.length,
+              itemBuilder: (context, index) {
+                final item = serviceViewModel.items[index];
 
-            return GestureDetector(
-              onTap: () {
-                final detailServiceModel = DetailService(id: item.id);
-                Provider.of<DetailViewModel>(context, listen: false)
-                    .setUser(detailServiceModel);
+                return GestureDetector(
+                  onTap: () {
+                    final detailServiceModel = DetailService(id: item.id);
+                    Provider.of<DetailViewModel>(context, listen: false)
+                        .setNewDetail(detailServiceModel);
 
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => const DetailServiceScreen(),
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const DetailServiceScreen(),
+                      ),
+                    );
+                  },
+                  child: Card(
+                    color: const Color(0xFF84A756),
+                    borderOnForeground: true,
+                    elevation: 10,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      children: <Widget>[
+                        ListTile(
+                          title: Text('Remision No:  ${item.service}',
+                              style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14)),
+                          leading: const Icon(
+                            FontAwesomeIcons.truck,
+                            color: Colors.white,
+                            size: 20,
+                          ),
+                          subtitle: Text(
+                            "Cliente: ${item.client}",
+                            style: const TextStyle(color: Colors.white),
+                          ),
+                          trailing: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              elevation: 8.0,
+                              backgroundColor: Colors.white,
+                              side: BorderSide.none,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(25.0),
+                              ),
+                            ),
+                            onPressed: null,
+                            child: Text(
+                              item.status!,
+                              style: const TextStyle(
+                                  fontSize: 13, color: Colors.white),
+                            ),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                            const Text(
+                              '   Carga Origen :  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              item.origin!,
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            const Text(
+                              '   Fecha Carga :  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              item.loadDate!,
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        const Divider(
+                          color: Colors.transparent,
+                          height: 10.0,
+                        ),
+                        Row(
+                          children: [
+                            const Text(
+                              '   Carga Destino :  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              item.destination!,
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                            const Text(
+                              '   Fecha Descarga :  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              item.unloadDate!,
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        const Divider(
+                          color: Colors.transparent,
+                          height: 10.0,
+                        ),
+                        Row(
+                          children: [
+                            const Text(
+                              '   Documentador :  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              item.documenter!,
+                              style: const TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        const Divider(
+                          color: Colors.transparent,
+                          height: 10.0,
+                        ),
+                      ],
+                    ),
                   ),
                 );
               },
-              child: Card(
-                color: const Color(0xFF84A756),
-                borderOnForeground: true,
-                elevation: 10,
-                child: Column(
-                  mainAxisSize: MainAxisSize.max,
-                  children: <Widget>[
-                    ListTile(
-                      title: Text('Remision No:  ${item.service}',
-                          style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14)),
-                      leading: const Icon(
-                        FontAwesomeIcons.truck,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                      subtitle: Text(
-                        "Cliente: ${item.client}",
-                        style: const TextStyle(color: Colors.white),
-                      ),
-                      trailing: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          elevation: 8.0,
-                          backgroundColor: Colors.white,
-                          side: BorderSide.none,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(25.0),
-                          ),
-                        ),
-                        onPressed: null,
-                        child: Text(
-                          item.status!,
-                          style: const TextStyle(
-                              fontSize: 13, color: Colors.white),
-                        ),
-                      ),
-                    ),
-                    Row(
-                      children: [
-                        const Text(
-                          '   Carga Origen :  ',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                        Text(
-                          item.origin,
-                          style: const TextStyle(
-                              fontSize: 14, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const Text(
-                          '   Fecha Carga :  ',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                        Text(
-                          item.loadDate,
-                          style: const TextStyle(
-                              fontSize: 14, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    const Divider(
-                      color: Colors.transparent,
-                      height: 10.0,
-                    ),
-                    Row(
-                      children: [
-                        const Text(
-                          '   Carga Destino :  ',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                        Text(
-                          item.destination,
-                          style: const TextStyle(
-                              fontSize: 14, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    Row(
-                      children: [
-                        const Text(
-                          '   Fecha Descarga :  ',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                        Text(
-                          item.unloadDate,
-                          style: const TextStyle(
-                              fontSize: 14, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    const Divider(
-                      color: Colors.transparent,
-                      height: 10.0,
-                    ),
-                    Row(
-                      children: [
-                        const Text(
-                          '   Documentador :  ',
-                          style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.bold,
-                              color: Colors.white),
-                        ),
-                        Text(
-                          item.documenter,
-                          style: const TextStyle(
-                              fontSize: 14, color: Colors.white),
-                        ),
-                      ],
-                    ),
-                    const Divider(
-                      color: Colors.transparent,
-                      height: 10.0,
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ),
+            ),
+          );
+        },
       ),
     );
   }
-
-  //FutureBuilder(
-  //  future: serviceViewModel.fetchItems(),
-  //  builder: (context, snapshot) {
-
-  //      return ListView.builder(
-  //       padding: const EdgeInsets.all(10),
-  //       itemCount: serviceViewModel.items.length,
-  //       itemBuilder: (context, index) {
-  //         final item = serviceViewModel.items[index];
-  //         return GestureDetector(
-  //           onTap: () {
-  //             sendScreenWidget(item.id);
-  //           },
-  //           child: Card(
-  //             color: const Color(0xFF84A756),
-  //             borderOnForeground: true,
-  //             elevation: 10,
-  //             child: Column(
-  //               mainAxisSize: MainAxisSize.max,
-  //               children: <Widget>[
-  //                 ListTile(
-  //                   title: Text('Remision No:  ${item.service}',
-  //                       style: const TextStyle(
-  //                           color: Colors.white,
-  //                           fontWeight: FontWeight.bold,
-  //                           fontSize: 14)),
-  //                   leading: const Icon(
-  //                     FontAwesomeIcons.truck,
-  //                     color: Colors.white,
-  //                     size: 20,
-  //                   ),
-  //                   subtitle: Text(
-  //                     "Cliente: ${item.client}",
-  //                     style: const TextStyle(color: Colors.white),
-  //                   ),
-  //                   trailing: ElevatedButton(
-  //                     style: ElevatedButton.styleFrom(
-  //                       elevation: 8.0,
-  //                       backgroundColor: Colors.white,
-  //                       side: BorderSide.none,
-  //                       shape: RoundedRectangleBorder(
-  //                         borderRadius: BorderRadius.circular(25.0),
-  //                       ),
-  //                     ),
-  //                     onPressed: null,
-  //                     child: Text(
-  //                       item.status!,
-  //                       style: const TextStyle(
-  //                           fontSize: 13, color: Colors.white),
-  //                     ),
-  //                   ),
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     const Text(
-  //                       '   Carga Origen :  ',
-  //                       style: TextStyle(
-  //                           fontSize: 14,
-  //                           fontWeight: FontWeight.bold,
-  //                           color: Colors.white),
-  //                     ),
-  //                     Text(
-  //                       item.origin,
-  //                       style: const TextStyle(
-  //                           fontSize: 14, color: Colors.white),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     const Text(
-  //                       '   Fecha Carga :  ',
-  //                       style: TextStyle(
-  //                           fontSize: 14,
-  //                           fontWeight: FontWeight.bold,
-  //                           color: Colors.white),
-  //                     ),
-  //                     Text(
-  //                       item.loadDate,
-  //                       style: const TextStyle(
-  //                           fontSize: 14, color: Colors.white),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 const Divider(
-  //                   color: Colors.transparent,
-  //                   height: 10.0,
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     const Text(
-  //                       '   Carga Destino :  ',
-  //                       style: TextStyle(
-  //                           fontSize: 14,
-  //                           fontWeight: FontWeight.bold,
-  //                           color: Colors.white),
-  //                     ),
-  //                     Text(
-  //                       item.destination,
-  //                       style: const TextStyle(
-  //                           fontSize: 14, color: Colors.white),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     const Text(
-  //                       '   Fecha Descarga :  ',
-  //                       style: TextStyle(
-  //                           fontSize: 14,
-  //                           fontWeight: FontWeight.bold,
-  //                           color: Colors.white),
-  //                     ),
-  //                     Text(
-  //                       item.unloadDate,
-  //                       style: const TextStyle(
-  //                           fontSize: 14, color: Colors.white),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 const Divider(
-  //                   color: Colors.transparent,
-  //                   height: 10.0,
-  //                 ),
-  //                 Row(
-  //                   children: [
-  //                     const Text(
-  //                       '   Documentador :  ',
-  //                       style: TextStyle(
-  //                           fontSize: 14,
-  //                           fontWeight: FontWeight.bold,
-  //                           color: Colors.white),
-  //                     ),
-  //                     Text(
-  //                       item.documenter,
-  //                       style: const TextStyle(
-  //                           fontSize: 14, color: Colors.white),
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 const Divider(
-  //                   color: Colors.transparent,
-  //                   height: 10.0,
-  //                 ),
-  //               ],
-  //             ),
-  //           ),
-  //         );
-  //       },
-  //     );
-  //   },
-  // ),
-
-  //);
-  //  }
 }
