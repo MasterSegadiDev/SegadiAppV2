@@ -465,7 +465,7 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                   }
                 : null,
           ),
-          const Text(
+           Text(
             'Estatus de Soporte',
             style: TextStyle(fontSize: 12, color: Colors.black),
           )
@@ -482,7 +482,7 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
             onPressed: null,
           ),
           Text(
-            'Status de Soporte',
+            'Estatus de Soporte',
             style: TextStyle(fontSize: 12, color: Colors.black),
           )
         ],

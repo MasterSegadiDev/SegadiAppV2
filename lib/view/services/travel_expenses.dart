@@ -3,61 +3,7 @@ import 'package:provider/provider.dart';
 import 'package:segadi/view/services/modals/list_travel_expenses.dart';
 import 'package:segadi/view_model/services_operator/travel_expenses.dart';
 
-class TravelExpensesScreen extends StatefulWidget {
-  const TravelExpensesScreen({Key? key}) : super(key: key);
-
-  @override
-  // ignore: library_private_types_in_public_api, no_logic_in_create_state
-  _TravelExpensesScreen createState() => _TravelExpensesScreen();
-}
-
-class _TravelExpensesScreen extends State<TravelExpensesScreen> {
-  List data = [];
-  String concept = "";
-  String comentery = "";
-  dynamic importe = 0;
-
-  String? valuePaymentConcept;
-  int? selected;
-  int? conceptId;
-  //double totalImport = 0;
-
-  bool loading = true;
-  List listDataOption = [];
-
-  bool cancelButton = true;
-
-  // Future getDataOption(int id) async {
-  //   listDataOption = await TravelExpensesService().getData(id);
-  //   if (listDataOption.isEmpty) {
-  //     setState(() {
-  //       cancelButton = false;
-  //     });
-  //   }
-  // }
-
-  // List<TravelExpenses> listTravelExpenses = [];
-  // Future getTravelExpenses(int id) async {
-  //   listTravelExpenses = await TravelExpensesService().getTravelExpenses(id);
-  //   setState(() {
-  //     loading = false;
-  //     _loadData();
-  //   });
-  // }
-
-  _loadData() async {
-    setState(() {
-      // getDataOption(id);
-    });
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    // getDataOption(id);
-    // getTravelExpenses(id);
-  }
-
+class TravelExpensesScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final travelExpensesViewModel =
@@ -65,84 +11,108 @@ class _TravelExpensesScreen extends State<TravelExpensesScreen> {
     double totalImport = 0;
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title: Text(
           'Viáticos',
           style: TextStyle(color: Colors.white),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF2C522A),
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: Color(0xFF2C522A),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                TextButton(
-                  onPressed: cancelButton
-                      ? () {
-                          // _dialogBuilder(context);
-                          _showBottomSheet(context);
-                        }
-                      : null,
-                  child: const Text(
-                    'Agregar conceptos',
-                    style: TextStyle(color: Colors.black),
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(
-              height: 20,
-            ),
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DataTable(
-                columns: const [
-                  DataColumn(
-                    label: Text(
-                      'Concepto',
-                    ),
-                  ),
-                  DataColumn(
-                    label: Text(
-                      'Importe',
-                    ),
-                  ),
-                ],
-                rows: travelExpensesViewModel.loadListTableTravelExpenses
-                    .map((e) {
-                  double result = double.parse(e.totalUsed.toString());
-                  totalImport += result;
-
-                  return DataRow(cells: [
-                    DataCell(Text(e.paymentConcept.toString())),
-                    DataCell(Text(e.totalUsed.toString())),
-                  ]);
-                }).toList(),
+      body: SingleChildScrollView(
+        child: Center(
+          child: Column(
+            children: [
+              SizedBox(
+                height: 20,
               ),
-            ),
-            Row(
-              children: [
-                Column(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [Text('Importe Total:$totalImport')],
-                )
-              ],
-            )
-          ],
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(100),
+                    ),
+                    fixedSize: Size(200, double.infinity)),
+                onPressed: () async {
+                  await travelExpensesViewModel.fetchItemsTravelExpenses();
+                  if (travelExpensesViewModel.bandera) {
+                    _showBottomSheet(context);
+                  }
+                },
+                child: Text('Agregar conceptos'),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: <DataColumn>[
+                    DataColumn(
+                      label: Text(
+                        'Viático Asignado',
+                        style: TextStyle(
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                    DataColumn(
+                      label: Text(
+                        'Importe Registrado',
+                        style: TextStyle(
+                            fontStyle: FontStyle.normal,
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ),
+                  ],
+                  rows: travelExpensesViewModel.tableItems.map((e) {
+                    double result = double.parse(e.totalUsed.toString());
+
+                    totalImport += result;
+
+                    return DataRow(cells: [
+                      DataCell(Text(e.paymentConcept.toString())),
+                      DataCell(Text(e.totalUsed.toString())),
+                    ]);
+                  }).toList(),
+                  decoration: BoxDecoration(
+                    border: Border.all(color: Colors.green, width: 1),
+                    borderRadius: BorderRadius.circular(10),
+                    color: Colors.green.withOpacity(0.1),
+                  ),
+                  headingRowColor: WidgetStateProperty.resolveWith<Color>(
+                      (Set<WidgetState> states) {
+                    return Colors.green.withOpacity(0.3);
+                  }),
+                  dataRowColor: WidgetStateProperty.resolveWith<Color>(
+                      (Set<WidgetState> states) {
+                    return states.contains(WidgetState.selected)
+                        ? Colors.blue.withOpacity(0.2)
+                        : Colors.transparent;
+                  }),
+                ),
+              ),
+              SizedBox(
+                height: 20,
+              ),
+              Text(
+                'Importe Total  : ${totalImport}',
+                style: TextStyle(
+                    color: Colors.black,
+                    fontStyle: FontStyle.normal,
+                    fontSize: 15,
+                    fontWeight: FontWeight.bold),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
+}
 
-
-  void _showBottomSheet(BuildContext context) {
-    showModalBottomSheet(
-      isScrollControlled: false,
-      context: context,
-      builder: (ctx) => ListTravelExpensesView(),
-    );
-  }
+void _showBottomSheet(BuildContext context) {
+  showModalBottomSheet(
+    isScrollControlled: true,
+    context: context,
+    builder: (ctx) => ListTravelExpensesView(),
+  );
 }

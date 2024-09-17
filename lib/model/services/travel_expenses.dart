@@ -21,6 +21,8 @@ class TravelExpenses {
   String? paymentTotal;
   //String? comments;
 
+  double? import;
+
   TravelExpenses({
     this.id,
     //this.serviceId,
@@ -29,6 +31,7 @@ class TravelExpenses {
     //this.totalUsed,
     this.paymentTotal,
     //this.comments,
+    this.import,
   });
 
   factory TravelExpenses.fromJson(Map<String, dynamic> json) => TravelExpenses(
@@ -53,14 +56,14 @@ class TravelExpenses {
   final storage = const FlutterSecureStorage();
 
   Future<http.Response> insertImport(
-      int serviceId, int moneyCheckId, dynamic importTotal, comentary) async {
+      int serviceId, int conceptId, dynamic importTotal, comentary) async {
     String? token;
     token = await storage.read(key: 'token');
 
     Map data = {
       "service_id": serviceId,
       "token": token,
-      "money_check_id": moneyCheckId,
+      "money_check_id": conceptId,
       "total_used": importTotal,
       "comments": comentary,
     };
@@ -73,7 +76,11 @@ class TravelExpenses {
       body: body,
     );
 
-    return response;
+    if (response.statusCode == 200) {
+      return response;
+    } else {
+      throw Exception('Ha ocurrido un error al insertar el concepto');
+    }
   }
 
   Future<List<TravelExpenses>> getData(int id) async {
@@ -82,7 +89,6 @@ class TravelExpenses {
     String? token;
     token = await storage.read(key: 'token');
 
-    print('user id: ${userId} service id: ${id} token : ${token}');
 
     final response = await http.get(
       Uri.parse('${baseURL}index.php').replace(queryParameters: {
@@ -92,7 +98,7 @@ class TravelExpenses {
         'token': token,
       }),
     );
-    print(response.statusCode);
+   
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
       return data.map((json) => TravelExpenses.fromJson(json)).toList();
@@ -100,6 +106,4 @@ class TravelExpenses {
       throw Exception('Ha ocurrido un error al consultar los viaticos');
     }
   }
-
-
 }

@@ -46,7 +46,11 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DetailViewModel()),
         ChangeNotifierProvider(create: (_) => CheckListViewModel()),
         ChangeNotifierProvider(create: (_) => TripClosureViewModel()),
-         ChangeNotifierProvider(create: (_) => TravelExpensesViewModel()),
+        ChangeNotifierProvider(create: (_) {
+          final loadTableTravelExpenses = TravelExpensesViewModel();
+          loadTableTravelExpenses.tableFetchItems();
+          return loadTableTravelExpenses;
+        })
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -66,7 +70,7 @@ class MyApp extends StatelessWidget {
               const DetailServicesFinishedScreen(id: 0),
           'trip_closure': (context) => const TripClosureScreen(),
           '/user': (context) => const UserScreen(),
-          '/travel_expenses': (context) => const TravelExpensesScreen(),
+          '/travel_expenses': (context) =>  TravelExpensesScreen(),
         },
       ),
     );
