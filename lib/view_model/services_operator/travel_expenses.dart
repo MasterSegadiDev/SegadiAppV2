@@ -7,6 +7,9 @@ class TravelExpensesViewModel extends ChangeNotifier {
   TravelExpenses _travelExpenses = TravelExpenses();
   TableExpenses _tableExpenses = TableExpenses();
 
+  final TextEditingController textController = TextEditingController();
+  final TextEditingController textController1 = TextEditingController();
+
   TableExpenses? _table;
   TableExpenses? get table => _table;
 
@@ -62,8 +65,6 @@ class TravelExpensesViewModel extends ChangeNotifier {
 
   void setNewDetail(int id) async {
     serviceDetailId = id;
-
-    _items = await _travelExpenses.getData(serviceDetailId);
     _tableItems = await _tableExpenses.getTravelExpenses(serviceDetailId);
 
     notifyListeners();
@@ -72,6 +73,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
   Future<void> fetchItemsTravelExpenses() async {
     _items = [];
     _data = [];
+    print('listado de data no full: ${_data}');
     _bandera = false;
 
     _items = await _travelExpenses.getData(serviceDetailId);
@@ -81,6 +83,9 @@ class TravelExpensesViewModel extends ChangeNotifier {
       _conceptId = 0;
       _comentary = '';
       _import = '';
+      textController.clear();
+      textController1.clear();
+      print('listado de data full: ${_data}');
     }
 
     notifyListeners();
@@ -95,11 +100,6 @@ class TravelExpensesViewModel extends ChangeNotifier {
     _tableItems = await _tableExpenses.getTravelExpenses(serviceDetailId);
     notifyListeners();
   }
-
-  void reloadItems() async {}
-
-  final TextEditingController textController = TextEditingController();
-  final TextEditingController textController1 = TextEditingController();
 
   Future<void> insertImport() async {
     _errorMessage = null;

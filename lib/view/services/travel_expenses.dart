@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:segadi/helper/messages.dart';
 import 'package:segadi/view/services/modals/list_travel_expenses.dart';
 import 'package:segadi/view_model/services_operator/travel_expenses.dart';
 
@@ -35,6 +36,9 @@ class TravelExpensesScreen extends StatelessWidget {
                   await travelExpensesViewModel.fetchItemsTravelExpenses();
                   if (travelExpensesViewModel.bandera) {
                     _showBottomSheet(context);
+                  } else {
+                    scaffoldMessengerError(context,
+                        'Ha ocurrido un error inesperado, no se pudo consultar el listado de tus viáticos');
                   }
                 },
                 child: Text('Agregar conceptos'),

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/helper/messages.dart';
+
 
 import 'package:segadi/view_model/services_operator/travel_expenses.dart';
 
@@ -8,7 +8,7 @@ class ListTravelExpensesView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final travelExpensesViewModel =
-        Provider.of<TravelExpensesViewModel>(context);
+        Provider.of<TravelExpensesViewModel>(context, listen: false);
 
     return Container(
       height: 600,
@@ -168,15 +168,3 @@ class ListTravelExpensesView extends StatelessWidget {
   }
 }
 
-Future<void> message(BuildContext context, errorMessage) {
-  return showDialog<void>(
-    context: context,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        title: Text('Ha ocurrido un error'),
-        insetPadding: const EdgeInsets.all(20),
-        content: Text('${errorMessage}'),
-      );
-    },
-  );
-}
