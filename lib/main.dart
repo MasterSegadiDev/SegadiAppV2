@@ -22,11 +22,11 @@ Future main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp(const MyApp());
+  runApp( MyApp());
 }
 
 class MyApp extends StatelessWidget {
-  const MyApp({Key? key}) : super(key: key);
+   MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -35,7 +35,6 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => LoginViewModel()),
         ChangeNotifierProvider(create: (_) => BiometricViewModel()),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
-        //ChangeNotifierProvider(create: (_) => ServicesViewModel().fetchItems()),
         ChangeNotifierProvider(
           create: (_) {
             final serviceViewModel = ServicesViewModel();
@@ -46,11 +45,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(create: (_) => DetailViewModel()),
         ChangeNotifierProvider(create: (_) => CheckListViewModel()),
         ChangeNotifierProvider(create: (_) => TripClosureViewModel()),
-        ChangeNotifierProvider(create: (_) {
-          final loadTableTravelExpenses = TravelExpensesViewModel();
-          loadTableTravelExpenses.tableFetchItems();
-          return loadTableTravelExpenses;
-        })
+        ChangeNotifierProvider(
+          create: (_) {
+            final loadTableTravelExpenses = TravelExpensesViewModel();
+            loadTableTravelExpenses.tableFetchItems();
+            return loadTableTravelExpenses;
+          },
+        ),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -61,16 +62,16 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         routes: {
-          '/': (context) => const LoginView(),
-          '/home_page': (context) => const HomeScreen(),
-          '/services': (context) => const ServiceListView(),
-          '/services_finished': (context) => const FinishServiceList(),
-          '/detail_service': (context) => const DetailServiceScreen(),
+          '/': (context) =>  LoginView(),
+          '/home_page': (context) =>  HomeScreen(),
+          '/services': (context) =>  ServiceListView(),
+          '/services_finished': (context) =>  FinishServiceList(),
+          '/detail_service': (context) =>  DetailServiceScreen(),
           '/detail_service_finished': (context) =>
-              const DetailServicesFinishedScreen(id: 0),
-          'trip_closure': (context) => const TripClosureScreen(),
-          '/user': (context) => const UserScreen(),
-          '/travel_expenses': (context) =>  TravelExpensesScreen(),
+               DetailServicesFinishedScreen(id: 0),
+          'trip_closure': (context) =>  TripClosureScreen(),
+          '/user': (context) =>  UserScreen(),
+          '/travel_expenses': (context) => TravelExpensesScreen(),
         },
       ),
     );

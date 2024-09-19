@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -11,7 +12,7 @@ import 'package:segadi/view_model/services_operator/travel_expenses.dart';
 import 'package:segadi/view_model/services_operator/trip_closure.dart';
 
 class DetailServiceScreen extends StatefulWidget {
-  const DetailServiceScreen({Key? key}) : super(key: key);
+  DetailServiceScreen({Key? key}) : super(key: key);
 
   @override
   _DetailServiceScreen createState() => _DetailServiceScreen();
@@ -25,29 +26,29 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
     // Usar viewModel...
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Detalle Remision',
+        title: Text(
+          'Detalle Remisión',
           style: TextStyle(color: Colors.white),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF2C522A),
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: Color(0xFF2C522A),
       ),
       backgroundColor: Colors.white,
       body: viewModel.item == null
-          ? const Center(child: CircularProgressIndicator())
+          ? Center(child: CircularProgressIndicator())
           : SingleChildScrollView(
               child: Column(
                 children: [
                   Padding(
-                    padding: const EdgeInsets.all(10.0),
+                    padding: EdgeInsets.all(10.0),
                     child: Container(
                       //height: 530,
-                      padding: const EdgeInsets.all(10),
+                      padding: EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         border: Border.all(
-                          color: const Color(0xFF84A756),
+                          color: Color(0xFF84A756),
                         ),
-                        color: const Color(0xFF84A756),
+                        color: Color(0xFF84A756),
                         borderRadius: BorderRadius.circular(10),
                       ),
                       child: Column(
@@ -56,95 +57,102 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                             children: [
                               Align(
                                 alignment: Alignment.center,
-                                child: Text(
-                                  'Servicio: ${viewModel.item!.service}',
-                                  style: const TextStyle(
-                                      fontSize: 20,
+                                child: AutoSizeText(
+                                  'REMISIÓN NÚMERO: ${viewModel.item!.service}',
+                                  style: TextStyle(
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white),
+                                  minFontSize: 14,
+                                  maxFontSize: 17,
                                 ),
                               ),
-                              const Row(children: [
-                                Text(
-                                  'Remitente',
+                              Row(children: [
+                                AutoSizeText(
+                                  'REMITENTE',
                                   style: TextStyle(
-                                      fontSize: 20,
                                       fontWeight: FontWeight.bold,
                                       color: Colors.white),
+                                  minFontSize: 14,
+                                  maxFontSize: 17,
                                 )
                               ]),
-                              const Divider(
+                              Divider(
                                 height: 15.0,
                                 color: Colors.white,
                               ),
-                              const Row(
+                              Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     'Razon Social:',
                                     style: TextStyle(
-                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     viewModel.item!.senderBusinessName
                                         .toString(),
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 12),
+                                    style: TextStyle(color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   )
                                 ],
                               ),
-                              const Row(
+                              Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     'Télefono:',
                                     style: TextStyle(
-                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     viewModel.item!.senderPhoneNumber
                                         .toString(),
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 12),
+                                    style: TextStyle(color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   )
                                 ],
                               ),
-                              const Row(
+                              Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     'Contacto:',
                                     style: TextStyle(
-                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     viewModel.item!.senderName.toString(),
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 12),
+                                    style: TextStyle(color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   )
                                 ],
                               ),
-                              const Row(
+                              Row(
                                 children: [
                                   Text(
                                     'Domicilio:',
                                     style: TextStyle(
-                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
                                   ),
@@ -152,49 +160,47 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                               ),
                               Row(
                                 children: [
-                                  Text(
-                                    '${viewModel.item!.senderStreet} ${viewModel.item!.senderOutdoorNumber} ',
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 12),
-                                  )
+                                  SizedBox(
+                                    width: 350,
+                                    child: AutoSizeText(
+                                      '${viewModel.item!.senderStreet} ${viewModel.item!.senderOutdoorNumber} ${viewModel.item!.senderZipCode}',
+                                      style: TextStyle(color: Colors.white),
+                                      minFontSize: 13,
+                                      maxFontSize: 16,
+                                      maxLines: 3,
+                                    ),
+                                  ),
                                 ],
                               ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${viewModel.item!.senderZipCode}',
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 12),
-                                  )
-                                ],
-                              ),
-                              const Divider(
+                              Divider(
                                 color: Colors.transparent,
                                 height: 15.0,
                               ),
-                              const Row(
+                              Row(
                                 children: [
-                                  Text(
-                                    'Destinatario',
+                                  AutoSizeText(
+                                    'DESTINATARIO',
                                     style: TextStyle(
-                                        fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
-                                  )
+                                    minFontSize: 14,
+                                    maxFontSize: 17,
+                                  ),
                                 ],
                               ),
-                              const Divider(
+                              Divider(
                                 color: Colors.white,
                                 height: 15.0,
                               ),
-                              const Row(
+                              Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     'Razon Social:',
                                     style: TextStyle(
-                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   ),
                                 ],
                               ),
@@ -203,19 +209,20 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                   Text(
                                     viewModel.item!.recipientBusinessName
                                         .toString(),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         color: Colors.white, fontSize: 12),
                                   )
                                 ],
                               ),
-                              const Row(
+                              Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     'Télefono:',
                                     style: TextStyle(
-                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   ),
                                 ],
                               ),
@@ -224,62 +231,59 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                   Text(
                                     viewModel.item!.recipientPhoneNumber
                                         .toString(),
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                         color: Colors.white, fontSize: 12),
                                   )
                                 ],
                               ),
-                              const Row(
+                              Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     'Contacto:',
                                     style: TextStyle(
-                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     viewModel.item!.recipientName.toString(),
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 12),
+                                    style: TextStyle(color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   )
                                 ],
                               ),
-                              const Row(
+                              Row(
                                 children: [
-                                  Text(
+                                  AutoSizeText(
                                     'Domicilio:',
                                     style: TextStyle(
-                                        fontSize: 14,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
+                                    minFontSize: 13,
+                                    maxFontSize: 16,
                                   ),
                                 ],
                               ),
                               Row(
                                 children: [
-                                  FittedBox(
-                                      fit: BoxFit.fitWidth,
-                                      child: Text(
-                                        '${viewModel.item!.recipientStreet} ${viewModel.item!.recipientOutdoorNumber}',
-                                        style: const TextStyle(
-                                            color: Colors.white, fontSize: 12),
-                                      )),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '${viewModel.item!.recipientZipCode} ${viewModel.item!.recipientState}',
-                                    style: const TextStyle(
-                                        color: Colors.white, fontSize: 12),
+                                  SizedBox(
+                                    width: 350,
+                                    child: AutoSizeText(
+                                      '${viewModel.item!.recipientStreet} ${viewModel.item!.recipientOutdoorNumber} ${viewModel.item!.recipientZipCode} ${viewModel.item!.recipientState}',
+                                      style: TextStyle(color: Colors.white),
+                                      minFontSize: 13,
+                                      maxFontSize: 16,
+                                      maxLines: 3,
+                                    ),
                                   ),
                                 ],
-                              ),
+                              )
                             ],
                           ),
                         ],
@@ -287,10 +291,9 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(10.0),
+                    padding: EdgeInsets.all(10.0),
                     child: Container(
-                      //height: 100,
-                      width: 380,
+                      width: double.infinity,
                       color: Colors.white,
                       child: Column(
                         children: [
@@ -301,12 +304,12 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                     viewModel.item!.isEnableCheckList),
                               ),
                               Expanded(
-                                child: iconStatus(
+                                child: iatus(
                                     viewModel.item!.isEnableStatusSupport,
                                     viewModel.item!.isEnableContinueRute,
                                     viewModel),
                               ),
-                              const Expanded(
+                              Expanded(
                                 child: Column(
                                   children: <Widget>[
                                     IconButton(
@@ -344,14 +347,14 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                 child: Column(
                                   children: <Widget>[
                                     IconButton(
-                                        icon: const Icon(
+                                        icon: Icon(
                                           FontAwesomeIcons.solidFilePdf,
                                           color: Colors.red,
                                         ),
                                         iconSize: 25.5,
                                         onPressed: () => {} // getPdf(id),
                                         ),
-                                    const Text(
+                                    Text(
                                       'Descargar Servicio',
                                       style: TextStyle(
                                           fontSize: 12, color: Colors.black),
@@ -366,7 +369,7 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                     ),
                   ),
                   Padding(
-                    padding: const EdgeInsets.all(10.0),
+                    padding: EdgeInsets.all(10.0),
                     child: SizedBox(
                       height: 40,
                       width: 380,
@@ -379,12 +382,12 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                   height: 40,
                                   child: ElevatedButton(
                                     style: ElevatedButton.styleFrom(
+                                        backgroundColor: Color(0xFF2C522A),
                                         shape: RoundedRectangleBorder(
                                           borderRadius:
                                               BorderRadius.circular(100),
                                         ),
-                                        fixedSize:
-                                            const Size(1000, double.infinity)),
+                                        fixedSize: Size(1000, double.infinity)),
                                     onPressed: viewModel.item!.isEnableButton!
                                         ? () async {
                                             await viewModel.changeStatusService(
@@ -392,8 +395,10 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                                     .item!.mandatoryStatusId!);
                                           }
                                         : null,
-                                    child:
-                                        Text(viewModel.item!.mandatoryStatus!),
+                                    child: Text(
+                                      viewModel.item!.mandatoryStatus!,
+                                      style: TextStyle(color: Colors.white),
+                                    ),
                                   ),
                                 ),
                               )
@@ -414,7 +419,7 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
       return Column(
         children: <Widget>[
           IconButton(
-              icon: const Icon(
+              icon: Icon(
                 FontAwesomeIcons.clipboardList,
                 color: Colors.blue,
               ),
@@ -424,14 +429,14 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                     _openIconButtonPressed(),
                   } //_dialogCircleCheck((context)),
               ),
-          const Text(
+          Text(
             'Check List',
             style: TextStyle(fontSize: 12, color: Colors.black),
           )
         ],
       );
     } else {
-      return const Column(
+      return Column(
         children: <Widget>[
           IconButton(
             icon: Icon(
@@ -449,12 +454,12 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
     }
   }
 
-  iconStatus(status, buttonStatus, viewModel) {
+  iatus(status, buttonStatus, viewModel) {
     if (status == true) {
       return Column(
         children: <Widget>[
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               FontAwesomeIcons.locationDot,
               color: Colors.red,
             ),
@@ -465,14 +470,14 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                   }
                 : null,
           ),
-           Text(
+          Text(
             'Estatus de Soporte',
             style: TextStyle(fontSize: 12, color: Colors.black),
           )
         ],
       );
     } else {
-      return const Column(
+      return Column(
         children: <Widget>[
           IconButton(
             icon: Icon(
@@ -495,7 +500,7 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
       return Column(
         children: <Widget>[
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               FontAwesomeIcons.circleCheck,
               color: Colors.green,
             ),
@@ -515,14 +520,14 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                   }
                 : null,
           ),
-          const Text(
+          Text(
             'Cierre de viaje',
             style: TextStyle(fontSize: 12, color: Colors.black),
           )
         ],
       );
     } else {
-      return const Column(
+      return Column(
         children: <Widget>[
           IconButton(
             icon: Icon(
@@ -545,7 +550,7 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
       return Column(
         children: <Widget>[
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               FontAwesomeIcons.fileInvoiceDollar,
               color: Colors.green,
             ),
@@ -565,14 +570,14 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                   }
                 : null,
           ),
-          const Text(
+          Text(
             ' Viáticos',
             style: TextStyle(fontSize: 12, color: Colors.black),
           )
         ],
       );
     } else {
-      return const Column(
+      return Column(
         children: <Widget>[
           IconButton(
             icon: Icon(

@@ -13,10 +13,9 @@ import 'package:segadi/view_model/globals.dart';
 import 'package:http/http.dart' as http;
 
 class FinishServiceList extends StatefulWidget {
-  const FinishServiceList({Key? key}) : super(key: key);
+   FinishServiceList({Key? key}) : super(key: key);
 
   @override
-  // ignore: library_private_types_in_public_api
   _FinishServiceList createState() => _FinishServiceList();
 }
 
@@ -40,16 +39,16 @@ class _FinishServiceList extends State<FinishServiceList> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title:  Text(
           'Remisiones Finalizadas',
           style: TextStyle(color: Colors.white),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF2C522A),
+        iconTheme:  IconThemeData(color: Colors.white),
+        backgroundColor:  Color(0xFF2C522A),
       ),
-      drawer: const DrawerScreen(),
+      drawer:  DrawerScreen(),
       body: loading == true
-          ? const Center(
+          ?  Center(
               child: SizedBox(
                 width: 30,
                 height: 30,
@@ -57,7 +56,7 @@ class _FinishServiceList extends State<FinishServiceList> {
               ),
             )
           : ListView.builder(
-              padding: const EdgeInsets.all(10),
+              padding:  EdgeInsets.all(10),
               itemCount: services.length,
               itemBuilder: (context, index) {
                 return GestureDetector(
@@ -65,7 +64,7 @@ class _FinishServiceList extends State<FinishServiceList> {
                     sendScreenWidget(services[index].id);
                   },
                   child: Card(
-                    color: const Color(0xFF84A756),
+                    color:  Color(0xFF84A756),
                     borderOnForeground: true,
                     elevation: 10,
                     child: Column(
@@ -74,21 +73,21 @@ class _FinishServiceList extends State<FinishServiceList> {
                         ListTile(
                           title: Text(
                               'Remision No:  ${services[index].service}',
-                              style: const TextStyle(
+                              style:  TextStyle(
                                   color: Colors.white,
                                   fontWeight: FontWeight.bold)),
-                          leading: const Icon(
+                          leading:  Icon(
                             FontAwesomeIcons.truck,
                             color: Colors.white,
                           ),
                           subtitle: Text(
                             "Cliente: ${services[index].client}",
-                            style: const TextStyle(color: Colors.white),
+                            style:  TextStyle(color: Colors.white),
                           ),
                         ),
                         Row(
                           children: [
-                            const Text(
+                             Text(
                               '   Carga Origen:  ',
                               style: TextStyle(
                                   fontSize: 14,
@@ -97,14 +96,14 @@ class _FinishServiceList extends State<FinishServiceList> {
                             ),
                             Text(
                               services[index].origin,
-                              style: const TextStyle(
+                              style:  TextStyle(
                                   fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
                         Row(
                           children: [
-                            const Text(
+                             Text(
                               '   Fecha Carga:  ',
                               style: TextStyle(
                                   fontSize: 14,
@@ -113,18 +112,18 @@ class _FinishServiceList extends State<FinishServiceList> {
                             ),
                             Text(
                               services[index].loadDate,
-                              style: const TextStyle(
+                              style:  TextStyle(
                                   fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
-                        const Divider(
+                         Divider(
                           color: Colors.transparent,
                           height: 10.0,
                         ),
                         Row(
                           children: [
-                            const Text(
+                             Text(
                               '   Carga Destino:  ',
                               style: TextStyle(
                                   fontSize: 14,
@@ -133,14 +132,14 @@ class _FinishServiceList extends State<FinishServiceList> {
                             ),
                             Text(
                               services[index].destination,
-                              style: const TextStyle(
+                              style:  TextStyle(
                                   fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
                         Row(
                           children: [
-                            const Text(
+                             Text(
                               '   Fecha Descarga:  ',
                               style: TextStyle(
                                   fontSize: 14,
@@ -149,18 +148,18 @@ class _FinishServiceList extends State<FinishServiceList> {
                             ),
                             Text(
                               services[index].unloadDate,
-                              style: const TextStyle(
+                              style:  TextStyle(
                                   fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
-                        const Divider(
+                         Divider(
                           color: Colors.transparent,
                           height: 10.0,
                         ),
                         Row(
                           children: [
-                            const Text(
+                             Text(
                               '   Documentador:  ',
                               style: TextStyle(
                                   fontSize: 14,
@@ -169,12 +168,12 @@ class _FinishServiceList extends State<FinishServiceList> {
                             ),
                             Text(
                               services[index].documenter,
-                              style: const TextStyle(
+                              style:  TextStyle(
                                   fontSize: 14, color: Colors.white),
                             ),
                           ],
                         ),
-                        const Divider(
+                         Divider(
                           color: Colors.transparent,
                           height: 10.0,
                         ),
@@ -186,7 +185,7 @@ class _FinishServiceList extends State<FinishServiceList> {
             ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
-        child: const Icon(
+        child:  Icon(
           Icons.phone,
           color: Colors.white,
         ),
@@ -224,7 +223,7 @@ class _FinishServiceList extends State<FinishServiceList> {
           'id': id.toString(),
           'token': token,
         }))
-        .timeout(const Duration(seconds: 90));
+        .timeout( Duration(seconds: 90));
 
     var data = jsonDecode(response.body.toString());
 

@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/helper/messages.dart';
@@ -5,7 +6,7 @@ import 'package:segadi/view_model/login/biometric_viewmodel.dart';
 import 'package:segadi/view_model/login/user_login.dart';
 
 class LoginView extends StatefulWidget {
-  const LoginView({Key? key}) : super(key: key);
+  LoginView({Key? key}) : super(key: key);
 
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -27,47 +28,49 @@ class _LoginScreenState extends State<LoginView> {
 
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF2C522A),
-        iconTheme: const IconThemeData(
+        backgroundColor: Color(0xFF2C522A),
+        iconTheme: IconThemeData(
           color: Color(0xFF2C522A),
         ),
       ),
       body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: SingleChildScrollView(
+        padding: EdgeInsets.all(8.0),
+        child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               Image.asset("assets/images/logo1.png"),
-              const SizedBox(
-                height: 15,
+              SizedBox(
+                height: 10,
               ),
-              const Row(
+              Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  AutoSizeText(
                     'Bienvenido',
                     style: TextStyle(
                       color: Colors.black,
-                      fontSize: 14.0,
                     ),
+                    minFontSize: 13,
+                    maxFontSize: 16,
                   ),
                 ],
               ),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Text(
+                  AutoSizeText(
                     loginViewModel.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: Colors.black,
-                      fontSize: 14.0,
                     ),
+                    minFontSize: 13,
+                    maxFontSize: 16,
                   ),
                 ],
               ),
-              const SizedBox(
-                height: 20,
+              SizedBox(
+                height: 10,
               ),
               TextFormField(
                 keyboardType: TextInputType.name,
@@ -75,12 +78,12 @@ class _LoginScreenState extends State<LoginView> {
                   labelText: 'Usuario',
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(100)),
-                  prefixIcon: const Icon(Icons.person),
+                  prefixIcon: Icon(Icons.person),
                 ),
                 onChanged: (value) => loginViewModel.username = value,
               ),
-              const SizedBox(
-                height: 20,
+              SizedBox(
+                height: 10,
               ),
               TextFormField(
                 keyboardType: TextInputType.text,
@@ -88,7 +91,7 @@ class _LoginScreenState extends State<LoginView> {
                 decoration: InputDecoration(
                   border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(100)),
-                  prefixIcon: const Icon(Icons.lock),
+                  prefixIcon: Icon(Icons.lock),
                   hintText: 'Contraseña',
                   suffixIcon: IconButton(
                     icon: Icon(
@@ -106,12 +109,12 @@ class _LoginScreenState extends State<LoginView> {
                 ),
                 onChanged: (value) => loginViewModel.password = value,
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 10),
               InkWell(
                 onTap: () {
                   //loginViewModel.removeAllPrefs();
                 },
-                child: const Padding(
+                child: Padding(
                   padding: EdgeInsets.all(10.0),
                   child: Text(
                     "¿Quieres cambiar de usuario?",
@@ -119,16 +122,17 @@ class _LoginScreenState extends State<LoginView> {
                   ),
                 ),
               ),
-              const SizedBox(height: 20),
+              SizedBox(height: 10),
               if (loginViewModel.isLoading)
-                const CircularProgressIndicator()
+                CircularProgressIndicator()
               else
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF2C522A),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(100),
                       ),
-                      fixedSize: const Size(1000, double.infinity)),
+                      fixedSize: Size(1000, double.infinity)),
                   onPressed: () async {
                     await loginViewModel.login();
                     if (loginViewModel.errorMessage != null) {
@@ -136,14 +140,17 @@ class _LoginScreenState extends State<LoginView> {
                           context, loginViewModel.errorMessage!);
                     } else {
                       scaffoldMessengerSuccess(context);
-                      Future.delayed(const Duration(seconds: 2), () {
+                      Future.delayed(Duration(seconds: 2), () {
                         Navigator.pushNamed(context, '/home_page');
                       });
                     }
                   },
-                  child: const Text('Login'),
+                  child: Text(
+                    'Login',
+                    style: TextStyle(color: Colors.white),
+                  ),
                 ),
-              const SizedBox(
+              SizedBox(
                 height: 20,
               ),
               if (biometricViewModel.isBiometricAvailable == true)
@@ -160,27 +167,28 @@ class _LoginScreenState extends State<LoginView> {
 
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2C522A),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
           ),
-          fixedSize: const Size(1000, double.infinity)),
+          fixedSize: Size(1000, double.infinity)),
       onPressed: () async {
         await biometricViewModel.authenticate();
         if (biometricViewModel.isAuthenticatedWithToken) {
-        
           scaffoldMessengerSuccess(context);
-         
-          Future.delayed(const Duration(seconds: 2), () {
+
+          Future.delayed(Duration(seconds: 2), () {
             Navigator.pushNamed(context, '/home_page');
           });
         } else {
           scaffoldMessengerError(
-             
-              context,
-              'Inicia sesion con tu Usuario y Contraseña');
+              context, 'Inicia sesion con tu Usuario y Contraseña');
         }
       },
-      child: const Text('Acceder con biometria'),
+      child: Text(
+        'Acceder con biometria',
+        style: TextStyle(color: Colors.white),
+      ),
     );
   }
 }

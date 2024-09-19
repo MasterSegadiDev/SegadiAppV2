@@ -12,7 +12,7 @@ import 'package:segadi/view_model/services_operator/detail_finished.dart';
 class DetailServicesFinishedScreen extends StatefulWidget {
   final int id;
 
-  const DetailServicesFinishedScreen({Key? key, required this.id})
+   DetailServicesFinishedScreen({Key? key, required this.id})
       : super(key: key);
 
   @override
@@ -30,7 +30,7 @@ class _DetailServicesFinishedScreen
   Future<DetailFinished>? detailFinished;
   bool loading = true;
 
-  // ignore: non_constant_identifier_names
+  // ignore: non_ant_identifier_names
   Future<CheckList>? list_data;
 
   final int value = 0;
@@ -51,14 +51,14 @@ class _DetailServicesFinishedScreen
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
+        title:  Text(
           'Detalle Remision',
           style: TextStyle(color: Colors.white),
         ),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF2C522A),
+        iconTheme:  IconThemeData(color: Colors.white),
+        backgroundColor:  Color(0xFF2C522A),
       ),
-      drawer: const DrawerScreen(),
+      drawer:  DrawerScreen(),
       body: FutureBuilder<DetailFinished>(
         future: detailFinished,
         builder: (context, snapshot) {
@@ -70,14 +70,14 @@ class _DetailServicesFinishedScreen
                 child: Column(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.all(10.0),
+                      padding:  EdgeInsets.all(10.0),
                       child: Container(
-                        padding: const EdgeInsets.all(10),
+                        padding:  EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           border: Border.all(
-                            color: const Color(0xFF84A756),
+                            color:  Color(0xFF84A756),
                           ),
-                          color: const Color(0xFF84A756),
+                          color:  Color(0xFF84A756),
                           borderRadius: BorderRadius.circular(10),
                         ),
                         child: Column(
@@ -88,13 +88,13 @@ class _DetailServicesFinishedScreen
                                   alignment: Alignment.center,
                                   child: Text(
                                     'Servicio: ${snapshot.data!.service}',
-                                    style: const TextStyle(
+                                    style:  TextStyle(
                                         fontSize: 20,
                                         fontWeight: FontWeight.bold,
                                         color: Colors.white),
                                   ),
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Remitente',
@@ -105,11 +105,11 @@ class _DetailServicesFinishedScreen
                                     )
                                   ],
                                 ),
-                                const Divider(
+                                 Divider(
                                   height: 15.0,
                                   color: Colors.white,
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Razón Social:',
@@ -125,12 +125,12 @@ class _DetailServicesFinishedScreen
                                   height: 20,
                                   child: AutoSizeText(
                                     snapshot.data!.senderBusinessName,
-                                    style: const TextStyle(
+                                    style:  TextStyle(
                                         fontSize: 14, color: Colors.white),
                                     maxLines: 2,
                                   ),
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Télefono:',
@@ -146,11 +146,11 @@ class _DetailServicesFinishedScreen
                                     Text(
                                       snapshot.data!.senderPhoneNumber,
                                       style:
-                                          const TextStyle(color: Colors.white),
+                                           TextStyle(color: Colors.white),
                                     )
                                   ],
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Contacto:',
@@ -166,11 +166,11 @@ class _DetailServicesFinishedScreen
                                     Text(
                                       snapshot.data!.senderName,
                                       style:
-                                          const TextStyle(color: Colors.white),
+                                           TextStyle(color: Colors.white),
                                     )
                                   ],
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Domicilio:',
@@ -185,7 +185,7 @@ class _DetailServicesFinishedScreen
                                 //   children: [
                                 //     Text(
                                 //       '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ${snapshot.data!.senderZipCode}',
-                                //       style: const TextStyle(color: Colors.white),
+                                //       style:  TextStyle(color: Colors.white),
                                 //     )
                                 //   ],
                                 // ),
@@ -194,16 +194,16 @@ class _DetailServicesFinishedScreen
                                   height: 20,
                                   child: AutoSizeText(
                                     '${snapshot.data!.senderStreet} ${snapshot.data!.senderOutdoorNumber} ${snapshot.data!.senderZipCode}',
-                                    style: const TextStyle(
+                                    style:  TextStyle(
                                         fontSize: 14, color: Colors.white),
                                     maxLines: 2,
                                   ),
                                 ),
-                                const Divider(
+                                 Divider(
                                   height: 15.0,
                                   color: Colors.transparent,
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Destinatario',
@@ -214,11 +214,11 @@ class _DetailServicesFinishedScreen
                                     )
                                   ],
                                 ),
-                                const Divider(
+                                 Divider(
                                   height: 15.0,
                                   color: Colors.white,
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Razón Social:',
@@ -235,12 +235,12 @@ class _DetailServicesFinishedScreen
                                   height: 20,
                                   child: AutoSizeText(
                                     snapshot.data!.recipientBusinessName,
-                                    style: const TextStyle(
+                                    style:  TextStyle(
                                         fontSize: 14, color: Colors.white),
                                     maxLines: 2,
                                   ),
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Télefono:',
@@ -256,11 +256,11 @@ class _DetailServicesFinishedScreen
                                     Text(
                                       snapshot.data!.recipientPhoneNumber,
                                       style:
-                                          const TextStyle(color: Colors.white),
+                                           TextStyle(color: Colors.white),
                                     )
                                   ],
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Contacto:',
@@ -276,11 +276,11 @@ class _DetailServicesFinishedScreen
                                     Text(
                                       snapshot.data!.recipientName,
                                       style:
-                                          const TextStyle(color: Colors.white),
+                                           TextStyle(color: Colors.white),
                                     )
                                   ],
                                 ),
-                                const Row(
+                                 Row(
                                   children: [
                                     Text(
                                       'Domicilio:',
@@ -295,7 +295,7 @@ class _DetailServicesFinishedScreen
                                 //   children: [
                                 //     Text(
                                 //       "${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}",
-                                //       style: const TextStyle(color: Colors.white),
+                                //       style:  TextStyle(color: Colors.white),
                                 //     ),
                                 //   ],
                                 // ),
@@ -304,16 +304,16 @@ class _DetailServicesFinishedScreen
                                   height: 20,
                                   child: AutoSizeText(
                                     '${snapshot.data!.recipientStreet} ${snapshot.data!.recipientOutdoorNumber}${snapshot.data!.recipientZipCode} ${snapshot.data!.recipientState}',
-                                    style: const TextStyle(color: Colors.white),
+                                    style:  TextStyle(color: Colors.white),
                                     maxLines: 2,
                                   ),
                                 ),
-                                const Divider(
+                                 Divider(
                                   height: 15.0,
                                   color: Colors.transparent,
                                 ),
                                 if (snapshot.data!.userRoll == false)
-                                  const Row(
+                                   Row(
                                     children: [
                                       Text(
                                         'Comisiones',
@@ -324,12 +324,12 @@ class _DetailServicesFinishedScreen
                                       )
                                     ],
                                   ),
-                                const Divider(
+                                 Divider(
                                   height: 15.0,
                                   color: Colors.white,
                                 ),
                                 if (snapshot.data!.userRoll == false)
-                                  const Row(
+                                   Row(
                                     children: [
                                       Text(
                                         'Comisión Total:',
@@ -345,13 +345,13 @@ class _DetailServicesFinishedScreen
                                     children: [
                                       Text(
                                         snapshot.data!.paymentTotal.toString(),
-                                        style: const TextStyle(
+                                        style:  TextStyle(
                                             color: Colors.white),
                                       ),
                                     ],
                                   ),
                                 if (snapshot.data!.userRoll == false)
-                                  const Row(
+                                   Row(
                                     children: [
                                       Text(
                                         'Total Asignado:',
@@ -368,13 +368,13 @@ class _DetailServicesFinishedScreen
                                       Text(
                                         snapshot.data!.allowanceTotal
                                             .toString(),
-                                        style: const TextStyle(
+                                        style:  TextStyle(
                                             color: Colors.white),
                                       ),
                                     ],
                                   ),
                                 if (snapshot.data!.userRoll == false)
-                                  const Row(
+                                   Row(
                                     children: [
                                       Text(
                                         'Viaticos Comprobados:',
@@ -391,13 +391,13 @@ class _DetailServicesFinishedScreen
                                       Text(
                                         snapshot.data!.allowanceChecked
                                             .toString(),
-                                        style: const TextStyle(
+                                        style:  TextStyle(
                                             color: Colors.white),
                                       ),
                                     ],
                                   ),
                                 if (snapshot.data!.userRoll == false)
-                                  const Row(
+                                   Row(
                                     children: [
                                       Text(
                                         'Diferencia de viaticos:',
@@ -414,7 +414,7 @@ class _DetailServicesFinishedScreen
                                       Text(
                                         snapshot.data!.allowanceDifference
                                             .toString(),
-                                        style: const TextStyle(
+                                        style:  TextStyle(
                                             color: Colors.white),
                                       ),
                                     ],
@@ -432,13 +432,13 @@ class _DetailServicesFinishedScreen
           } else if (snapshot.hasError) {
             return Text("${snapshot.error}");
           }
-          return const CircularProgressIndicator();
+          return  CircularProgressIndicator();
         },
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
         elevation: 20.0,
-        child: const Icon(
+        child:  Icon(
           Icons.phone,
           color: Colors.white,
         ),
@@ -450,9 +450,9 @@ class _DetailServicesFinishedScreen
     );
   }
 
-  // ignore: non_constant_identifier_names
+  // ignore: non_ant_identifier_names
   Widget Comitions(snapshot) {
-    return const Column(
+    return  Column(
       children: [],
     );
   }

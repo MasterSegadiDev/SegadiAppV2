@@ -1,3 +1,4 @@
+import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 //import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -10,7 +11,7 @@ import 'package:segadi/view_model/services_operator/assigned_services.dart';
 import 'package:segadi/view_model/services_operator/detail_service.dart';
 
 class ServiceListView extends StatelessWidget {
-  const ServiceListView({super.key});
+  ServiceListView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -23,20 +24,20 @@ class ServiceListView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-          title: const Text(
+          title: Text(
             'Remisiones Asignadas',
             style: TextStyle(color: Colors.white),
           ),
-          iconTheme: const IconThemeData(color: Colors.white),
-          backgroundColor: const Color(0xFF2C522A)),
+          iconTheme: IconThemeData(color: Colors.white),
+          backgroundColor: Color(0xFF2C522A)),
       backgroundColor: Colors.white,
-      drawer: const DrawerScreen(),
+      drawer: DrawerScreen(),
       body: Consumer<ServicesViewModel>(
         builder: (context, serviceViewModel, child) {
           return RefreshIndicator(
             onRefresh: _handleRefresh,
             child: ListView.builder(
-              padding: const EdgeInsets.all(10),
+              padding: EdgeInsets.all(10),
               itemCount: serviceViewModel.items.length,
               itemBuilder: (context, index) {
                 final item = serviceViewModel.items[index];
@@ -50,39 +51,180 @@ class ServiceListView extends StatelessWidget {
                     Navigator.push(
                       context,
                       MaterialPageRoute(
-                        builder: (context) => const DetailServiceScreen(),
+                        builder: (context) => DetailServiceScreen(),
                       ),
                     );
                   },
                   child: Card(
-                    color: const Color(0xFF84A756),
-                    borderOnForeground: true,
+                    color: Color(0xFF84A756),
+                    //borderOnForeground: true,
                     elevation: 10,
+                    clipBehavior: Clip.antiAlias,
                     child: Column(
                       mainAxisSize: MainAxisSize.max,
                       children: <Widget>[
                         ListTile(
-                          title: Text('Remision No:  ${item.service}',
-                              style: const TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14)),
-                          leading: const Icon(
+                          title: AutoSizeText(
+                            'REMISIÓN NÚMERO:  ${item.service}',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            minFontSize: 14,
+                            maxFontSize: 17,
+                          ),
+                          leading: Icon(
                             FontAwesomeIcons.truck,
                             color: Colors.white,
-                            size: 20,
                           ),
-                          subtitle: Text(
-                            "Cliente: ${item.client}",
-                            style: const TextStyle(color: Colors.white),
+                          subtitle: AutoSizeText(
+                            'CLIENTE: ${item.client}',
+                            style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: Colors.white),
                           ),
-                          trailing: ElevatedButton(
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 16.0),
+                          child: Row(
+                            children: [
+                              AutoSizeText(
+                                'ORIGEN DE CARGA',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                                minFontSize: 14,
+                                maxFontSize: 17,
+                              )
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 16.0, bottom: 2.0),
+                          child: Row(
+                            children: [
+                              const AutoSizeText(
+                                'Origen:  ',
+                                style: TextStyle(color: Colors.white),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              ),
+                              AutoSizeText(
+                                item.origin!,
+                                style: const TextStyle(color: Colors.white),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 16.0, bottom: 2.0),
+                          child: Row(
+                            children: [
+                              const AutoSizeText(
+                                'Fecha: ',
+                                style: TextStyle(color: Colors.white),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              ),
+                              AutoSizeText(
+                                item.loadDate!,
+                                style: const TextStyle(color: Colors.white),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 16.0, top: 8.0),
+                          child: Row(
+                            children: [
+                              AutoSizeText(
+                                'DESTINO DE CARGA',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                                minFontSize: 14,
+                                maxFontSize: 17,
+                              )
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 16.0, bottom: 2.0),
+                          child: Row(
+                            children: [
+                              const AutoSizeText(
+                                'Destino:  ',
+                                style: TextStyle(color: Colors.white),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              ),
+                              AutoSizeText(
+                                item.destination!,
+                                style: const TextStyle(color: Colors.white),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(left: 16.0, bottom: 2.0),
+                          child: Row(
+                            children: [
+                              const AutoSizeText(
+                                'Fecha: ',
+                                style: TextStyle(color: Colors.white),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              ),
+                              AutoSizeText(
+                                item.unloadDate!,
+                                style: const TextStyle(color: Colors.white),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding:
+                              EdgeInsets.only(left: 16.0, top: 8, bottom: 8),
+                          child: Row(
+                            children: [
+                              AutoSizeText(
+                                'DOCUMENTADOR:  ',
+                                style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              ),
+                              AutoSizeText(
+                                '${item.documenter!}',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                ),
+                                minFontSize: 13,
+                                maxFontSize: 16,
+                              )
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: EdgeInsets.only(
+                              left: 16.0, right: 16, top: 8, bottom: 8),
+                          child: ElevatedButton(
                             style: ElevatedButton.styleFrom(
-                              elevation: 8.0,
+                              //elevation: 0.0,
                               backgroundColor: Colors.white,
                               side: BorderSide.none,
+                              fixedSize: Size(1000, double.infinity),
                               shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(25.0),
+                                borderRadius: BorderRadius.circular(10.0),
                               ),
                             ),
                             onPressed: null,
@@ -92,98 +234,6 @@ class ServiceListView extends StatelessWidget {
                                   fontSize: 13, color: Colors.white),
                             ),
                           ),
-                        ),
-                        Row(
-                          children: [
-                            const Text(
-                              '   Carga Origen :  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              item.origin!,
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            const Text(
-                              '   Fecha Carga :  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              item.loadDate!,
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        const Divider(
-                          color: Colors.transparent,
-                          height: 10.0,
-                        ),
-                        Row(
-                          children: [
-                            const Text(
-                              '   Carga Destino :  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              item.destination!,
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                            const Text(
-                              '   Fecha Descarga :  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              item.unloadDate!,
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        const Divider(
-                          color: Colors.transparent,
-                          height: 10.0,
-                        ),
-                        Row(
-                          children: [
-                            const Text(
-                              '   Documentador :  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              item.documenter!,
-                              style: const TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        const Divider(
-                          color: Colors.transparent,
-                          height: 10.0,
                         ),
                       ],
                     ),

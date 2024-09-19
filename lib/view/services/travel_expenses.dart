@@ -18,6 +18,7 @@ class TravelExpensesScreen extends StatelessWidget {
         ),
         iconTheme: IconThemeData(color: Colors.white),
         backgroundColor: Color(0xFF2C522A),
+        //backgroundColor: Color(value)
       ),
       body: SingleChildScrollView(
         child: Center(
@@ -28,6 +29,7 @@ class TravelExpensesScreen extends StatelessWidget {
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2C522A),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(100),
                     ),
@@ -41,7 +43,10 @@ class TravelExpensesScreen extends StatelessWidget {
                         'Ha ocurrido un error inesperado, no se pudo consultar el listado de tus viáticos');
                   }
                 },
-                child: Text('Agregar conceptos'),
+                child: const Text(
+                  'Agregar conceptos',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
               SizedBox(
                 height: 20,

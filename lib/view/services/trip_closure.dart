@@ -152,74 +152,95 @@ class _TripClosureState extends State<TripClosureScreen> {
             '¿Quieres cerrar el viaje con la imagen captura?',
           ),
           actions: <Widget>[
-            Padding(
-              padding: EdgeInsets.all(2.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(100),
-                  ),
-                  fixedSize: const Size(250, double.infinity),
-                ),
-                onPressed: () async {
-                  await viewModelTripClosure.saveImage(
-                    viewModelTripClosure.tripClosure.id!,
-                    viewModelTripClosure.tripClosure.serviceId!,
-                    viewModelTripClosure.tripClosure.closeTravel = false,
-                  );
+            Column(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(2.0),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF2C522A),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(100),
+                        ),
+                        fixedSize: const Size(250, double.infinity),
+                      ),
+                      onPressed: () async {
+                        await viewModelTripClosure.saveImage(
+                          viewModelTripClosure.tripClosure.id!,
+                          viewModelTripClosure.tripClosure.serviceId!,
+                          viewModelTripClosure.tripClosure.closeTravel = false,
+                        );
 
-                  if (viewModelTripClosure.isServiceClosed == false) {
-                    Navigator.of(context).pop();
-                    scaffoldMessengerSuccessEvidentia(
-                        context, viewModelTripClosure.successMessage!);
-                  } else if (viewModelTripClosure.isServiceClosed == true) {
-                    scaffoldMessengerSuccessEvidentia(
-                        context, viewModelTripClosure.successMessage!);
+                        if (viewModelTripClosure.isServiceClosed == false) {
+                          Navigator.of(context).pop();
+                          scaffoldMessengerSuccessEvidentia(
+                              context, viewModelTripClosure.successMessage!);
+                        } else if (viewModelTripClosure.isServiceClosed ==
+                            true) {
+                          scaffoldMessengerSuccessEvidentia(
+                              context, viewModelTripClosure.successMessage!);
 
-                    Future.delayed(const Duration(seconds: 2), () {
-                      final detailServiceModel = DetailService(
-                          id: viewModelTripClosure.tripClosure.id);
-                      Provider.of<DetailViewModel>(context, listen: false)
-                          .setNewDetail(detailServiceModel);
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                    });
-                  }
-                },
-                child: const Text('Agregar mas evidencias'),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.all(2.0),
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100),
+                          Future.delayed(const Duration(seconds: 2), () {
+                            final detailServiceModel = DetailService(
+                                id: viewModelTripClosure.tripClosure.id);
+                            Provider.of<DetailViewModel>(context, listen: false)
+                                .setNewDetail(detailServiceModel);
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
+                          });
+                        }
+                      },
+                      child: const Text(
+                        'Agregar mas evidencias',
+                        style: TextStyle(color: Colors.white),
+                      ),
                     ),
-                    fixedSize: const Size(250, double.infinity)),
-                onPressed: () async {
-                  await viewModelTripClosure.saveImage(
-                    viewModelTripClosure.tripClosure.id!,
-                    viewModelTripClosure.tripClosure.serviceId!,
-                    viewModelTripClosure.tripClosure.closeTravel = true,
-                  );
-                  if (viewModelTripClosure.isServiceClosed == true) {
-                    scaffoldMessengerSuccessEvidentia(
-                        context, viewModelTripClosure.successMessage!);
-
-                    Future.delayed(const Duration(seconds: 2), () {
-                      final detailServiceModel = DetailService(
-                          id: viewModelTripClosure.tripClosure.id);
-                      Provider.of<DetailViewModel>(context, listen: false)
-                          .setNewDetail(detailServiceModel);
-                      Navigator.of(context).pop();
-                      Navigator.of(context).pop();
-                    });
-                  }
-                },
-                child: const Text('Cerrar viaje'),
-              ),
+                  ),
+                )
+              ],
             ),
+            Column(
+              children: [
+                Center(
+                  child: Padding(
+                    padding: EdgeInsets.all(2.0),
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                          backgroundColor: const Color(0xFF2C522A),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(100),
+                          ),
+                          fixedSize: const Size(250, double.infinity)),
+                      onPressed: () async {
+                        await viewModelTripClosure.saveImage(
+                          viewModelTripClosure.tripClosure.id!,
+                          viewModelTripClosure.tripClosure.serviceId!,
+                          viewModelTripClosure.tripClosure.closeTravel = true,
+                        );
+                        if (viewModelTripClosure.isServiceClosed == true) {
+                          scaffoldMessengerSuccessEvidentia(
+                              context, viewModelTripClosure.successMessage!);
+
+                          Future.delayed(const Duration(seconds: 2), () {
+                            final detailServiceModel = DetailService(
+                                id: viewModelTripClosure.tripClosure.id);
+                            Provider.of<DetailViewModel>(context, listen: false)
+                                .setNewDetail(detailServiceModel);
+                            Navigator.of(context).pop();
+                            Navigator.of(context).pop();
+                          });
+                        }
+                      },
+                      child: const Text(
+                        'Cerrar viaje',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ),
+                )
+              ],
+            )
           ],
         );
       },

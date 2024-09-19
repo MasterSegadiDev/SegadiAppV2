@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-
 import 'package:segadi/view_model/services_operator/travel_expenses.dart';
 
 class ListTravelExpensesView extends StatelessWidget {
@@ -146,7 +145,7 @@ class ListTravelExpensesView extends StatelessWidget {
                                   borderRadius:
                                       BorderRadius.circular(20), // <-- Radius
                                 ),
-                                backgroundColor: Colors.lightGreen,
+                                backgroundColor: const Color(0xFF2C522A),
                               ),
                               child: Text(
                                 'Agregar',
@@ -167,4 +166,3 @@ class ListTravelExpensesView extends StatelessWidget {
     );
   }
 }
-

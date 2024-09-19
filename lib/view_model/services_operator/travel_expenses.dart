@@ -60,13 +60,11 @@ class TravelExpensesViewModel extends ChangeNotifier {
 
   TravelExpensesViewModel() {
     fetchItemsTravelExpenses();
-    print('reload screen ');
   }
 
   void setNewDetail(int id) async {
     serviceDetailId = id;
     _tableItems = await _tableExpenses.getTravelExpenses(serviceDetailId);
-
     notifyListeners();
   }
 
@@ -87,7 +85,6 @@ class TravelExpensesViewModel extends ChangeNotifier {
       textController1.clear();
       print('listado de data full: ${_data}');
     }
-
     notifyListeners();
   }
 

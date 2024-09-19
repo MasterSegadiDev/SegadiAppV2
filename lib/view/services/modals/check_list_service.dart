@@ -43,7 +43,8 @@ class _CheckListView extends State<CheckListView> {
         },
       ),
       bottomNavigationBar: FloatingActionButton.small(
-        backgroundColor: Colors.green,
+        //backgroundColor: Color(value)
+         backgroundColor: const Color(0xFF2C522A),
         child: Text(
           'Guardar',
           style: TextStyle(color: Colors.white),
