@@ -19,7 +19,7 @@ class ServicesViewModel extends ChangeNotifier {
       _items = await _itemService.fetchItems();
       notifyListeners();
     } catch (e) {
-      print(e);
+        throw Exception('Ha ocurrido un error');
     }
   }
 

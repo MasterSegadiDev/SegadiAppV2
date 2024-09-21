@@ -57,8 +57,9 @@ class TravelExpenses {
 
   Future<http.Response> insertImport(
       int serviceId, int conceptId, dynamic importTotal, comentary) async {
+    final prefs = await SharedPreferences.getInstance();
     String? token;
-    token = await storage.read(key: 'token');
+    token = prefs.getString('token');
 
     Map data = {
       "service_id": serviceId,
@@ -87,8 +88,7 @@ class TravelExpenses {
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     String? token;
-    token = await storage.read(key: 'token');
-
+    token = prefs.getString('token');
 
     final response = await http.get(
       Uri.parse('${baseURL}index.php').replace(queryParameters: {
@@ -98,7 +98,7 @@ class TravelExpenses {
         'token': token,
       }),
     );
-   
+
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
       return data.map((json) => TravelExpenses.fromJson(json)).toList();

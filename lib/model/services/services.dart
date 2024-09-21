@@ -67,7 +67,7 @@ class Services {
 
     final prefs = await SharedPreferences.getInstance();
     id = prefs.getInt('id') ?? 0;
-    token = await storage.read(key: 'token');
+    token = prefs.getString('token');
     var route = 'index.php';
 
     var response = await http.get(

@@ -393,6 +393,23 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                             await viewModel.changeStatusService(
                                                 viewModel
                                                     .item!.mandatoryStatusId!);
+                                            if (viewModel.errorMessage !=
+                                                null) {
+                                              return showDialog<void>(
+                                                context: context,
+                                                builder:
+                                                    (BuildContext context) {
+                                                  return AlertDialog(
+                                                    //title: ,
+                                                    insetPadding:
+                                                        const EdgeInsets.all(
+                                                            20),
+                                                    content: Text(
+                                                        '${viewModel.errorMessage}'),
+                                                  );
+                                                },
+                                              );
+                                            }
                                           }
                                         : null,
                                     child: Text(
@@ -425,7 +442,6 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
               ),
               iconSize: 25.5,
               onPressed: () => {
-                    print('click en checklist'),
                     _openIconButtonPressed(),
                   } //_dialogCircleCheck((context)),
               ),

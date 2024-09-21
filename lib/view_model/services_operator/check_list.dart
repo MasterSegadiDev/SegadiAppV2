@@ -19,7 +19,6 @@ class CheckListViewModel extends ChangeNotifier {
 
   void toggleItem(int index, int id) {
     _items[index].isChecked = !_items[index].isChecked;
-    print(_items[index].isChecked);
 
     if (_items[index].isChecked == true) {
       optionSelect.add(id);
@@ -31,9 +30,6 @@ class CheckListViewModel extends ChangeNotifier {
   }
 
   Future<void> save() async {
-    print(optionSelect);
-    var response =
-        await _itemCheckList.saveCheckList(serviceDetailId, optionSelect);
-    print(response.statusCode);
+    _itemCheckList.saveCheckList(serviceDetailId, optionSelect);
   }
 }

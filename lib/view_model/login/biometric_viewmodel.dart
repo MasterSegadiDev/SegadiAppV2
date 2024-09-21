@@ -5,6 +5,7 @@ import 'package:http/http.dart' as http;
 import 'package:segadi/model/login/biometric_model.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:segadi/model/login/user_login.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class BiometricViewModel extends ChangeNotifier {
   final BiometricModel _biometricModel = BiometricModel();
@@ -34,34 +35,39 @@ class BiometricViewModel extends ChangeNotifier {
   }
 
   Future<void> authenticate() async {
-    token = await storage.read(key: 'auth_token');
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+    print('token guardado: ${token}');
+
+    username = prefs.getString('username');
+    password = await prefs.getString('password');
+
     if (token != null) {
-      await storage.delete(key: 'token');
+      prefs.remove('token');
     }
-    username = await storage.read(key: 'username');
-    password = await storage.read(key: 'password');
+
+    print('usuario ${username} and password ${password}');
 
     _isAuthenticated = await _biometricModel.authenticateWithBiometrics();
 
     if (_isAuthenticated == true && username != null && password != null) {
-      String? decodedUsername = utf8.decode(base64.decode(username!));
-      String? decodedPassword = utf8.decode(base64.decode(password!));
-
-      http.Response response =
-          await _authService.login(decodedUsername, decodedPassword);
+      http.Response response = await _authService.login(username!, password!);
+      print(response.statusCode);
 
       if (response.statusCode == 200) {
         Map responseMap = json.decode(response.body);
-        await storage.write(key: 'token', value: responseMap['token']);
-
+        prefs.setString('token', responseMap['token']);
         _isAuthenticatedWithToken = true;
+
+        print('nuevo token: ${prefs.getString('token')}');
       }
     }
     notifyListeners();
   }
 
   Future<void> _loadFromPrefs() async {
-    token = await storage.read(key: 'auth_token');
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
     notifyListeners();
   }
 }

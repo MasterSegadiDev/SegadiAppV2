@@ -102,13 +102,13 @@ class TripClosureViewModel extends ChangeNotifier {
 
   Future<void> saveImage(int id, String serviceId, bool closeTravel) async {
     if (closeTravel == true) {
-      print('estas en insertar imagenes true');
+    
       var rest = await _tripClosure.closeTravels(id);
       if (rest.statusCode == 200) {
         _isServiceClosed = true;
         _successMessage = 'Tu viaje se ha cerrado con éxito';
       } else {
-        print('El viaje no se pudo cerrar con exito');
+        throw Exception('Ha ocurrido un error al cerrar el viaje');
       }
     } else {
       

@@ -1,5 +1,5 @@
-
 import 'package:flutter/material.dart';
+
 const String baseURL = 'http://198.251.68.42/DesarrolloSEGADI/web/';
 //const String baseURL = 'http://198.251.68.42/SEGADI/web/';
 
@@ -77,5 +77,3 @@ successSnackBar(BuildContext context, String text) {
     ),
   );
 }
-
-

@@ -32,8 +32,7 @@ class TripClosure {
       serviceId: json["service_id"],
       extension: json["extension"],
       image: json["image"],
-      closeTravel: json["service_closed"]
-      );
+      closeTravel: json["service_closed"]);
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -46,9 +45,9 @@ class TripClosure {
   final storage = const FlutterSecureStorage();
   Future<http.Response> insertImage(
       int id, String serviceId, String image, String extension) async {
-    late String? token;
-
-    token = await storage.read(key: 'token');
+    final prefs = await SharedPreferences.getInstance();
+    String? token;
+    token = prefs.getString('token');
 
     Map data = {
       "service_id": id,
@@ -76,9 +75,8 @@ class TripClosure {
 
   Future getTotalEvidentias(int serviceId) async {
     final prefs = await SharedPreferences.getInstance();
-    late String? token;
-
-    token = await storage.read(key: 'token');
+    String? token;
+    token = prefs.getString('token');
     var userId = prefs.getInt('id') ?? 0;
     var route = 'index.php';
 
@@ -100,8 +98,9 @@ class TripClosure {
 
   Future<http.Response> insertImageTripClosure(
       int id, String serviceId, String image, String extension) async {
-    late String? token;
-    token = await storage.read(key: 'token');
+    final prefs = await SharedPreferences.getInstance();
+    String? token;
+    token = prefs.getString('token');
 
     Map data = {
       "service_id": id,
@@ -120,8 +119,6 @@ class TripClosure {
       body: body,
     );
 
-    print(response.statusCode);
-
     if (response.statusCode == 200) {
       return response;
     } else {
@@ -130,15 +127,15 @@ class TripClosure {
   }
 
   Future<http.Response> closeTravels(serviceId) async {
-    late String? token;
-    token = await storage.read(key: 'token');
+    final prefs = await SharedPreferences.getInstance();
+    String? token;
+    token = prefs.getString('token');
 
     Map data = {
       "service_id": serviceId,
       "token": token,
       "close": 1,
     };
-    print(data);
 
     var body = json.encode(data);
     var url = Uri.parse('${baseURL}index.php?r=esegadi/cierreevidenciaspost');
@@ -147,7 +144,7 @@ class TripClosure {
       headers: headers,
       body: body,
     );
-    print(response.statusCode);
+
     if (response.statusCode == 200) {
       return response;
     } else {

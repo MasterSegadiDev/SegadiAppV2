@@ -202,12 +202,11 @@ class DetailService {
 class DetailServices {
   final storage = const FlutterSecureStorage();
   Future<DetailService> getDetail(id) async {
-    print(id);
-    late String? token;
+    String? token;
 
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
-    token = await storage.read(key: 'token');
+    token = prefs.getString('token');
     var route = 'index.php';
 
     var response = await http.get(
@@ -437,8 +436,10 @@ class DetailServices {
   }
 
   Future<http.Response> changeStatusService(int serviceId, int statusId) async {
-    late String? token;
-    token = await storage.read(key: 'token');
+    String? token;
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
+    print(token);
 
     Map data = {"service_id": serviceId, "status_id": statusId, "token": token};
 
@@ -449,22 +450,15 @@ class DetailServices {
       headers: headers,
       body: body,
     );
-    
-    print(response.statusCode);
 
-    if (response.statusCode == 200) {
-      return response;
-    } else {
-      throw Exception('Ha ocurrido un error al cambiar el estatus');
-    }
+    return response;
   }
 
   Future<http.Response> changeStatusSupport(
       int serviceId, int statusId, String type) async {
-    late String? token;
-    token = await storage.read(key: 'token');
-
-    
+    String? token;
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
 
     Map data = {
       "service_id": serviceId,
@@ -481,11 +475,6 @@ class DetailServices {
       body: body,
     );
 
-    if (response.statusCode == 200) {
-      return response;
-    } else {
-      throw Exception(
-          'Ha ocurrido un error al seleccionar un estatus de soporte');
-    }
+    return response;
   }
 }

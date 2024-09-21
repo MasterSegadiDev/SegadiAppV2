@@ -71,7 +71,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
   Future<void> fetchItemsTravelExpenses() async {
     _items = [];
     _data = [];
-    print('listado de data no full: ${_data}');
+    
     _bandera = false;
 
     _items = await _travelExpenses.getData(serviceDetailId);
@@ -83,7 +83,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
       _import = '';
       textController.clear();
       textController1.clear();
-      print('listado de data full: ${_data}');
+      
     }
     notifyListeners();
   }
@@ -103,10 +103,10 @@ class TravelExpensesViewModel extends ChangeNotifier {
 
     if (conceptId <= 0) {
       _errorMessage = 'Necesitas seleccionar un concepto';
-      print(_errorMessage);
+     
     } else if (import.isEmpty) {
       _errorMessage = 'Necesitas ingresar un importe a registrar';
-      print(_errorMessage);
+    
     } else if (conceptId > 0 && import.isNotEmpty) {
       var contain = _data.where((element) => element.id == conceptId);
 

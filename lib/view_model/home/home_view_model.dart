@@ -13,5 +13,4 @@ class HomeViewModel extends ChangeNotifier {
     token = prefs.getString('token') ?? '';
     notifyListeners();
   }
-
 }

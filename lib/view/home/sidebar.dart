@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:segadi/model/user/UserInformation.dart';
-import 'package:segadi/view/home/home.dart';
+import 'package:segadi/view/home/routes.dart';
 import 'package:segadi/view_model/user/user_information.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class DrawerScreen extends StatefulWidget {
-   DrawerScreen({Key? key}) : super(key: key);
+  DrawerScreen({Key? key}) : super(key: key);
   @override
   // ignore: library_private_types_in_public_api
   _DrawerScreen createState() => _DrawerScreen();
@@ -38,12 +38,12 @@ class _DrawerScreen extends State<DrawerScreen> {
       child: SizedBox(
         width: 300,
         child: Drawer(
-          backgroundColor:  Color(0xFF2C522A),
+          backgroundColor: Color(0xFF2C522A),
           //#84A756
           child: ListView(
             children: [
               UserAccountsDrawerHeader(
-                decoration:  BoxDecoration(
+                decoration: BoxDecoration(
                   color: Color(0xFF2C522A),
                 ),
                 accountName: Text(name),
@@ -72,29 +72,29 @@ class _DrawerScreen extends State<DrawerScreen> {
                           ),
                         );
                       }
-                      return  CircularProgressIndicator();
+                      return CircularProgressIndicator();
                     },
                   ),
                 ),
                 accountEmail: null,
               ),
               ListTile(
-                leading:  Icon(
+                leading: Icon(
                   Icons.person,
                   color: Colors.white,
                 ),
-                title:  Text(
+                title: Text(
                   'Perfil',
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {},
               ),
               ListTile(
-                leading:  Icon(
+                leading: Icon(
                   FontAwesomeIcons.house,
                   color: Colors.white,
                 ),
-                title:  Text(
+                title: Text(
                   'Home',
                   style: TextStyle(color: Colors.white),
                 ),
@@ -103,46 +103,46 @@ class _DrawerScreen extends State<DrawerScreen> {
                   Navigator.push(
                     context,
                     MaterialPageRoute(
-                      builder: (context) =>  HomeScreen(),
+                      builder: (context) => HomeScreen(),
                     ),
                   );
                 },
               ),
               ExpansionTile(
-                title:  Text(
+                title: Text(
                   'Servicios',
                   style: TextStyle(color: Colors.white),
                 ),
-                leading:  Icon(
+                leading: Icon(
                   Icons.file_open,
                   color: Colors.white,
                 ),
-                childrenPadding:  EdgeInsets.only(left: 60),
+                childrenPadding: EdgeInsets.only(left: 60),
                 children: [
                   ListTile(
-                    leading:  Icon(
+                    leading: Icon(
                       FontAwesomeIcons.file,
                       color: Colors.white,
                     ),
-                    title:  Text(
+                    title: Text(
                       "Servicios Asignados",
                       style: TextStyle(color: Colors.white),
                     ),
                     onTap: () {
-                      // Navigator.push(
-                      //   context,
-                      //   MaterialPageRoute(
-                      //     builder: (context) =>  ServicesScreen(),
-                      //   ),
-                      // );
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ServiceListView(),
+                        ),
+                      );
                     },
                   ),
                   ListTile(
-                    leading:  Icon(
+                    leading: Icon(
                       FontAwesomeIcons.circleCheck,
                       color: Colors.white,
                     ),
-                    title:  Text(
+                    title: Text(
                       "Servicios Realizados",
                       style: TextStyle(color: Colors.white),
                     ),
@@ -153,19 +153,19 @@ class _DrawerScreen extends State<DrawerScreen> {
                 ],
               ),
               ListTile(
-                leading:  Icon(
+                leading: Icon(
                   Icons.folder,
                   color: Colors.white,
                 ),
-                title:  Text(
+                title: Text(
                   'Expendiente',
                   style: TextStyle(color: Colors.white),
                 ),
                 onTap: () {
-                  // Navigator.pushNamed(context, '/user');
+                 
                 },
               ),
-               ListTile(
+              ListTile(
                 leading: Icon(
                   // ignore: deprecated_member_use
                   FontAwesomeIcons.tools,
@@ -176,13 +176,13 @@ class _DrawerScreen extends State<DrawerScreen> {
                   style: TextStyle(color: Colors.white),
                 ),
               ),
-               Divider(),
+              Divider(),
               ListTile(
-                title:  Text(
+                title: Text(
                   'Salir',
                   style: TextStyle(color: Colors.white),
                 ),
-                leading:  Icon(
+                leading: Icon(
                   Icons.exit_to_app,
                   color: Colors.white,
                 ),
@@ -198,6 +198,8 @@ class _DrawerScreen extends State<DrawerScreen> {
   }
 
   logout(context) async {
+    final prefs = await SharedPreferences.getInstance();
+    prefs.remove('token');
     Navigator.of(context)
         .pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
   }

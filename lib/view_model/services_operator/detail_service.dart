@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/model/services/detail_service.dart';
 import 'package:segadi/view_model/globals.dart';
@@ -12,13 +13,16 @@ class DetailViewModel extends ChangeNotifier {
   DetailService? _item;
   DetailService? get item => _item;
 
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
   void setNewDetail(DetailService detailServiceModel) async {
     detail = detailServiceModel;
     serviceDetailId = 0;
     serviceDetailId = detail.id!;
 
     _item = await _detailService.getDetail(detail.id);
-    print(_item);
+
     notifyListeners();
   }
 
@@ -36,7 +40,6 @@ class DetailViewModel extends ChangeNotifier {
 
   void toggleItem(int index, int id) {
     _items[index].isChecked = !_items[index].isChecked;
-    print(_items[index].isChecked);
 
     if (_items[index].isChecked == true) {
       optionSelect.add(id);
@@ -48,39 +51,57 @@ class DetailViewModel extends ChangeNotifier {
   }
 
   Future<void> save() async {
-    await _itemCheckList.saveCheckList(serviceDetailId, optionSelect);
-    _item = await _detailService.getDetail(detail.id);
-    print(_item);
+    var response;
+    _errorMessage = null;
+
+    if (optionSelect.isEmpty) {
+      _errorMessage =
+          'Necesitas seleccionar al menos una opción del check list';
+    } else {
+      response =
+          await _itemCheckList.saveCheckList(serviceDetailId, optionSelect);
+      print(response.statusCode);
+      if (response.statusCode == 200) {
+        _item = await _detailService.getDetail(detail.id);
+      } else {
+        _errorMessage =
+            'Ha ocurrido un error al guardar el checkList, código de error: ${response.statusCode}';
+      }
+    }
+
     notifyListeners();
   }
 
   Future<void> changeStatusService(int statusId) async {
     serviceDetailId = 0;
     serviceDetailId = detail.id!;
-    var res =
+    _errorMessage = null;
+    http.Response response =
         await _detailService.changeStatusService(serviceDetailId, statusId);
-    print(res.statusCode);
-    if (res.statusCode == 200) {
+    print(response.statusCode);
+
+    if (response.statusCode == 200) {
       _item = await _detailService.getDetail(detail.id);
-      print(_item);
-      notifyListeners();
+    } else {
+      _errorMessage =
+          'Ha ocurrido un error al cambiar el estatus de la remision, código de error: ${response.statusCode}';
     }
+    notifyListeners();
   }
 
   Future<void> changeStatusSupport(int statusId, String status) async {
-    print('estatus: ${statusId} estatus tipo: ${status}');
     serviceDetailId = 0;
     serviceDetailId = detail.id!;
-    print(statusId);
-
-    var res = await _detailService.changeStatusSupport(
+    _errorMessage = null;
+    http.Response response = await _detailService.changeStatusSupport(
         serviceDetailId, statusId, status);
 
-    if (res.statusCode == 200) {
+    if (response.statusCode == 200) {
       _item = await _detailService.getDetail(detail.id);
-      print(_item);
-      notifyListeners();
+    } else {
+      _errorMessage =
+          'Ha ocurrido un error al cambiar el estatus de soporte, código de error: ${response.statusCode}';
     }
+    notifyListeners();
   }
-
 }

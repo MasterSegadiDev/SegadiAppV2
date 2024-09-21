@@ -55,6 +55,7 @@ class LoginViewModel extends ChangeNotifier {
   Future<void> login() async {
     _isLoading = true;
     _errorMessage = null;
+
     notifyListeners();
 
     if (_username.isEmpty) {
@@ -70,6 +71,7 @@ class LoginViewModel extends ChangeNotifier {
 
       if (response.body.isNotEmpty) {
         _errorMessage = null;
+        final prefs = await SharedPreferences.getInstance();
 
         Map responseMap = json.decode(response.body);
         if (responseMap['token'] == null) {
@@ -78,26 +80,22 @@ class LoginViewModel extends ChangeNotifier {
         }
         if (responseMap['token'] != null) {
           _isLoading = false;
-          token = responseMap['token'];
+          prefs.clear();
 
-          final prefs = await SharedPreferences.getInstance();
           prefs.setInt('id', responseMap["user"]['id']);
           prefs.setString('name', responseMap["user"]['name']);
-
-          //prefs.setString('token', responseMap['token']);
+          prefs.setString('username', _username);
+          prefs.setString('password', _password);
+          prefs.setString('token', responseMap['token']);
           prefs.setString(
               'user_roll', responseMap['user']['empleado_permisionario']);
-
-          //to save token, i'm use secure storage with encode base 64
-          String? encodeUsername = base64.encode(utf8.encode(_username));
-          String? encodePassword = base64.encode(utf8.encode(_password));
-          
-          await storage.write(key: 'token', value: token);
-          await storage.write(key: 'username', value: encodeUsername);
-          await storage.write(key: 'password', value: encodePassword);
-
         }
+      } else {
+        _errorMessage = 'Ha ocurrido un error al logearte, intentalo de nuevo';
       }
+
+      _username = '';
+      _password = '';
     }
     notifyListeners();
   }

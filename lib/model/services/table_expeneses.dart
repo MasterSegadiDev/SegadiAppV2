@@ -41,7 +41,7 @@ class TableExpenses {
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     String? token;
-    token = await storage.read(key: 'token');
+    token = prefs.getString('token');
     var route = 'index.php';
 
     var response = await http

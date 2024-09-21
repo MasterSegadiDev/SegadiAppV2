@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:segadi/view_model/globals.dart';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 List<CheckList> checkListFromJson(String str) =>
     List<CheckList>.from(json.decode(str).map((x) => CheckList.fromJson(x)));
@@ -38,11 +39,15 @@ class CheckList {
 
 class NewCheckList {
   final storage = const FlutterSecureStorage();
+
   Future<List<CheckList>> fetchItems() async {
     String? token;
     List<CheckList> serviceList = [];
+    final prefs = await SharedPreferences.getInstance();
 
-    token = await storage.read(key: 'token');
+    //token = await storage.read(key: 'token');
+    token = prefs.getString('token');
+    print(token);
     var route = 'index.php';
 
     var response = await http.get(
@@ -55,7 +60,7 @@ class NewCheckList {
     );
 
     var data = jsonDecode(response.body.toString());
-    print(response.statusCode);
+
     if (response.statusCode == 200) {
       for (Map<String, dynamic> index in data) {
         serviceList.add(CheckList.fromJson(index));
@@ -69,14 +74,15 @@ class NewCheckList {
 
   Future<http.Response> saveCheckList(int id, List checkList) async {
     String? token;
-    token = await storage.read(key: 'token');
+    //token = await storage.read(key: 'token');
+    final prefs = await SharedPreferences.getInstance();
+    token = prefs.getString('token');
 
     Map data = {
       "service": {"service_id": id, "list": checkList},
       "token": token
     };
     var body = json.encode(data);
-  
 
     var url = Uri.parse('${baseURL}index.php?r=esegadi/checklistpost');
     http.Response response = await http.post(
@@ -84,12 +90,7 @@ class NewCheckList {
       headers: headers,
       body: body,
     );
-    print(response.statusCode);
-    if (response.statusCode == 200) {
-      return response;
-    } else {
-      throw Exception(
-          'Ha ocurrido un error, el check list no se pudo registrar');
-    }
+
+    return response;
   }
 }

@@ -4,40 +4,37 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:segadi/view/home/sidebar.dart';
 import 'package:segadi/view/services/services_operator.dart';
 
-
 class HomeScreen extends StatelessWidget {
-   HomeScreen({super.key});
+  HomeScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
-    
     return Scaffold(
       appBar: AppBar(
-        title:  Text(
+        title: Text(
           'Menu',
           style: TextStyle(color: Colors.white),
         ),
-        iconTheme:  IconThemeData(color: Colors.white),
-        backgroundColor:  Color(0xFF2C522A),
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: Color(0xFF2C522A),
       ),
       backgroundColor: Colors.white,
-      drawer:  DrawerScreen(),
+      drawer: DrawerScreen(),
       body: Center(
         child: GridView.count(
           crossAxisCount: 2,
-          padding:  EdgeInsets.all(10.0),
+          padding: EdgeInsets.all(10.0),
           children: <Widget>[
             GestureDetector(
               onTap: () {
-                
-                 Navigator.push(
+                Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) =>  ServiceListView(),
+                    builder: (context) => ServiceListView(),
                   ),
                 );
               },
-              child:  Card(
+              child: Card(
                 color: Color(0xFF84A756),
                 shadowColor: Colors.transparent,
                 child: Column(
@@ -65,10 +62,8 @@ class HomeScreen extends StatelessWidget {
               ),
             ),
             GestureDetector(
-              onTap: () {
-                Navigator.popAndPushNamed(context, '/user');
-              },
-              child:  Card(
+              onTap: () {},
+              child: Card(
                 color: Color(0xFF84A756),
                 shadowColor: Colors.transparent,
                 child: Column(
@@ -97,7 +92,7 @@ class HomeScreen extends StatelessWidget {
             ),
             GestureDetector(
               onTap: () {},
-              child:  Card(
+              child: Card(
                 color: Color(0xFF84A756),
                 shadowColor: Colors.transparent,
                 child: Column(
@@ -130,7 +125,7 @@ class HomeScreen extends StatelessWidget {
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
-        child:  Icon(
+        child: Icon(
           Icons.phone,
           color: Colors.white,
         ),
@@ -140,5 +135,4 @@ class HomeScreen extends StatelessWidget {
       ),
     );
   }
-
 }

@@ -43,15 +43,28 @@ class _CheckListView extends State<CheckListView> {
         },
       ),
       bottomNavigationBar: FloatingActionButton.small(
-        //backgroundColor: Color(value)
-         backgroundColor: const Color(0xFF2C522A),
+        backgroundColor: const Color(0xFF2C522A),
         child: Text(
           'Guardar',
           style: TextStyle(color: Colors.white),
         ),
         onPressed: () async {
           await checkVieModel.save();
-          Navigator.pop(context);
+
+          if (checkVieModel.errorMessage != null) {
+            return showDialog<void>(
+              context: context,
+              builder: (BuildContext context) {
+                return AlertDialog(
+                  //title: ,
+                  insetPadding: const EdgeInsets.all(20),
+                  content: Text('${checkVieModel.errorMessage}'),
+                );
+              },
+            );
+          } else {
+            Navigator.pop(context);
+          }
         },
       ),
     );

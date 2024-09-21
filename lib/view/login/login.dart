@@ -109,20 +109,20 @@ class _LoginScreenState extends State<LoginView> {
                 ),
                 onChanged: (value) => loginViewModel.password = value,
               ),
-              SizedBox(height: 10),
-              InkWell(
-                onTap: () {
-                  //loginViewModel.removeAllPrefs();
-                },
-                child: Padding(
-                  padding: EdgeInsets.all(10.0),
-                  child: Text(
-                    "¿Quieres cambiar de usuario?",
-                    style: TextStyle(color: Colors.blue),
-                  ),
-                ),
-              ),
-              SizedBox(height: 10),
+              // SizedBox(height: 10),
+              // InkWell(
+              //   onTap: () {
+              //     //loginViewModel.removeAllPrefs();
+              //   },
+              //   child: Padding(
+              //     padding: EdgeInsets.all(10.0),
+              //     child: Text(
+              //       "¿Quieres cambiar de usuario?",
+              //       style: TextStyle(color: Colors.blue),
+              //     ),
+              //   ),
+              // ),
+              SizedBox(height: 20),
               if (loginViewModel.isLoading)
                 CircularProgressIndicator()
               else
