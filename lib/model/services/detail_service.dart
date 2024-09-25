@@ -202,6 +202,8 @@ class DetailService {
 class DetailServices {
   final storage = const FlutterSecureStorage();
   Future<DetailService> getDetail(id) async {
+
+    print(id);
     String? token;
 
     final prefs = await SharedPreferences.getInstance();

@@ -1,7 +1,11 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_file_downloader/flutter_file_downloader.dart';
+
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:segadi/helper/messages.dart';
+
 import 'package:segadi/model/services/trip_closure.dart';
 import 'package:segadi/view/services/modals/check_list_service.dart';
 import 'package:segadi/view/services/modals/status_support.dart';
@@ -347,13 +351,34 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                 child: Column(
                                   children: <Widget>[
                                     IconButton(
-                                        icon: Icon(
-                                          FontAwesomeIcons.solidFilePdf,
-                                          color: Colors.red,
-                                        ),
-                                        iconSize: 25.5,
-                                        onPressed: () => {} // getPdf(id),
-                                        ),
+                                      icon: Icon(
+                                        FontAwesomeIcons.solidFilePdf,
+                                        color: Colors.red,
+                                      ),
+                                      iconSize: 25.5,
+                                      onPressed: () async {
+                                        viewModel.getPdf();
+                                        if (viewModel.bandera == true) {
+                                          print('esta en empty');
+                                          setState(
+                                            () {
+                                              String name =
+                                                  "CFDI Remision: ${viewModel.detail.id}";
+                                              FileDownloader.downloadFile(
+                                                url: viewModel.url,
+                                                name: name,
+                                                notificationType:
+                                                    NotificationType.all,
+                                              );
+                                            },
+                                          );
+                                        } else if (viewModel.bandera == false) {
+                                          print('esta en no empty');
+                                          scaffoldMessengerError(context,
+                                              viewModel.errorMessageUrl);
+                                        }
+                                      },
+                                    ),
                                     Text(
                                       'Descargar Servicio',
                                       style: TextStyle(
@@ -395,20 +420,11 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                                     .item!.mandatoryStatusId!);
                                             if (viewModel.errorMessage !=
                                                 null) {
-                                              return showDialog<void>(
-                                                context: context,
-                                                builder:
-                                                    (BuildContext context) {
-                                                  return AlertDialog(
-                                                    //title: ,
-                                                    insetPadding:
-                                                        const EdgeInsets.all(
-                                                            20),
-                                                    content: Text(
-                                                        '${viewModel.errorMessage}'),
-                                                  );
-                                                },
-                                              );
+                                              if (viewModel.errorMessage !=
+                                                  null) {
+                                                scaffoldMessengerError(context,
+                                                    viewModel.errorMessage!);
+                                              }
                                             }
                                           }
                                         : null,
