@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:segadi/view_model/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -53,7 +53,7 @@ class TravelExpenses {
         "payment_total": paymentTotal,
         //"comments": comments,
       };
-  final storage = const FlutterSecureStorage();
+
 
   Future<http.Response> insertImport(
       int serviceId, int conceptId, dynamic importTotal, comentary) async {

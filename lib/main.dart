@@ -2,8 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/helper/navigator.dart';
+import 'package:segadi/repo/device_info_respository.dart';
+//import 'package:segadi/repo/device_info_respository.dart';
 
 import 'package:segadi/view/home/routes.dart';
+import 'package:segadi/view_model/devices/device_view_model.dart';
+//import 'package:segadi/view_model/devices/device_view_model.dart';
 import 'package:segadi/view_model/home/home_view_model.dart';
 import 'package:segadi/view_model/login/biometric_viewmodel.dart';
 import 'package:segadi/view_model/login/user_login.dart';
@@ -22,11 +26,11 @@ Future main() async {
     DeviceOrientation.portraitDown,
   ]);
 
-  runApp( MyApp());
+  runApp(MyApp());
 }
 
 class MyApp extends StatelessWidget {
-   MyApp({Key? key}) : super(key: key);
+  MyApp({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -34,6 +38,7 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LoginViewModel()),
         ChangeNotifierProvider(create: (_) => BiometricViewModel()),
+        //ChangeNotifierProvider(create: (_) => DeviceInfoViewModel(DeviceInfoRespository())),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(
           create: (_) {
@@ -52,6 +57,8 @@ class MyApp extends StatelessWidget {
             return loadTableTravelExpenses;
           },
         ),
+        ChangeNotifierProvider(
+            create: (_) => DeviceInfoViewModel(DeviceInfoRespository())),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -62,15 +69,15 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         routes: {
-          '/': (context) =>  LoginView(),
-          '/home_page': (context) =>  HomeScreen(),
-          '/services': (context) =>  ServiceListView(),
-          '/services_finished': (context) =>  FinishServiceList(),
-          '/detail_service': (context) =>  DetailServiceScreen(),
+          '/': (context) => LoginView(),
+          '/home_page': (context) => HomeScreen(),
+          '/services': (context) => ServiceListView(),
+          '/services_finished': (context) => FinishServiceList(),
+          '/detail_service': (context) => DetailServiceScreen(),
           '/detail_service_finished': (context) =>
-               DetailServicesFinishedScreen(id: 0),
-          'trip_closure': (context) =>  TripClosureScreen(),
-          '/user': (context) =>  UserScreen(),
+              DetailServicesFinishedScreen(id: 0),
+          'trip_closure': (context) => TripClosureScreen(),
+          '/user': (context) => UserScreen(),
           '/travel_expenses': (context) => TravelExpensesScreen(),
         },
       ),

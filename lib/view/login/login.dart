@@ -1,7 +1,10 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/helper/messages.dart';
+import 'package:segadi/view/home/user.dart';
+//import 'package:segadi/view_model/devices/device_view_model.dart';
 import 'package:segadi/view_model/login/biometric_viewmodel.dart';
 import 'package:segadi/view_model/login/user_login.dart';
 
@@ -25,6 +28,7 @@ class _LoginScreenState extends State<LoginView> {
   Widget build(BuildContext context) {
     final loginViewModel = Provider.of<LoginViewModel>(context);
     final biometricViewModel = Provider.of<BiometricViewModel>(context);
+    //final deviceVieModel = Provider.of<DeviceInfoViewModel>(context);
 
     return Scaffold(
       appBar: AppBar(
@@ -80,6 +84,7 @@ class _LoginScreenState extends State<LoginView> {
                       borderRadius: BorderRadius.circular(100)),
                   prefixIcon: Icon(Icons.person),
                 ),
+                controller: loginViewModel.usernameController,
                 onChanged: (value) => loginViewModel.username = value,
               ),
               SizedBox(
@@ -107,21 +112,9 @@ class _LoginScreenState extends State<LoginView> {
                     },
                   ),
                 ),
+                controller: loginViewModel.passwordController,
                 onChanged: (value) => loginViewModel.password = value,
               ),
-              // SizedBox(height: 10),
-              // InkWell(
-              //   onTap: () {
-              //     //loginViewModel.removeAllPrefs();
-              //   },
-              //   child: Padding(
-              //     padding: EdgeInsets.all(10.0),
-              //     child: Text(
-              //       "¿Quieres cambiar de usuario?",
-              //       style: TextStyle(color: Colors.blue),
-              //     ),
-              //   ),
-              // ),
               SizedBox(height: 20),
               if (loginViewModel.isLoading)
                 CircularProgressIndicator()
@@ -138,11 +131,19 @@ class _LoginScreenState extends State<LoginView> {
                     if (loginViewModel.errorMessage != null) {
                       scaffoldMessengerError(
                           context, loginViewModel.errorMessage!);
-                    } else {
+                    } else if (loginViewModel.isValidScreen == false) {
+                      print(
+                          'Despues de registrarte puedes ingresar a SEGADI Operador');
+                      _showBottomSheetRegister(context);
+                    } else if (loginViewModel.errorMessage == null &&
+                        loginViewModel.isValidScreen == true) {
                       scaffoldMessengerSuccess(context);
-                      Future.delayed(Duration(seconds: 2), () {
-                        Navigator.pushNamed(context, '/home_page');
-                      });
+                      Future.delayed(
+                        Duration(seconds: 2),
+                        () {
+                          Navigator.pushNamed(context, '/home_page');
+                        },
+                      );
                     }
                   },
                   child: Text(
@@ -158,6 +159,16 @@ class _LoginScreenState extends State<LoginView> {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        child: Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
+        onPressed: () {
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+        },
       ),
     );
   }
@@ -191,4 +202,12 @@ class _LoginScreenState extends State<LoginView> {
       ),
     );
   }
+}
+
+void _showBottomSheetRegister(BuildContext context) {
+  showModalBottomSheet(
+    isScrollControlled: true,
+    context: context,
+    builder: (ctx) => UserScreen(),
+  );
 }

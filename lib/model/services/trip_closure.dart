@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:http/http.dart' as http;
 import 'package:segadi/view_model/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -42,7 +42,6 @@ class TripClosure {
         "service_closed": closeTravel
       };
 
-  final storage = const FlutterSecureStorage();
   Future<http.Response> insertImage(
       int id, String serviceId, String image, String extension) async {
     final prefs = await SharedPreferences.getInstance();

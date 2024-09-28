@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:segadi/view_model/globals.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
@@ -38,7 +38,7 @@ class CheckList {
 }
 
 class NewCheckList {
-  final storage = const FlutterSecureStorage();
+ 
 
   Future<List<CheckList>> fetchItems() async {
     String? token;
@@ -47,7 +47,7 @@ class NewCheckList {
 
     //token = await storage.read(key: 'token');
     token = prefs.getString('token');
-    print(token);
+   
     var route = 'index.php';
 
     var response = await http.get(

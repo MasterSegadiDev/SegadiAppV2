@@ -4,7 +4,7 @@
 
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:segadi/view_model/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -200,10 +200,10 @@ class DetailService {
 }
 
 class DetailServices {
-  final storage = const FlutterSecureStorage();
+
   Future<DetailService> getDetail(id) async {
 
-    print(id);
+    
     String? token;
 
     final prefs = await SharedPreferences.getInstance();
@@ -441,7 +441,7 @@ class DetailServices {
     String? token;
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
-    print(token);
+    
 
     Map data = {"service_id": serviceId, "status_id": statusId, "token": token};
 

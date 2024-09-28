@@ -1,10 +1,12 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_file_downloader/flutter_file_downloader.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/helper/messages.dart';
+import 'package:segadi/model/services/pdf_service.dart';
 
 import 'package:segadi/model/services/trip_closure.dart';
 import 'package:segadi/view/services/modals/check_list_service.dart';
@@ -356,28 +358,9 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                                         color: Colors.red,
                                       ),
                                       iconSize: 25.5,
-                                      onPressed: () async {
-                                        viewModel.getPdf();
-                                        if (viewModel.bandera == true) {
-                                          print('esta en empty');
-                                          setState(
-                                            () {
-                                              String name =
-                                                  "CFDI Remision: ${viewModel.detail.id}";
-                                              FileDownloader.downloadFile(
-                                                url: viewModel.url,
-                                                name: name,
-                                                notificationType:
-                                                    NotificationType.all,
-                                              );
-                                            },
-                                          );
-                                        } else if (viewModel.bandera == false) {
-                                          print('esta en no empty');
-                                          scaffoldMessengerError(context,
-                                              viewModel.errorMessageUrl);
-                                        }
-                                      },
+                                      onPressed: () => getPdf(
+                                          viewModel.detail.id!,
+                                          viewModel.item!.service!),
                                     ),
                                     Text(
                                       'Descargar Servicio',
@@ -444,6 +427,16 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                 ],
               ),
             ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        child: Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
+        onPressed: () {
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+        },
+      ),
     );
   }
 
@@ -646,5 +639,24 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
         );
       },
     );
+  }
+
+  getPdf(int id, String serviceId) async {
+  
+    var res = await PdfService().getPdf(id);
+
+    if (res == null) {
+      scaffoldMessengerError(context,
+          'La remisión: ${serviceId} aun no cuenta con un CFDI timbrado');
+    } else {
+      String rest = res["url"];
+
+      String name = "CFDI Remision: ${serviceId}";
+      FileDownloader.downloadFile(
+        url: rest,
+        name: name,
+        notificationType: NotificationType.all,
+      );
+    }
   }
 }

@@ -1,5 +1,7 @@
 
 
+import 'dart:convert';
+
 import 'package:segadi/view_model/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -22,6 +24,9 @@ class PdfService {
       'service_id': serviceId.toString(),
     }));
 
-    return response;
+     var data = jsonDecode(response.body.toString());
+    if (response.statusCode == 200) {
+      return data;
+    }
   }
 }

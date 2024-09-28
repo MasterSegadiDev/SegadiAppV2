@@ -1,5 +1,6 @@
 import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 //import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
@@ -242,6 +243,16 @@ class ServiceListView extends StatelessWidget {
               },
             ),
           );
+        },
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        child: Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
+        onPressed: () {
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
         },
       ),
     );

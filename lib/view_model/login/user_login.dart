@@ -5,12 +5,17 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:segadi/model/login/user_login.dart';
+import 'package:segadi/repo/device_info_respository.dart';
+import 'package:segadi/view_model/devices/device_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
-  final storage = const FlutterSecureStorage();
+  final DeviceInfoViewModel _deviceInfoViewModel =
+      DeviceInfoViewModel(DeviceInfoRespository());
+
+  final TextEditingController usernameController = TextEditingController();
+  final TextEditingController passwordController = TextEditingController();
 
   String name = '';
 
@@ -35,12 +40,16 @@ class LoginViewModel extends ChangeNotifier {
   String token = '';
 
   bool _isLoading = false;
+
   String? _errorMessage;
+  String? get errorMessage => _errorMessage;
 
   String get username => _username;
   String get password => _password;
   bool get isLoading => _isLoading;
-  String? get errorMessage => _errorMessage;
+
+  bool _isValidScreen = false;
+  bool get isValidScreen => _isValidScreen;
 
   set username(String value) {
     _username = value;
@@ -70,7 +79,10 @@ class LoginViewModel extends ChangeNotifier {
       http.Response response = await _authService.login(_username, _password);
 
       if (response.body.isNotEmpty) {
+
         _errorMessage = null;
+        
+        _isValidScreen = await _deviceInfoViewModel.validateDeviceInfo();
         final prefs = await SharedPreferences.getInstance();
 
         Map responseMap = json.decode(response.body);
@@ -89,6 +101,7 @@ class LoginViewModel extends ChangeNotifier {
           prefs.setString('token', responseMap['token']);
           prefs.setString(
               'user_roll', responseMap['user']['empleado_permisionario']);
+          print(responseMap['token']);
         }
       } else {
         _errorMessage = 'Ha ocurrido un error al logearte, intentalo de nuevo';
@@ -96,6 +109,8 @@ class LoginViewModel extends ChangeNotifier {
 
       _username = '';
       _password = '';
+      usernameController.clear();
+      passwordController.clear();
     }
     notifyListeners();
   }

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/helper/messages.dart';
 import 'package:segadi/view/services/modals/list_travel_expenses.dart';
@@ -40,7 +41,7 @@ class TravelExpensesScreen extends StatelessWidget {
                     _showBottomSheet(context);
                   } else {
                     scaffoldMessengerError(context,
-                        'Ha ocurrido un error inesperado, no se pudo consultar el listado de tus viáticos');
+                        'Por el momento no tienes viáticos asignados para esta remisión');
                   }
                 },
                 child: const Text(
@@ -113,6 +114,16 @@ class TravelExpensesScreen extends StatelessWidget {
             ],
           ),
         ),
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        child: Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
+        onPressed: () {
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+        },
       ),
     );
   }

@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
 import 'package:segadi/view_model/globals.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
@@ -35,7 +35,7 @@ class TableExpenses {
         "total_used": totalUsed,
       };
 
-  final storage = const FlutterSecureStorage();
+
 
   Future<List<TableExpenses>> getTravelExpenses(int id) async {
     final prefs = await SharedPreferences.getInstance();

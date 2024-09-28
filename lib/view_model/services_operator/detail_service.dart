@@ -1,19 +1,15 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
 import 'package:segadi/model/services/checklist.dart';
 import 'package:segadi/model/services/detail_service.dart';
-import 'package:segadi/model/services/pdf_service.dart';
 
 import 'package:segadi/view_model/globals.dart';
 
 class DetailViewModel extends ChangeNotifier {
   final DetailServices _detailService = DetailServices();
   final NewCheckList _itemCheckList = NewCheckList();
-
-  final PdfService _pdfService = PdfService();
+  //final PdfService _pdfService = PdfService();
 
   late DetailService detail;
 
@@ -76,7 +72,7 @@ class DetailViewModel extends ChangeNotifier {
     } else {
       response =
           await _itemCheckList.saveCheckList(serviceDetailId, optionSelect);
-      print(response.statusCode);
+     
       if (response.statusCode == 200) {
         _item = await _detailService.getDetail(detail.id);
       } else {
@@ -94,7 +90,7 @@ class DetailViewModel extends ChangeNotifier {
     _errorMessage = null;
     http.Response response =
         await _detailService.changeStatusService(serviceDetailId, statusId);
-    print(response.statusCode);
+    
 
     if (response.statusCode == 200) {
       _item = await _detailService.getDetail(detail.id);
@@ -121,22 +117,21 @@ class DetailViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> getPdf() async {
-    notifyListeners();
+  // Future<void> getPdf() async {
 
-    http.Response response = await _pdfService.getPdf(serviceDetailId);
+  //   notifyListeners();
+  //   var rest;
+  //   rest = await _pdfService.getPdf(serviceDetailId);
 
-    if (response.statusCode == 200) {
-      Map responseMap = json.decode(response.body);
-      _url = responseMap['url'];
-      _bandera = true;
-    } else {
-      _errorMessageUrl =
-          'La remisión a un no tiene el CFDI timbrado';
-      _bandera = false;
-      print(_errorMessageUrl);
-    }
+  //   if (rest == null) {
+  //     bandera == false;
+  //   } else {
+  //     bandera == true;
+  //     Map responseMap = json.decode(rest.body);
+  //     _url = responseMap['url'];
+  //     print(responseMap['url']);
+  //   }
 
-    notifyListeners();
-  }
+  //   notifyListeners();
+  // }
 }
