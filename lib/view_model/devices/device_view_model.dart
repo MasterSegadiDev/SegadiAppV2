@@ -24,8 +24,23 @@ class DeviceInfoViewModel extends ChangeNotifier {
   DeviceInfo? _deviceInfoServe;
   DeviceInfo? get deviceInfoServe => _deviceInfoServe;
 
+  bool _isValidName = false;
+  bool get isValidName => _isValidName;
+
   bool _isValid = false;
   bool get isValid => _isValid;
+
+  bool _isValidFirstName = false;
+  bool get isValidFirstName => _isValidFirstName;
+
+  bool _isValidLastName = false;
+  bool get isValidLastName => _isValidLastName;
+
+  bool _isValidPhoneJob = false;
+  bool get isValidPhoneJob => _isValidPhoneJob;
+
+  bool _isValidPhonePerson = false;
+  bool get isValidPhonePerson => _isValidPhonePerson;
 
   bool _bandera = false;
   bool get bandera => _bandera;
@@ -54,13 +69,58 @@ class DeviceInfoViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  String _phoneNumber = '';
-  String get phoneNumber => _phoneNumber;
+  String _phoneNumberJob = '';
+  String get phoneNumberJob => _phoneNumberJob;
+
+  String _phoneNumberPerson = '';
+  String get phoneNumberPerson => _phoneNumberPerson;
 
   BuildContext get context => context;
 
   set phoneNumber(String value) {
-    _phoneNumber = value;
+    _phoneNumberJob = value;
+    notifyListeners();
+  }
+
+  String _input = '';
+  bool _isValidInput = true;
+
+  String get input => _input;
+  bool get isValidInput => _isValidInput;
+
+  void validateInputName(String valueName) {
+    print('value entrado desde input: ${valueName}');
+    _input = valueName;
+    _isValidName = _input.isNotEmpty && _input.length >= 3;
+    _nameUser = valueName;
+    print(_nameUser);
+    notifyListeners();
+  }
+
+  void validateInputFirstName(String valueFirstName) {
+    print('value entrado desde input: ${valueFirstName}');
+    _input = valueFirstName;
+    _isValidFirstName = _input.isNotEmpty && _input.length >= 3;
+    _firsName = valueFirstName;
+    print(_firsName);
+    notifyListeners();
+  }
+
+  void validateInputPhoneJob(String valuePhoneJob) {
+    print('value entrado desde input: ${valuePhoneJob}');
+    _input = valuePhoneJob;
+    _isValidPhoneJob = _input.isNotEmpty && _input.length >= 3;
+    _phoneNumberJob = valuePhoneJob;
+    print(_phoneNumberJob);
+    notifyListeners();
+  }
+
+  void validateInputPhonePerson(String valuePhonePerson) {
+    print('value entrado desde input: ${valuePhonePerson}');
+    _input = valuePhonePerson;
+    _isValidPhonePerson = _input.isNotEmpty && _input.length >= 3;
+    _phoneNumberPerson = valuePhonePerson;
+    print(_phoneNumberPerson);
     notifyListeners();
   }
 
@@ -75,12 +135,9 @@ class DeviceInfoViewModel extends ChangeNotifier {
   }
 
   Future<bool> validateDeviceInfo() async {
-    var id = 'RSR1.201013.001';
+    var id = 'RSR1.201013.002';
 
     _deviceInfo = (await _deviceInfoRepository.getDeviceInfo()) as DeviceInfo?;
-    //var data = await _deviceModel.getDataDevice();
-    //Map responseMap = json.decode(data as String);
-    //print(responseMap);
 
     if (_deviceInfo!.idDevice!.isNotEmpty &&
         _deviceInfo!.idDevice == id &&
@@ -96,33 +153,30 @@ class DeviceInfoViewModel extends ChangeNotifier {
   }
 
   Future<void> saveDataDevice() async {
-    _deviceInfo = (await _deviceInfoRepository.getDeviceInfo()) as DeviceInfo?;
-    print(_deviceInfo!.hostDevice);
+    _isLoading = true;
+    notifyListeners();
 
-    // print(
-    //     'nombre: ${_nameUser} apellido pa: ${_firsName}  apellido ma: ${_lastName} telefono: ${_phoneNumber}');
+    if (_nameUser.isNotEmpty &&
+        _firsName.isNotEmpty &&
+        _lastName.isNotEmpty &&
+        _phoneNumberJob.isNotEmpty &&
+        _phoneNumberPerson.isNotEmpty) {
+      _deviceInfo =
+          (await _deviceInfoRepository.getDeviceInfo()) as DeviceInfo?;
 
-    var user = User(
-      name: _nameUser,
-      firstName: _firsName,
-      lastName: _lastName,
-      phoneNumber: _phoneNumber,
-    );
+      var user = User(
+        name: _nameUser,
+        firstName: _firsName,
+        lastName: _lastName,
+        phoneNumber: _phoneNumberJob,
+      );
 
-    var rest = await _user.saveUser(user);
-    print(rest);
-
-    if (rest == 200) {
-      _bandera = true;
-    } else {
-      _bandera = false;
-      _errorMessage = 'Ha ocurrido un error';
+      var rest = await _user.saveUser(user);
+      if (rest == 200) {
+        _bandera = true;
+        _isLoading = false;
+      }
     }
-
-    // if (_nameUser.isNotEmpty) {
-    //   _bandera = true;
-    // }
-
     notifyListeners();
   }
 }

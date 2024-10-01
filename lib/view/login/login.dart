@@ -77,6 +77,7 @@ class _LoginScreenState extends State<LoginView> {
                 height: 10,
               ),
               TextFormField(
+                style: TextStyle(height: 1),
                 keyboardType: TextInputType.name,
                 decoration: InputDecoration(
                   labelText: 'Usuario',
@@ -91,6 +92,7 @@ class _LoginScreenState extends State<LoginView> {
                 height: 10,
               ),
               TextFormField(
+                style: TextStyle(height: 1),
                 keyboardType: TextInputType.text,
                 obscureText: !_passwordVisible,
                 decoration: InputDecoration(
@@ -134,7 +136,8 @@ class _LoginScreenState extends State<LoginView> {
                     } else if (loginViewModel.isValidScreen == false) {
                       print(
                           'Despues de registrarte puedes ingresar a SEGADI Operador');
-                      _showBottomSheetRegister(context);
+                      //_showBottomSheetRegister(context);
+                      Navigator.pushNamed(context, '/user');
                     } else if (loginViewModel.errorMessage == null &&
                         loginViewModel.isValidScreen == true) {
                       scaffoldMessengerSuccess(context);
