@@ -1,0 +1,241 @@
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:segadi/utils/global_variables.dart';
+import 'package:segadi/views/home/routes.dart';
+import 'package:segadi/views/home/sidebar.dart';
+import 'package:segadi/models/services/services_finished.dart';
+
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:http/http.dart' as http;
+
+class FinishServiceList extends StatefulWidget {
+   FinishServiceList({Key? key}) : super(key: key);
+
+  @override
+  _FinishServiceList createState() => _FinishServiceList();
+}
+
+class _FinishServiceList extends State<FinishServiceList> {
+  List<ServicesFinished> services = [];
+  bool loading = true;
+
+  @override
+  void initState() {
+    super.initState();
+
+    getServices().then((value) {
+      setState(() {
+        //getServices();
+        loading = false;
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title:  Text(
+          'Remisiones Finalizadas',
+          style: TextStyle(color: Colors.white),
+        ),
+        iconTheme:  IconThemeData(color: Colors.white),
+        backgroundColor:  Color(0xFF2C522A),
+      ),
+      drawer:  DrawerScreen(),
+      body: loading == true
+          ?  Center(
+              child: SizedBox(
+                width: 30,
+                height: 30,
+                child: CircularProgressIndicator(),
+              ),
+            )
+          : ListView.builder(
+              padding:  EdgeInsets.all(10),
+              itemCount: services.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    sendScreenWidget(services[index].id);
+                  },
+                  child: Card(
+                    color:  Color(0xFF84A756),
+                    borderOnForeground: true,
+                    elevation: 10,
+                    child: Column(
+                      mainAxisSize: MainAxisSize.max,
+                      children: <Widget>[
+                        ListTile(
+                          title: Text(
+                              'Remision No:  ${services[index].service}',
+                              style:  TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold)),
+                          leading:  Icon(
+                            FontAwesomeIcons.truck,
+                            color: Colors.white,
+                          ),
+                          subtitle: Text(
+                            "Cliente: ${services[index].client}",
+                            style:  TextStyle(color: Colors.white),
+                          ),
+                        ),
+                        Row(
+                          children: [
+                             Text(
+                              '   Carga Origen:  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              services[index].origin,
+                              style:  TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                             Text(
+                              '   Fecha Carga:  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              services[index].loadDate,
+                              style:  TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                         Divider(
+                          color: Colors.transparent,
+                          height: 10.0,
+                        ),
+                        Row(
+                          children: [
+                             Text(
+                              '   Carga Destino:  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              services[index].destination,
+                              style:  TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                        Row(
+                          children: [
+                             Text(
+                              '   Fecha Descarga:  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              services[index].unloadDate,
+                              style:  TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                         Divider(
+                          color: Colors.transparent,
+                          height: 10.0,
+                        ),
+                        Row(
+                          children: [
+                             Text(
+                              '   Documentador:  ',
+                              style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.white),
+                            ),
+                            Text(
+                              services[index].documenter,
+                              style:  TextStyle(
+                                  fontSize: 14, color: Colors.white),
+                            ),
+                          ],
+                        ),
+                         Divider(
+                          color: Colors.transparent,
+                          height: 10.0,
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              },
+            ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.red,
+        child:  Icon(
+          Icons.phone,
+          color: Colors.white,
+        ),
+        onPressed: () {
+          FlutterPhoneDirectCaller.callNumber('+523311364928');
+        },
+      ),
+    );
+  }
+
+  sendScreenWidget(id) async {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => DetailServicesFinishedScreen(
+          id: id,
+        ),
+      ),
+    );
+  }
+
+
+  final String baseUrl= GlobalVariables.baseUrl;
+
+  Future<List<ServicesFinished>> getServices() async {
+    int id = 0;
+    String token = "";
+
+    final prefs = await SharedPreferences.getInstance();
+    id = prefs.getInt('id') ?? 0;
+    token = prefs.getString('token') ?? '';
+    var route = 'index.php';
+
+    var response = await http
+        .get(Uri.parse(baseUrl + route).replace(queryParameters: {
+          'r': 'esegadi/getterminadas',
+          'id': id.toString(),
+          'token': token,
+        }))
+        .timeout( Duration(seconds: 90));
+
+    var data = jsonDecode(response.body.toString());
+
+    if (response.statusCode == 200) {
+      for (Map<String, dynamic> index in data) {
+        services.add(ServicesFinished.fromJson(index));
+      }
+
+      return services;
+    } else {
+      return services;
+    }
+  }
+}

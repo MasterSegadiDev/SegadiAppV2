@@ -1,5 +1,5 @@
 import 'package:device_info_plus/device_info_plus.dart';
-import 'package:segadi/model/device/device.dart';
+import 'package:segadi/models/device/device.dart';
 
 class DeviceInfoRespository {
   final DeviceInfoPlugin _deviceInfoPlugin = DeviceInfoPlugin();

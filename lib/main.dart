@@ -5,18 +5,18 @@ import 'package:segadi/helper/navigator.dart';
 import 'package:segadi/repo/device_info_respository.dart';
 //import 'package:segadi/repo/device_info_respository.dart';
 
-import 'package:segadi/view/home/routes.dart';
-import 'package:segadi/view_model/devices/device_view_model.dart';
+import 'package:segadi/views/home/routes.dart';
+import 'package:segadi/viewmodels/devices/device_view_model.dart';
 //import 'package:segadi/view_model/devices/device_view_model.dart';
-import 'package:segadi/view_model/home/home_view_model.dart';
-import 'package:segadi/view_model/login/biometric_viewmodel.dart';
-import 'package:segadi/view_model/login/user_login.dart';
-import 'package:segadi/view_model/services_operator/assigned_services.dart';
-import 'package:segadi/view_model/services_operator/check_list.dart';
+import 'package:segadi/viewmodels/home/home_view_model.dart';
+import 'package:segadi/viewmodels/login/biometric_viewmodel.dart';
+import 'package:segadi/viewmodels/login/user_login.dart';
+import 'package:segadi/viewmodels/services_operator/assigned_services.dart';
+import 'package:segadi/viewmodels/services_operator/check_list.dart';
 
-import 'package:segadi/view_model/services_operator/detail_service.dart';
-import 'package:segadi/view_model/services_operator/travel_expenses.dart';
-import 'package:segadi/view_model/services_operator/trip_closure.dart';
+import 'package:segadi/viewmodels/services_operator/detail_service.dart';
+import 'package:segadi/viewmodels/services_operator/travel_expenses.dart';
+import 'package:segadi/viewmodels/services_operator/trip_closure.dart';
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -38,7 +38,6 @@ class MyApp extends StatelessWidget {
       providers: [
         ChangeNotifierProvider(create: (_) => LoginViewModel()),
         ChangeNotifierProvider(create: (_) => BiometricViewModel()),
-        //ChangeNotifierProvider(create: (_) => DeviceInfoViewModel(DeviceInfoRespository())),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
         ChangeNotifierProvider(
           create: (_) {

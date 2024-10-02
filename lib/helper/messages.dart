@@ -20,22 +20,88 @@ scaffoldMessengerSuccessEvidentia(BuildContext context, String message) {
   );
 }
 
-scaffoldMessengerWarning(BuildContext context, String text) {
+scaffoldMessengerWarning(BuildContext context, String message) {
   return ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       backgroundColor: Colors.yellow,
-      content: Text(text),
+      content: Text('${message}'),
       behavior: SnackBarBehavior.floating,
     ),
   );
 }
 
-scaffoldMessengerError(BuildContext context, String text) {
+scaffoldMessengerError(BuildContext context, String message) {
   return ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
       backgroundColor: Colors.red,
-      content: Text(text),
+      content: Text('${message}'),
       behavior: SnackBarBehavior.floating,
+    ),
+  );
+}
+
+errorSnackBar(BuildContext context, String text) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      //title: const Text("Ha ocurrido un error inesperado"),
+      content: Text(text),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(ctx).pop();
+          },
+          child: Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(14),
+            child: const Text("OK"),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+warningSnackBar(BuildContext context, String text) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Hay un problema"),
+      content: Text(text),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(ctx).pop();
+          },
+          child: Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(14),
+            child: const Text("OK"),
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
+successSnackBar(BuildContext context, String text) {
+  showDialog(
+    context: context,
+    builder: (ctx) => AlertDialog(
+      title: const Text("Bienvenido"),
+      content: Text(text),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () {
+            Navigator.of(ctx).pop();
+          },
+          child: Container(
+            color: Colors.white,
+            padding: const EdgeInsets.all(14),
+            child: const Text("OK"),
+          ),
+        ),
+      ],
     ),
   );
 }
