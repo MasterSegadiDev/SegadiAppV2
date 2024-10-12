@@ -6,13 +6,14 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:segadi/models/login/user_login.dart';
 import 'package:segadi/repo/device_info_respository.dart';
+import 'package:segadi/services/getDataDevice.dart';
 import 'package:segadi/viewmodels/devices/device_view_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginViewModel extends ChangeNotifier {
   final AuthService _authService = AuthService();
   final DeviceInfoViewModel _deviceInfoViewModel =
-      DeviceInfoViewModel(DeviceInfoRespository());
+      DeviceInfoViewModel(DeviceInfoRespository(), InfoDeviceSystemERP());
 
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -44,12 +45,21 @@ class LoginViewModel extends ChangeNotifier {
   String? _errorMessage;
   String? get errorMessage => _errorMessage;
 
+  String? _errorMessageDeviceUser;
+  String? get errorMessageDeviceUser => _errorMessageDeviceUser;
+
   String get username => _username;
   String get password => _password;
   bool get isLoading => _isLoading;
 
   bool _isValidScreen = false;
   bool get isValidScreen => _isValidScreen;
+
+  late var _device_on_system = null;
+  get device_on_system => _device_on_system;
+
+  late var _device_on_system_app = null;
+  get device_on_system_app => _device_on_system_app;
 
   set username(String value) {
     _username = value;
@@ -79,10 +89,25 @@ class LoginViewModel extends ChangeNotifier {
       http.Response response = await _authService.login(_username, _password);
 
       if (response.body.isNotEmpty) {
-
         _errorMessage = null;
-        
-        _isValidScreen = await _deviceInfoViewModel.validateDeviceInfo();
+
+        var array = await _deviceInfoViewModel.validateDeviceInfo();
+        print(array[0]);
+
+        if (array[0] != '' && array[1] == false && array[2] == null) {
+          //valida que el dispositivo no este en el sistema
+          _errorMessageDeviceUser = array[0] as String?;
+          _isValidScreen = false;
+          _device_on_system = true;
+          print('esta en on device in system null');
+        } else if (array[0] != '' && array[1] == false && array[3] == null) {
+          //valida que el dispositivo no este en el sistema
+          _errorMessageDeviceUser = array[0] as String?;
+          _isValidScreen = false;
+          _device_on_system_app = true;
+
+          print('esta en on device in app null');
+        }
         final prefs = await SharedPreferences.getInstance();
 
         Map responseMap = json.decode(response.body);

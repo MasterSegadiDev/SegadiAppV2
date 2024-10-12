@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/helper/navigator.dart';
 import 'package:segadi/repo/device_info_respository.dart';
+import 'package:segadi/services/getDataDevice.dart';
 //import 'package:segadi/repo/device_info_respository.dart';
 
 import 'package:segadi/views/home/routes.dart';
@@ -57,7 +58,8 @@ class MyApp extends StatelessWidget {
           },
         ),
         ChangeNotifierProvider(
-            create: (_) => DeviceInfoViewModel(DeviceInfoRespository())),
+            create: (_) => DeviceInfoViewModel(
+                DeviceInfoRespository(), InfoDeviceSystemERP())),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

@@ -7,8 +7,6 @@ class DeviceInfoRespository {
   Future<DeviceInfo> getDeviceInfo() async {
     final deviceInfo = await _deviceInfoPlugin.androidInfo;
     final deviceData = deviceInfo.data;
-    print(
-        'IDE DEL DISPOSITIVO: ${deviceData['id']} MODELO DEL DISPOSITIVO: ${deviceData['model']} DEVICE: ${deviceData['device']} HOST: ${deviceData['host']}');
 
     return DeviceInfo(
       idDevice: deviceData['id'] ?? 'Unknown',

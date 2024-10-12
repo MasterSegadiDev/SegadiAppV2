@@ -131,11 +131,11 @@ class _LoginScreenState extends State<LoginView> {
                     if (loginViewModel.errorMessage != null) {
                       scaffoldMessengerError(
                           context, loginViewModel.errorMessage!);
-                    } else if (loginViewModel.isValidScreen == false) {
-                      print(
-                          'Despues de registrarte puedes ingresar a SEGADI Operador');
-                      //_showBottomSheetRegister(context);
+                    } else if (loginViewModel.device_on_system_app == true) {
                       Navigator.pushNamed(context, '/user');
+                    } else if (loginViewModel.device_on_system == true) {
+                      scaffoldMessengerError(
+                          context, loginViewModel.errorMessageDeviceUser!);
                     } else if (loginViewModel.errorMessage == null &&
                         loginViewModel.isValidScreen == true) {
                       scaffoldMessengerSuccess(context);

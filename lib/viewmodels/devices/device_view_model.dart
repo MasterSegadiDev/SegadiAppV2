@@ -1,18 +1,21 @@
+import 'dart:convert';
+import 'dart:ffi';
 
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:segadi/models/device/device.dart';
-import 'package:segadi/models/user/user.dart';
 import 'package:segadi/repo/device_info_respository.dart';
+import 'package:segadi/services/getDataDevice.dart';
 
 class DeviceInfoViewModel extends ChangeNotifier {
- // final DeviceInfo _deviceModel = DeviceInfo();
+  // final DeviceInfo _deviceModel = DeviceInfo();
   final DeviceInfoRespository _deviceInfoRepository;
+  final InfoDeviceSystemERP _infoDeviceSystemERP;
 
-  final User _user = User();
   DeviceInfo? _deviceInfo;
   bool _isLoading = false;
 
-  DeviceInfoViewModel(this._deviceInfoRepository);
+  DeviceInfoViewModel(this._deviceInfoRepository, this._infoDeviceSystemERP);
 
   String _errorMessage = '';
   String get errorMessage => _errorMessage;
@@ -28,6 +31,12 @@ class DeviceInfoViewModel extends ChangeNotifier {
 
   bool _isValid = false;
   bool get isValid => _isValid;
+
+  late var _device_on_system_app = null;
+  get device_on_system_app => _device_on_system_app;
+
+  late var _device_on_system = null;
+  get device_on_system => _device_on_system;
 
   bool _isValidFirstName = false;
   bool get isValidFirstName => _isValidFirstName;
@@ -133,22 +142,43 @@ class DeviceInfoViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<bool> validateDeviceInfo() async {
-    var id = 'RSR1.201013.002';
+  Future<List> validateDeviceInfo() async {
+    _errorMessage.isEmpty;
+    notifyListeners();
 
     _deviceInfo = (await _deviceInfoRepository.getDeviceInfo()) as DeviceInfo?;
+    http.Response response = await _infoDeviceSystemERP.getDataDeviceSystem();
+    print('data device: ${json.decode(response.body)}');
+    Map responseMap = json.decode(response.body);
 
-    if (_deviceInfo!.idDevice!.isNotEmpty &&
-        _deviceInfo!.idDevice == id &&
-        _deviceInfo!.modelDevice! == 'sdk_gphone_x86' &&
-        _deviceInfo!.deviceInfo! == 'generic_x86_arm') {
+    if (_deviceInfo!.idDevice == responseMap["ide_dispositivo"]) {
       _isValid = true;
     } else {
       _isValid = false;
     }
-    print(_isValid);
+    if (responseMap['device_on_system'] == null) {
+      _errorMessage = responseMap['error_message'];
+      _isValid = false;
+      _device_on_system = null;
+      _device_on_system_app = false;
+    }
+    if (responseMap['device_on_system_app'] == null) {
+      _errorMessage = responseMap['error_message'];
+      _isValid = false;
+      _device_on_system = true;
+      _device_on_system_app = null;
+    }
 
-    return _isValid;
+    var array = [
+      _errorMessage, //0
+      _isValid, //1
+      _device_on_system, //2
+      _device_on_system_app //3
+    ];
+
+    print(array);
+
+    return array;
   }
 
   Future<void> saveDataDevice() async {
@@ -163,15 +193,22 @@ class DeviceInfoViewModel extends ChangeNotifier {
       _deviceInfo =
           (await _deviceInfoRepository.getDeviceInfo()) as DeviceInfo?;
 
-      var user = User(
-        name: _nameUser,
-        firstName: _firsName,
-        lastName: _lastName,
-        phoneNumber: _phoneNumberJob,
-      );
+      var newUserDevice = DeviceInfo(
+          name: _nameUser,
+          firstName: _firsName,
+          lastName: _lastName,
+          phoneNumberJob: _phoneNumberJob,
+          phoneNumberPerson: _phoneNumberPerson,
+          idDevice: _deviceInfo!.idDevice,
+          hostDevice: _deviceInfo!.hostDevice,
+          modelDevice: _deviceInfo!.modelDevice,
+          deviceInfo: _deviceInfo!.deviceInfo);
 
-      var rest = await _user.saveUser(user);
-      if (rest == 200) {
+      http.Response response =
+          await _infoDeviceSystemERP.saveDataDevice(newUserDevice);
+
+      // var rest = await _user.saveUser(user);
+      if (response.statusCode == 200) {
         _bandera = true;
         _isLoading = false;
       }
