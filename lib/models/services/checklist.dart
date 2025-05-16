@@ -1,6 +1,5 @@
 import 'dart:convert';
 
-
 import 'package:segadi/utils/global_variables.dart';
 
 import 'package:http/http.dart' as http;
@@ -39,10 +38,8 @@ class CheckList {
 }
 
 class NewCheckList {
-
   final String baseUrl = GlobalVariables.baseUrl;
-    final Map<String, String> headers = GlobalVariables.headers;
- 
+  final Map<String, String> headers = GlobalVariables.headers;
 
   Future<List<CheckList>> fetchItems() async {
     String? token;
@@ -51,7 +48,7 @@ class NewCheckList {
 
     //token = await storage.read(key: 'token');
     token = prefs.getString('token');
-   
+
     var route = 'index.php';
 
     var response = await http.get(
@@ -78,7 +75,6 @@ class NewCheckList {
 
   Future<http.Response> saveCheckList(int id, List checkList) async {
     String? token;
-    //token = await storage.read(key: 'token');
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
 
@@ -89,6 +85,7 @@ class NewCheckList {
     var body = json.encode(data);
 
     var url = Uri.parse('${baseUrl}index.php?r=esegadi/checklistpost');
+    print('URL CHECKLIST:' + url.toString());
     http.Response response = await http.post(
       url,
       headers: headers,

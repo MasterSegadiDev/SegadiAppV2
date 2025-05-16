@@ -1,118 +1,143 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
-
+import 'package:segadi/utils/user_session.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:segadi/models/services/checklist.dart';
 import 'package:segadi/models/services/detail_service.dart';
 import 'package:segadi/utils/global_variables.dart';
 
 class DetailViewModel extends ChangeNotifier {
+  // ===========================================================================
+  // DEPENDENCIAS Y SERVICIOS
+  // ===========================================================================
   final DetailServices _detailService = DetailServices();
   final NewCheckList _itemCheckList = NewCheckList();
 
-
-  int serviceDetailId = GlobalVariables.serviceDetailId;
-
-  late DetailService detail;
-
+  // ===========================================================================
+  // PROPIEDADES DE ESTADO
+  // ===========================================================================
+  int _serviceDetailId = GlobalVariables.serviceDetailId;
   DetailService? _item;
-  DetailService? get item => _item;
+  final List<CheckList> _items = [];
+  final List<int> _optionSelect = [];
 
+  // ===========================================================================
+  // VARIABLES DE CONTROL Y MENSAJES
+  // ===========================================================================
+  bool _bandera = true;
+  String _operatorRole = '';
   String? _errorMessage;
-  String? get errorMessage => _errorMessage;
+  String _url = '';
+  String _errorMessageUrl = '';
 
-  late String _errorMessageUrl;
+  // ===========================================================================
+  // GETTERS PÚBLICOS
+  // ===========================================================================
+  DetailService? get item => _item;
+  List<CheckList> get items => _items;
+  List<int> get optionSelect => _optionSelect;
+  bool get bandera => _bandera;
+  String get operatorRole => _operatorRole;
+  String? get errorMessage => _errorMessage;
+  String get url => _url;
   String get errorMessageUrl => _errorMessageUrl;
 
-  String _url = '';
-  String get url => _url;
+  // ===========================================================================
+  // ACCIONES PÚBLICAS
+  // ===========================================================================
 
-  bool _bandera = true;
-  bool get bandera => _bandera;
-
-  void setNewDetail(DetailService detailServiceModel) async {
-    print('numero servicio detalle: ${detailServiceModel.id}');
-
-    serviceDetailId = detailServiceModel.id!;
-
-    _item = await _detailService.getDetail(detailServiceModel.id);
-
-    notifyListeners();
+  Future<void> setNewDetail(DetailService detailServiceModel) async {
+    debugPrint('ID de detalle de servicio: ${detailServiceModel.id}');
+    _serviceDetailId = detailServiceModel.id!;
+    await _updateDetail();
   }
-
-  List<CheckList> _items = [];
-  List<CheckList> get items => _items;
-
-  List _optionSelect = [];
-  List get optionSelect => _optionSelect;
 
   Future<void> fetchItems() async {
     _optionSelect.clear();
-    _items = await _itemCheckList.fetchItems();
+    final fetchedItems = await _itemCheckList.fetchItems();
+    _items
+      ..clear()
+      ..addAll(fetchedItems);
     notifyListeners();
   }
 
   void toggleItem(int index, int id) {
-    _items[index].isChecked = !_items[index].isChecked;
+    final item = _items[index];
+    item.isChecked = !item.isChecked;
 
-    if (_items[index].isChecked == true) {
-      optionSelect.add(id);
-    } else if (_items[index].isChecked == false) {
-      optionSelect.remove(id);
-    }
-
+    item.isChecked ? _optionSelect.add(id) : _optionSelect.remove(id);
     notifyListeners();
   }
 
   Future<void> save() async {
-    var response;
     _errorMessage = null;
 
-    if (optionSelect.isEmpty) {
+    if (_optionSelect.isEmpty) {
       _errorMessage =
-          'Necesitas seleccionar al menos una opción del check list';
-    } else {
-      response =
-          await _itemCheckList.saveCheckList(serviceDetailId, optionSelect);
-
-      if (response.statusCode == 200) {
-        _item = await _detailService.getDetail(serviceDetailId);
-      } else {
-        _errorMessage =
-            'Ha ocurrido un error al guardar el checkList, código de error: ${response.statusCode}';
-      }
+          'Necesitas seleccionar al menos una opción del checklist.';
+      notifyListeners();
+      return;
     }
 
-    notifyListeners();
+    final response =
+        await _itemCheckList.saveCheckList(_serviceDetailId, _optionSelect);
+
+    if (response.statusCode == 200) {
+      await _updateDetail();
+    } else {
+      _errorMessage =
+          'Error al guardar el checklist. Código: ${response.statusCode}';
+      notifyListeners();
+    }
   }
 
   Future<void> changeStatusService(int statusId) async {
-    
-
+    final user = UserSession();
+    print('USUARIO TIPO ROL ${user.userRoll}');
     _errorMessage = null;
-    http.Response response =
-        await _detailService.changeStatusService(serviceDetailId, statusId);
+
+    final response =
+        await _detailService.changeStatusService(_serviceDetailId, statusId);
+
+    if (statusId == 2 && user.userRoll == 'No') {
+      print('SE VA ACTIVAR EL USUARIO EN AIRBAG');
+      await _detailService.changeStatusOperatorAirbag('active');
+    } else if (statusId == 23) {
+      await _detailService.changeStatusOperatorAirbag('inactive');
+    }
 
     if (response.statusCode == 200) {
-      _item = await _detailService.getDetail(serviceDetailId);
+      await _updateDetail();
     } else {
       _errorMessage =
-          'Ha ocurrido un error al cambiar el estatus de la remision, código de error: ${response.statusCode}';
+          'Error al cambiar el estatus del servicio. Código: ${response.statusCode}';
+      notifyListeners();
     }
-    notifyListeners();
   }
 
+  /// ✅ Método renombrado para coincidir con la vista
   Future<void> changeStatusSupport(int statusId, String status) async {
-    print('numero servicio detalle: ${serviceDetailId}');
     _errorMessage = null;
-    http.Response response = await _detailService.changeStatusSupport(
-        serviceDetailId, statusId, status);
+
+    final response = await _detailService.changeStatusSupport(
+      _serviceDetailId,
+      statusId,
+      status,
+    );
 
     if (response.statusCode == 200) {
-      _item = await _detailService.getDetail(serviceDetailId);
+      await _updateDetail();
     } else {
       _errorMessage =
-          'Ha ocurrido un error al cambiar el estatus de soporte, código de error: ${response.statusCode}';
+          'Error al cambiar el estatus de soporte. Código: ${response.statusCode}';
+      notifyListeners();
     }
+  }
+
+  // ===========================================================================
+  // MÉTODOS PRIVADOS
+  // ===========================================================================
+  Future<void> _updateDetail() async {
+    _item = await _detailService.getDetail(_serviceDetailId);
     notifyListeners();
   }
 }

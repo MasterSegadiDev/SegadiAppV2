@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:provider/provider.dart';
@@ -10,117 +11,95 @@ class TravelExpensesScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final travelExpensesViewModel =
         Provider.of<TravelExpensesViewModel>(context);
+
+    // Inicializar totalImport
     double totalImport = 0;
+
+    // Sumar los importes de cada elemento de la lista
+    for (var e in travelExpensesViewModel.tableItems) {
+      totalImport += double.tryParse(e.totalUsed.toString()) ?? 0;
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text(
-          'Viáticos',
-          style: TextStyle(color: Colors.white),
-        ),
-        iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: Color(0xFF2C522A),
-        //backgroundColor: Color(value)
+        title: const Text('Viáticos', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF2C522A),
+        iconTheme: const IconThemeData(color: Colors.white),
+        elevation: 0,
       ),
-      body: SingleChildScrollView(
-        child: Center(
-          child: Column(
-            children: [
-              SizedBox(
-                height: 20,
+      body: RefreshIndicator(
+        onRefresh: () async =>
+            await travelExpensesViewModel.fetchItemsTravelExpenses(),
+        child: ListView(
+          padding: const EdgeInsets.all(16),
+          children: [
+            ElevatedButton.icon(
+              icon: const Icon(Icons.add_circle_outline, color: Colors.white),
+              label: const Text('Agregar conceptos',
+                  style: TextStyle(color: Colors.white)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2C522A),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30)),
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                minimumSize: const Size.fromHeight(50),
               ),
-              ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFF2C522A),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100),
-                    ),
-                    fixedSize: Size(200, double.infinity)),
-                onPressed: () async {
-                  await travelExpensesViewModel.fetchItemsTravelExpenses();
-                  if (travelExpensesViewModel.bandera) {
-                    _showBottomSheet(context);
-                  } else {
-                    scaffoldMessengerError(context,
-                        'Por el momento no tienes viáticos asignados para esta remisión');
-                  }
-                },
-                child: const Text(
-                  'Agregar conceptos',
-                  style: TextStyle(color: Colors.white),
+              onPressed: () async {
+                await travelExpensesViewModel.fetchItemsTravelExpenses();
+                travelExpensesViewModel.bandera
+                    ? _showBottomSheet(context)
+                    : scaffoldMessengerError(context,
+                        'Por el momento no tienes viáticos asignados.');
+              },
+            ),
+            const Divider(height: 32, thickness: 1),
+            Center(
+              child: Text(
+                'Importe Total: ${totalImport.toStringAsFixed(2)}',
+                style:
+                    const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ...travelExpensesViewModel.tableItems.map((e) {
+              double result = double.tryParse(e.totalUsed.toString()) ?? 0;
+              return Card(
+                margin: const EdgeInsets.only(bottom: 12),
+                elevation: 8,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                  side: const BorderSide(color: Color(0xFF84A756), width: 1),
                 ),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              SingleChildScrollView(
-                scrollDirection: Axis.horizontal,
-                child: DataTable(
-                  columns: <DataColumn>[
-                    DataColumn(
-                      label: Text(
-                        'Viático Asignado',
-                        style: TextStyle(
-                            fontStyle: FontStyle.normal,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                    DataColumn(
-                      label: Text(
-                        'Importe Registrado',
-                        style: TextStyle(
-                            fontStyle: FontStyle.normal,
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                  rows: travelExpensesViewModel.tableItems.map((e) {
-                    double result = double.parse(e.totalUsed.toString());
-
-                    totalImport += result;
-
-                    return DataRow(cells: [
-                      DataCell(Text(e.paymentConcept.toString())),
-                      DataCell(Text(e.totalUsed.toString())),
-                    ]);
-                  }).toList(),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: Colors.green, width: 1),
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.green.withOpacity(0.1),
+                child: ListTile(
+                  contentPadding: const EdgeInsets.all(12),
+                  title: Text(
+                    e.paymentConcept ?? '',
+                    style: const TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  headingRowColor: WidgetStateProperty.resolveWith<Color>(
-                      (Set<WidgetState> states) {
-                    return Colors.green.withOpacity(0.3);
-                  }),
-                  dataRowColor: WidgetStateProperty.resolveWith<Color>(
-                      (Set<WidgetState> states) {
-                    return states.contains(WidgetState.selected)
-                        ? Colors.blue.withOpacity(0.2)
-                        : Colors.transparent;
-                  }),
+                  subtitle:
+                      Text('Importe registrado: \$${e.totalUsed.toString()}'),
+                  trailing: e.image == 1
+                      ? IconButton(
+                          icon: const Icon(Icons.image, color: Colors.green),
+                          onPressed: () =>
+                              showImageModal(context, e.id.toString()),
+                        )
+                      : Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: const [
+                            Icon(Icons.image_not_supported, color: Colors.red),
+                            Text('Sin imagen', style: TextStyle(fontSize: 10)),
+                          ],
+                        ),
                 ),
-              ),
-              SizedBox(
-                height: 20,
-              ),
-              Text(
-                'Importe Total  : ${totalImport}',
-                style: TextStyle(
-                    color: Colors.black,
-                    fontStyle: FontStyle.normal,
-                    fontSize: 15,
-                    fontWeight: FontWeight.bold),
-              ),
-            ],
-          ),
+              );
+            }).toList(),
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
-        child: Icon(
-          Icons.phone,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.phone, color: Colors.white),
         onPressed: () {
           FlutterPhoneDirectCaller.callNumber('+523311364928');
         },
@@ -134,5 +113,48 @@ void _showBottomSheet(BuildContext context) {
     isScrollControlled: true,
     context: context,
     builder: (ctx) => ListTravelExpensesView(),
+  );
+}
+
+void showImageModal(BuildContext context, String conceptId) async {
+  final travelExpensesViewModel =
+      Provider.of<TravelExpensesViewModel>(context, listen: false);
+  showDialog(
+    context: context,
+    barrierDismissible: false,
+    builder: (context) => const Center(child: CircularProgressIndicator()),
+  );
+
+  Uint8List? imageBytes =
+      await travelExpensesViewModel.fetchEvidenceImage(conceptId);
+  Navigator.pop(context);
+
+  showDialog(
+    context: context,
+    builder: (context) {
+      if (imageBytes != null) {
+        return AlertDialog(
+          title: const Text('Evidencia'),
+          content: Image.memory(imageBytes),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      } else {
+        return AlertDialog(
+          title: const Text('Error'),
+          content: const Text('No se pudo cargar la imagen.'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
+            ),
+          ],
+        );
+      }
+    },
   );
 }

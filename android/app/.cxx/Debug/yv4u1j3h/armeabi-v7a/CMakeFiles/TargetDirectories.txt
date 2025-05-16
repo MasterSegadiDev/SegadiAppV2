@@ -1,0 +1,2 @@
+C:/Users/ciber/Documents/projects flutter/carpeta flutter/appSegadiV1/android/app/.cxx/Debug/yv4u1j3h/armeabi-v7a/CMakeFiles/edit_cache.dir
+C:/Users/ciber/Documents/projects flutter/carpeta flutter/appSegadiV1/android/app/.cxx/Debug/yv4u1j3h/armeabi-v7a/CMakeFiles/rebuild_cache.dir

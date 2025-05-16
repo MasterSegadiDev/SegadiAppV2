@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:segadi/utils/global_variables.dart';
+import 'package:segadi/viewmodels/login/user_login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 List<TripClosure> tripClosureFromJson(String str) => List<TripClosure>.from(
@@ -42,8 +43,8 @@ class TripClosure {
         "service_closed": closeTravel
       };
 
-      final String baseUrl = GlobalVariables.baseUrl;
-    final Map<String, String> headers = GlobalVariables.headers;
+  final String baseUrl = GlobalVariables.baseUrl;
+  final Map<String, String> headers = GlobalVariables.headers;
 
   Future<http.Response> insertImage(
       int id, String serviceId, String image, String extension) async {
@@ -82,6 +83,8 @@ class TripClosure {
     var userId = prefs.getInt('id') ?? 0;
     var route = 'index.php';
 
+    print('GET TOTAL EVIDENCIAS: ${serviceId}, ID DEL USUARIO ${userId}');
+
     var response =
         await http.get(Uri.parse(baseUrl + route).replace(queryParameters: {
       'r': 'esegadi/getevidenciasfaltantes',
@@ -92,6 +95,7 @@ class TripClosure {
 
     if (response.statusCode == 200) {
       var data = jsonDecode(response.body.toString());
+      //print('EVIDENCIAS RESTANTES:' + data['remaining_evidences']);
       return data['remaining_evidences'];
     } else {
       throw Exception('Ha ocurrido un error al consultar las evidencias');
@@ -100,11 +104,13 @@ class TripClosure {
 
   Future<http.Response> insertImageTripClosure(
       int id, String serviceId, String image, String extension) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? token;
-    token = prefs.getString('token');
+    final token = await LoginViewModel.getSavedToken();
 
-    Map data = {
+    if (token == null) {
+      throw Exception("Token no disponible");
+    }
+
+    final Map<String, dynamic> data = {
       "service_id": id,
       "token": token,
       "document_name": serviceId + extension,
@@ -113,17 +119,18 @@ class TripClosure {
       "document": image,
     };
 
-    var body = json.encode(data);
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/evidenciaspost');
-    http.Response response = await http.post(
+    final url = Uri.parse('${baseUrl}index.php?r=esegadi/evidenciaspost');
+
+    final response = await http.post(
       url,
       headers: headers,
-      body: body,
+      body: jsonEncode(data),
     );
-
+    print('ESTATUS:' + response.statusCode.toString());
     if (response.statusCode == 200) {
       return response;
     } else {
+      debugPrint('Error: ${response.body}');
       throw Exception('Ha ocurrido un error al guardar la evidencia');
     }
   }

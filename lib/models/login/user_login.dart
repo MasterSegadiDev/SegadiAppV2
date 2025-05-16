@@ -13,10 +13,8 @@ class UserLogin {
 }
 
 class AuthService {
-
-    final String baseUrl = GlobalVariables.baseUrl;
-    final Map<String, String> headers = GlobalVariables.headers;
-
+  final String baseUrl = GlobalVariables.baseUrl;
+  final Map<String, String> headers = GlobalVariables.headers;
 
   Future<http.Response> login(String username, String password) async {
     Map data = {
@@ -25,12 +23,12 @@ class AuthService {
       "apptoken": "prueba"
     };
 
-  
     var body = json.encode(data);
     var url = Uri.parse('${baseUrl}index.php?r=esegadi/autenticapost');
+    print('URL LOGIN:' + url.toString());
     http.Response response = await http.post(
       url,
-      headers: headers ,
+      headers: headers,
       body: body,
     );
     print(response.statusCode);

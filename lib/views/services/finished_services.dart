@@ -12,230 +12,211 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
 class FinishServiceList extends StatefulWidget {
-   FinishServiceList({Key? key}) : super(key: key);
-
   @override
-  _FinishServiceList createState() => _FinishServiceList();
+  _FinishedServiceListScreenState createState() =>
+      _FinishedServiceListScreenState();
 }
 
-class _FinishServiceList extends State<FinishServiceList> {
+class _FinishedServiceListScreenState extends State<FinishServiceList> {
   List<ServicesFinished> services = [];
   bool loading = true;
 
   @override
   void initState() {
     super.initState();
+    getServices();
+  }
 
-    getServices().then((value) {
+  Future<void> getServices() async {
+    final prefs = await SharedPreferences.getInstance();
+    final id = prefs.getInt('id') ?? 0;
+    final token = prefs.getString('token') ?? '';
+    final route = 'index.php';
+
+    final String baseUrl = GlobalVariables.baseUrl;
+
+    final response = await http
+        .get(Uri.parse(baseUrl + route).replace(queryParameters: {
+          'r': 'esegadi/getterminadas',
+          'id': id.toString(),
+          'token': token,
+        }))
+        .timeout(const Duration(seconds: 90));
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
       setState(() {
-        //getServices();
+        services = List<ServicesFinished>.from(
+          data.map((item) => ServicesFinished.fromJson(item)),
+        );
         loading = false;
       });
-    });
+    } else {
+      setState(() => loading = false);
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title:  Text(
-          'Remisiones Finalizadas',
-          style: TextStyle(color: Colors.white),
-        ),
-        iconTheme:  IconThemeData(color: Colors.white),
-        backgroundColor:  Color(0xFF2C522A),
+        title: const Text('Remisiones Finalizadas',
+            style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: const Color(0xFF2C522A),
       ),
-      drawer:  DrawerScreen(),
-      body: loading == true
-          ?  Center(
-              child: SizedBox(
-                width: 30,
-                height: 30,
-                child: CircularProgressIndicator(),
-              ),
-            )
-          : ListView.builder(
-              padding:  EdgeInsets.all(10),
-              itemCount: services.length,
-              itemBuilder: (context, index) {
-                return GestureDetector(
-                  onTap: () {
-                    sendScreenWidget(services[index].id);
+      drawer: DrawerScreen(),
+      body: loading
+          ? const Center(child: CircularProgressIndicator())
+          : services.isEmpty
+              ? const Center(child: Text("No hay servicios finalizados"))
+              : ListView.builder(
+                  padding: const EdgeInsets.all(10),
+                  itemCount: services.length,
+                  itemBuilder: (context, index) {
+                    final item = services[index];
+                    return FinishServiceCard(
+                      item: item,
+                      onTap: () {
+                        sendScreenWidget(context, item.id);
+                      },
+                    );
                   },
-                  child: Card(
-                    color:  Color(0xFF84A756),
-                    borderOnForeground: true,
-                    elevation: 10,
-                    child: Column(
-                      mainAxisSize: MainAxisSize.max,
-                      children: <Widget>[
-                        ListTile(
-                          title: Text(
-                              'Remision No:  ${services[index].service}',
-                              style:  TextStyle(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold)),
-                          leading:  Icon(
-                            FontAwesomeIcons.truck,
-                            color: Colors.white,
-                          ),
-                          subtitle: Text(
-                            "Cliente: ${services[index].client}",
-                            style:  TextStyle(color: Colors.white),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                             Text(
-                              '   Carga Origen:  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              services[index].origin,
-                              style:  TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                             Text(
-                              '   Fecha Carga:  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              services[index].loadDate,
-                              style:  TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                         Divider(
-                          color: Colors.transparent,
-                          height: 10.0,
-                        ),
-                        Row(
-                          children: [
-                             Text(
-                              '   Carga Destino:  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              services[index].destination,
-                              style:  TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                        Row(
-                          children: [
-                             Text(
-                              '   Fecha Descarga:  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              services[index].unloadDate,
-                              style:  TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                         Divider(
-                          color: Colors.transparent,
-                          height: 10.0,
-                        ),
-                        Row(
-                          children: [
-                             Text(
-                              '   Documentador:  ',
-                              style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.white),
-                            ),
-                            Text(
-                              services[index].documenter,
-                              style:  TextStyle(
-                                  fontSize: 14, color: Colors.white),
-                            ),
-                          ],
-                        ),
-                         Divider(
-                          color: Colors.transparent,
-                          height: 10.0,
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              },
-            ),
+                ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
-        child:  Icon(
-          Icons.phone,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.phone, color: Colors.white),
         onPressed: () {
           FlutterPhoneDirectCaller.callNumber('+523311364928');
         },
       ),
     );
   }
+}
 
-  sendScreenWidget(id) async {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => DetailServicesFinishedScreen(
-          id: id,
+class FinishServiceCard extends StatelessWidget {
+  final ServicesFinished item;
+  final VoidCallback onTap;
+
+  const FinishServiceCard({
+    Key? key,
+    required this.item,
+    required this.onTap,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Card(
+        elevation: 8,
+        margin: const EdgeInsets.symmetric(vertical: 8),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF84A756), width: 1),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(12.0),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              ListTile(
+                contentPadding: EdgeInsets.zero,
+                leading:
+                    const Icon(FontAwesomeIcons.truck, color: Colors.green),
+                title: Text(
+                  'Remisión numero: ${item.service}',
+                  style: const TextStyle(
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16),
+                ),
+                subtitle: Text(
+                  'Cliente: ${item.client}',
+                  style: const TextStyle(color: Colors.black),
+                ),
+              ),
+              const Divider(color: Colors.grey),
+              _buildSection('Origen de Carga', Icons.location_on, [
+                _infoRow('Origen:', item.origin),
+                _infoRow('Fecha:', item.loadDate)
+              ]),
+              const SizedBox(height: 8),
+              _buildSection('Destino de Carga', Icons.flag, [
+                _infoRow('Destino:', item.destination),
+                _infoRow('Fecha:', item.unloadDate)
+              ]),
+              const SizedBox(height: 8),
+              _infoRow('Documentador:', item.documenter),
+              const SizedBox(height: 12),
+              _statusButton("FINALIZADO"),
+            ],
+          ),
         ),
       ),
     );
   }
 
-
-  final String baseUrl= GlobalVariables.baseUrl;
-
-  Future<List<ServicesFinished>> getServices() async {
-    int id = 0;
-    String token = "";
-
-    final prefs = await SharedPreferences.getInstance();
-    id = prefs.getInt('id') ?? 0;
-    token = prefs.getString('token') ?? '';
-    var route = 'index.php';
-
-    var response = await http
-        .get(Uri.parse(baseUrl + route).replace(queryParameters: {
-          'r': 'esegadi/getterminadas',
-          'id': id.toString(),
-          'token': token,
-        }))
-        .timeout( Duration(seconds: 90));
-
-    var data = jsonDecode(response.body.toString());
-
-    if (response.statusCode == 200) {
-      for (Map<String, dynamic> index in data) {
-        services.add(ServicesFinished.fromJson(index));
-      }
-
-      return services;
-    } else {
-      return services;
-    }
+  Widget _buildSection(String title, IconData icon, List<Widget> children) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(children: [
+          Icon(icon, size: 18, color: Colors.grey[700]),
+          const SizedBox(width: 6),
+          Text(title,
+              style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.black,
+                  fontSize: 15)),
+        ]),
+        const SizedBox(height: 4),
+        ...children
+      ],
+    );
   }
+
+  Widget _infoRow(String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 2, bottom: 2),
+      child: Row(
+        children: [
+          Text('$label ',
+              style: const TextStyle(color: Colors.black, fontSize: 13)),
+          Expanded(
+            child: Text(value,
+                style: const TextStyle(color: Colors.black, fontSize: 13),
+                overflow: TextOverflow.ellipsis),
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _statusButton(String status) {
+    return ElevatedButton(
+      onPressed: null,
+      style: ElevatedButton.styleFrom(
+        backgroundColor: const Color(0xFF2C522A),
+        disabledForegroundColor: Colors.green,
+        disabledBackgroundColor: Colors.green,
+        elevation: 0,
+        minimumSize: const Size.fromHeight(40),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+      ),
+      child: Text(
+        status,
+        style: const TextStyle(fontSize: 13, color: Colors.white),
+      ),
+    );
+  }
+}
+
+void sendScreenWidget(BuildContext context, int id) {
+  Navigator.push(
+    context,
+    MaterialPageRoute(
+      builder: (context) => DetailServicesFinishedScreen(id: id),
+    ),
+  );
 }

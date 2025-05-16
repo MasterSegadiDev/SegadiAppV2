@@ -4,6 +4,10 @@ import 'package:provider/provider.dart';
 import 'package:segadi/helper/navigator.dart';
 import 'package:segadi/repo/device_info_respository.dart';
 import 'package:segadi/services/getDataDevice.dart';
+import 'package:segadi/viewmodels/container_movement/container_movement_list_view_model.dart';
+import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
+import 'package:segadi/views/container_movements/container_movement_list_view.dart';
+
 //import 'package:segadi/repo/device_info_respository.dart';
 
 import 'package:segadi/views/home/routes.dart';
@@ -25,7 +29,15 @@ Future main() async {
   await SystemChrome.setPreferredOrientations([
     DeviceOrientation.portraitUp,
     DeviceOrientation.portraitDown,
+    DeviceOrientation.landscapeLeft,
+    DeviceOrientation.landscapeRight
   ]);
+
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    print('🔴 Error: ${details.exception}');
+    print('🧱 Stack: ${details.stack}');
+  };
 
   runApp(MyApp());
 }
@@ -60,6 +72,12 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (_) => DeviceInfoViewModel(
                 DeviceInfoRespository(), InfoDeviceSystemERP())),
+        ChangeNotifierProvider(create: (_) {
+          final data = ContainerMovementListViewModel();
+          data.loadMovimientos();
+          return data;
+        }),
+        ChangeNotifierProvider(create: (_) => UbicacionesViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -77,9 +95,13 @@ class MyApp extends StatelessWidget {
           '/detail_service': (context) => DetailServiceScreen(),
           '/detail_service_finished': (context) =>
               DetailServicesFinishedScreen(id: 0),
-          'trip_closure': (context) => TripClosureScreen(),
+          'trip_closure': (context) => TripClosureScreen(
+                id: 0,
+                serviceId: '',
+              ),
           '/user': (context) => UserScreen(),
           '/travel_expenses': (context) => TravelExpensesScreen(),
+          '/container_map': (context) => MovimientoView(),
         },
       ),
     );

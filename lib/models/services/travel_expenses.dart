@@ -56,8 +56,8 @@ class TravelExpenses {
   final String baseUrl = GlobalVariables.baseUrl;
   final Map<String, String> headers = GlobalVariables.headers;
 
-  Future<http.Response> insertImport(
-      int serviceId, int conceptId, dynamic importTotal, comentary) async {
+  Future<http.Response> insertImport(int serviceId, int conceptId,
+      dynamic importTotal, comentary, String name, String? imageBytes) async {
     final prefs = await SharedPreferences.getInstance();
     String? token;
     token = prefs.getString('token');
@@ -68,16 +68,20 @@ class TravelExpenses {
       "money_check_id": conceptId,
       "total_used": importTotal,
       "comments": comentary,
+      "document_name": name,
+      "document": imageBytes,
     };
 
     var body = json.encode(data);
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/comprobacionespost');
+    var url = Uri.parse(
+        '${GlobalVariables.baseUrl}index.php?r=esegadi/comprobacionespost');
     http.Response response = await http.post(
       url,
       headers: headers,
       body: body,
     );
-
+    print(
+        'ESTATUS DE RESPUESTA INSERT IMPORT:' + response.statusCode.toString());
     if (response.statusCode == 200) {
       return response;
     } else {
@@ -85,21 +89,22 @@ class TravelExpenses {
     }
   }
 
-  Future<List<TravelExpenses>> getData(int id) async {
+  Future<List<TravelExpenses>> getData(int remition_id) async {
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     String? token;
     token = prefs.getString('token');
 
     final response = await http.get(
-      Uri.parse('${baseUrl}index.php').replace(queryParameters: {
+      Uri.parse('${GlobalVariables.baseUrl}index.php')
+          .replace(queryParameters: {
         'r': 'esegadi/getcomprobaciones',
         'id': userId.toString(),
-        'id_remision': id.toString(),
+        'id_remision': GlobalVariables.serviceDetailId.toString(),
         'token': token,
       }),
     );
-
+    print(response.body);
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
       return data.map((json) => TravelExpenses.fromJson(json)).toList();

@@ -15,58 +15,61 @@ class TableExpenses {
   int? id;
   String? paymentConcept;
   String? totalUsed;
+  String? paymentDocument;
+  String? paymentExtention;
+  int? image;
 
   TableExpenses({
     this.id,
     this.paymentConcept,
     this.totalUsed,
+    this.paymentDocument,
+    this.paymentExtention,
+    this.image,
   });
 
   factory TableExpenses.fromJson(Map<String, dynamic> json) => TableExpenses(
-        id: json["id"],
-        paymentConcept: json["payment_concept"],
-        totalUsed: json["total_used"],
-      );
+      id: json["id"],
+      paymentConcept: json["payment_concept"],
+      totalUsed: json["total_used"],
+      paymentDocument: json["payment_document"],
+      paymentExtention: json["payment_extension"],
+      image: json["image"]);
 
   Map<String, dynamic> toJson() => {
         "id": id,
         "payment_concept": paymentConcept,
         "total_used": totalUsed,
+        "payment_document": paymentConcept,
+        "payment_extension": paymentConcept,
+        "image": image
       };
 
   final String baseUrl = GlobalVariables.baseUrl;
   final Map<String, String> headers = GlobalVariables.headers;
 
-  Future<List<TableExpenses>> getTravelExpenses(int id) async {
+  Future<List<TableExpenses>> getTravelExpenses(int remition_id) async {
     final prefs = await SharedPreferences.getInstance();
     var userId = prefs.getInt('id') ?? 0;
     String? token;
     token = prefs.getString('token');
-    var route = 'index.php';
 
     var response = await http
-        .get(Uri.parse(baseUrl + route).replace(queryParameters: {
+        .get(Uri.parse('${GlobalVariables.baseUrl}index.php')
+            .replace(queryParameters: {
           'r': 'esegadi/getcomprobacionestabla',
           'id': userId.toString(),
-          'id_remision': id.toString(),
+          'id_remision': GlobalVariables.serviceDetailId.toString(),
           'token': token,
         }))
-        .timeout(const Duration(seconds: 90));
+        .timeout(const Duration(seconds: 120));
+
     if (response.statusCode == 200) {
-      var data = jsonDecode(response.body.toString());
-
-      data.removeWhere((str) {
-        return str["total_used"] == "0.00";
-      });
-
-      List jsonResponse = data as List;
-
-      var datas = jsonResponse.map((e) => TableExpenses.fromJson(e)).toList();
-
-      return datas;
+      List<dynamic> data = json.decode(response.body);
+      print(data);
+      return data.map((json) => TableExpenses.fromJson(json)).toList();
     } else {
-      throw Exception(
-          'Ha ocurrido un error al consultar el listado de los viaticos registrados');
+      throw Exception('Ha ocurrido un error al consultar los viaticos');
     }
   }
 }

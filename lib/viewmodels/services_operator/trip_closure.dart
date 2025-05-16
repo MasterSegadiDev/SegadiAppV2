@@ -1,141 +1,176 @@
 import 'dart:convert';
 import 'dart:io';
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:segadi/models/services/trip_closure.dart';
 import 'package:segadi/utils/global_variables.dart';
 
-
 class TripClosureViewModel extends ChangeNotifier {
-  final TripClosure _tripClosure = TripClosure();
-  late TripClosure tripClosure;
-  int serviceDetailId = GlobalVariables.serviceDetailId;
+  late int id;
+  late String serviceId;
 
-  String _items = '';
-  String get items => _items;
+  void initialize(int tripId, String tripServiceId) {
+    id = tripId;
+    serviceId = tripServiceId;
+  }
 
   File? _image;
-  File? get image => _image;
-
+  String _imageEncoded = '';
+  String _extension = '';
+  String _errorMessage = '';
+  String _imagePath = '';
+  String _imageEncode = '';
+  String _exts = '';
+  String _successMessage = '';
   int _numberTotalEvidentias = 0;
-  int get numberTotalEvidentias => _numberTotalEvidentias;
-
-  String _imagepath = "";
-  String get imagepath => _imagepath;
-
-  int? evidentias;
-
-  String _exts = "";
-  String get exts => _exts;
-
-  String _imageEncode = "";
-  String get imageEncode => _imageEncode;
-
-  bool addImage = true;
-
-  int _serviceIdOld = 0;
-  int get serviceIdOld => _serviceIdOld;
-
+  bool _showSaveButton = false;
+  bool _showCaptureButton = false;
+  bool _isServiceClosed = false;
   bool _isLoading = false;
 
-  String? _successMessage;
-  String? get successMessage => _successMessage;
-
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
-  bool get isLoading => _isLoading;
-
   final ImagePicker _picker = ImagePicker();
-  XFile? _imageFile;
+  final TripClosure _tripClosureService = TripClosure();
 
-  XFile? get imageFile => _imageFile;
-
-  bool _isServiceClosed = false;
+  // Getters
+  File? get image => _image;
+  String get errorMessage => _errorMessage;
+  String get successMessage => _successMessage;
+  bool get showSaveButton => _showSaveButton;
+  bool get showCaptureButton => _showCaptureButton;
   bool get isServiceClosed => _isServiceClosed;
+  bool get isLoading => _isLoading;
+  int get numberTotalEvidentias => _numberTotalEvidentias;
 
-  bool _changePage = false;
-  bool get changePage => _changePage;
+  TripClosure? get tripClosureModel => TripClosure();
 
-  Future<void> captureImage() async {
-    final XFile? pickedFile =
-        await _picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      _imageFile = pickedFile;
-      _imagepath = pickedFile.path;
-      _exts = getFileExtension(imagepath)!;
+  // Control de carga
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
 
-      File? imagefile = File(imagepath);
-      Uint8List imagebytes = await imagefile.readAsBytes();
-      String base64string = base64.encode(imagebytes);
-      _imageEncode = base64string;
+  void _setError(String message) {
+    _errorMessage = message;
+    notifyListeners();
+  }
 
-      notifyListeners();
+  void _setSuccess(String message) {
+    _successMessage = message;
+    notifyListeners();
+  }
+
+  void deleteCapturedImage({bool notify = true}) {
+    _image = null;
+    _showSaveButton = false;
+    _showCaptureButton = true;
+    if (notify) notifyListeners();
+  }
+
+  Future<void> loadInitialData() async {
+    _setLoading(true);
+    try {
+      _numberTotalEvidentias = await _tripClosureService.getTotalEvidentias(id);
+      _showCaptureButton = true;
+      _showSaveButton = false;
+    } catch (e) {
+      _setError("Error al cargar los datos: $e");
+    } finally {
+      _setLoading(false);
     }
   }
 
-  String? getFileExtension(String imagepath) {
+  Future<void> captureImage() async {
     try {
-      return ".${imagepath.split('.').last}";
+      final XFile? pickedFile =
+          await _picker.pickImage(source: ImageSource.camera);
+
+      if (pickedFile != null) {
+        _imagePath = pickedFile.path;
+        _extension = _getFileExtension(_imagePath) ?? '';
+        _image = File(_imagePath);
+
+        _showSaveButton = true;
+        _showCaptureButton = false;
+        notifyListeners();
+      }
     } catch (e) {
+      _setError('Error al capturar la imagen: $e');
+    }
+  }
+
+  Future<bool> saveImage(bool closeTravel) async {
+    _setLoading(true);
+    try {
+      if (closeTravel) {
+        await _closeTrip(id);
+        return true;
+      } else {
+        await _prepareImageForUpload();
+
+        await _tripClosureService.insertImageTripClosure(
+            id, serviceId, _imageEncode, _exts);
+        _numberTotalEvidentias =
+            await _tripClosureService.getTotalEvidentias(id);
+
+        if (_numberTotalEvidentias > 0) {
+          _isServiceClosed = false;
+          _showCaptureButton = true;
+          _setSuccess('La captura se ha enviado con éxito');
+        } else {
+          await _closeTrip(id);
+          return true;
+        }
+      }
+    } catch (e) {
+      _setError('No se pudo guardar la imagen: $e');
+    } finally {
+      _resetImageState();
+      _setLoading(false);
+    }
+
+    return false;
+  }
+
+  Future<void> _closeTrip(int id) async {
+    final response = await _tripClosureService.closeTravels(id);
+    if (response.statusCode == 200) {
+      _isServiceClosed = true;
+      _setSuccess('Tu viaje se ha cerrado con éxito');
+    } else {
+      throw Exception('Error al cerrar el viaje');
+    }
+  }
+
+  Future<void> _prepareImageForUpload() async {
+    if (_imagePath.isEmpty) return;
+
+    final compressedBytes = await FlutterImageCompress.compressWithFile(
+      _imagePath,
+      quality: 70,
+    );
+
+    final bytes = compressedBytes ?? await File(_imagePath).readAsBytes();
+    _imageEncode = base64Encode(bytes);
+    _exts = _getFileExtension(_imagePath) ?? '';
+  }
+
+  String? _getFileExtension(String path) {
+    try {
+      return ".${path.split('.').last}";
+    } catch (_) {
       return null;
     }
   }
 
-  void setNewDetail(TripClosure tripClosureModel) async {
-    tripClosure = tripClosureModel;
-
-    serviceDetailId = 0;
-    serviceDetailId = tripClosure.id!;
-
-    _imageFile = null;
-    _imagepath = "";
-    _exts = "";
-    _imageEncode = "";
-
-
-    _numberTotalEvidentias =
-        (await _tripClosure.getTotalEvidentias(serviceDetailId)) as int;
-
-    notifyListeners();
-  }
-
-  Future<void> saveImage(int id, String serviceId, bool closeTravel) async {
-    if (closeTravel == true) {
-    
-      var rest = await _tripClosure.closeTravels(id);
-      if (rest.statusCode == 200) {
-        _isServiceClosed = true;
-        _successMessage = 'Tu viaje se ha cerrado con éxito';
-      } else {
-        throw Exception('Ha ocurrido un error al cerrar el viaje');
-      }
-    } else {
-      
-
-      await _tripClosure.insertImageTripClosure(
-          id, serviceId, imageEncode, exts);
-
-      _numberTotalEvidentias = await _tripClosure.getTotalEvidentias(id);
-
-      if (_numberTotalEvidentias > 0) {
-        _isServiceClosed = false;
-        _successMessage = 'La captura se ha enviado con éxito';
-      }
-      if (_numberTotalEvidentias == 0) {
-        var rest = await _tripClosure.closeTravels(id);
-        if (rest.statusCode == 200) {
-          _isServiceClosed = true;
-          _successMessage = 'Tu viaje se ha cerrado con éxito';
-        }
-      }
-    }
-    _imageFile = null;
-    _imagepath = "";
-    _exts = "";
-    _imageEncode = "";
+  void _resetImageState() {
+    _image = null;
+    _imagePath = '';
+    _exts = '';
+    _imageEncode = '';
+    _showSaveButton = false;
+    _errorMessage = '';
+    _successMessage = '';
     notifyListeners();
   }
 }

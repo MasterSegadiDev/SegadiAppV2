@@ -4,8 +4,8 @@
 
 import 'dart:convert';
 
-
 import 'package:segadi/utils/global_variables.dart';
+import 'package:segadi/viewmodels/login/user_login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:http/http.dart' as http;
 
@@ -200,9 +200,11 @@ class DetailService {
 }
 
 class DetailServices {
-
   final String baseUrl = GlobalVariables.baseUrl;
-    final Map<String, String> headers = GlobalVariables.headers;
+  final Map<String, String> headers = GlobalVariables.headers;
+
+  final String baseUrlAirbag = GlobalVariablesAirbag.baseUrl;
+  final Map<String, String> headersAirbag = GlobalVariablesAirbag.headers;
 
   Future<DetailService> getDetail(id) async {
     String? token;
@@ -222,6 +224,7 @@ class DetailServices {
         },
       ),
     );
+    print('BODY DEL DETALLE:' + response.body);
     if (response.statusCode == 200) {
       var body = json.decode(response.body);
       var result = DetailService.fromJson(body);
@@ -439,10 +442,9 @@ class DetailServices {
   }
 
   Future<http.Response> changeStatusService(int serviceId, int statusId) async {
-    String? token;
-    final prefs = await SharedPreferences.getInstance();
-    token = prefs.getString('token');
-    
+    //String? token;
+    //final prefs = await SharedPreferences.getInstance();
+    final token = await LoginViewModel.getSavedToken();
 
     Map data = {"service_id": serviceId, "status_id": statusId, "token": token};
 
@@ -453,6 +455,31 @@ class DetailServices {
       headers: headers,
       body: body,
     );
+    return response;
+  }
+
+  Future<http.Response> changeStatusOperatorAirbag(String status) async {
+    final prefs = await SharedPreferences.getInstance();
+    var userId = prefs.getInt('id') ?? 0;
+
+    print('User ID: $userId');
+
+    Map data = {"force": status}; // Revisa este valor si es correcto
+
+    var body = json.encode(data);
+    var url =
+        Uri.parse('${GlobalVariablesAirbag.baseUrl}$userId/changeAppStatus');
+
+    print('URL AIR BAG: $url');
+
+    http.Response response = await http.post(
+      url,
+      headers: GlobalVariablesAirbag.headers,
+      body: body,
+    );
+
+    print('Status code: ${response.statusCode}');
+    print('Response body: ${response.body}');
 
     return response;
   }

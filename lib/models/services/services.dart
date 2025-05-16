@@ -20,6 +20,8 @@ class Services {
   String? unloadDate;
   String? documenter;
   String? status;
+  String? scaleOne;
+  String? scaleTwo;
 
   Services({
     this.id,
@@ -31,19 +33,22 @@ class Services {
     this.unloadDate,
     this.documenter,
     this.status,
+    this.scaleOne,
+    this.scaleTwo,
   });
 
   factory Services.fromJson(Map<String, dynamic> json) => Services(
-        id: json["id"],
-        service: json["service"],
-        client: json["client"],
-        origin: json["origin"],
-        destination: json["destination"],
-        loadDate: json["load_date"],
-        unloadDate: json["unload_date"],
-        documenter: json["documenter"],
-        status: json["status"] ?? 'Sin Estatus',
-      );
+      id: json["id"],
+      service: json["service"],
+      client: json["client"],
+      origin: json["origin"],
+      destination: json["destination"],
+      loadDate: json["load_date"],
+      unloadDate: json["unload_date"],
+      documenter: json["documenter"],
+      status: json["status"] ?? 'Sin Estatus',
+      scaleOne: json["stopover_1"],
+      scaleTwo: json["stopover_2"]);
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -55,6 +60,8 @@ class Services {
         "unload_date": unloadDate,
         "documenter": documenter,
         "status": status,
+        "stopover_1": scaleOne,
+        "stopover_2": scaleTwo,
       };
 
   final String baseUrl = GlobalVariables.baseUrl;
@@ -79,7 +86,7 @@ class Services {
         },
       ),
     );
-
+    print('ESTATUS DEL LISTADO SERVICIOS:' + response.body);
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
       return data.map((json) => Services.fromJson(json)).toList();

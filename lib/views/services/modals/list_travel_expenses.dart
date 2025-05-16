@@ -1,167 +1,154 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-
 import 'package:segadi/viewmodels/services_operator/travel_expenses.dart';
+import 'dart:io';
 
 class ListTravelExpensesView extends StatelessWidget {
+  const ListTravelExpensesView({super.key});
+
   @override
   Widget build(BuildContext context) {
-    final travelExpensesViewModel =
-        Provider.of<TravelExpensesViewModel>(context, listen: false);
+    return Consumer<TravelExpensesViewModel>(
+      builder: (context, viewModel, child) {
+        return SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildDropdown(viewModel),
+              const SizedBox(height: 10),
+              _buildTextField(
+                label: 'Agrega un comentario',
+                controller: viewModel.textController1,
+                onChanged: (v) => viewModel.comentary = v,
+                minLines: 4,
+                maxLines: 250,
+              ),
+              const SizedBox(height: 10),
+              _buildTextField(
+                label: 'Agrega un importe a registrar',
+                controller: viewModel.textController,
+                onChanged: (v) => viewModel.import = v,
+                inputType: const TextInputType.numberWithOptions(
+                    decimal: true, signed: true),
+              ),
+              const SizedBox(height: 10),
+              _buildTextField(
+                label: 'Nombre de la evidencia',
+                controller: viewModel.evidenceNameController,
+                onChanged: (v) => viewModel.name = v,
+              ),
+              const SizedBox(height: 10),
+              _buildImageSection(viewModel),
+              const SizedBox(height: 20),
+              _buildSubmitButton(context, viewModel),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-    return Container(
-      height: 600,
-      child: Padding(
-        padding: EdgeInsets.all(20),
-        child: Column(
-          children: <Widget>[
-            Padding(
-              padding: EdgeInsets.all(0.0),
-              child: SizedBox(
-                child: Column(
-                  children: [
-                    DropdownButtonFormField(
-                      decoration: InputDecoration(
-                        labelText: 'Selecciona una concepto',
-                        border: OutlineInputBorder(
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                      ),
-                      hint: Text('Selecciona un concepto'),
-                      items: travelExpensesViewModel.items.map((e) {
-                        return DropdownMenuItem(
-                          value: e.id,
-                          child: Container(
-                            width: double.infinity,
-                            child: Text(
-                              e.paymentConcept.toString() +
-                                  '  \$' +
-                                  e.paymentTotal.toString(),
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                          ),
-                        );
-                      }).toList(),
-                      onChanged: (value) =>
-                          travelExpensesViewModel.concetId = value!,
-                      isDense: true,
-                      isExpanded: true,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 10, bottom: 10),
-              child: SizedBox(
-                width: double.infinity,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      minLines: 4,
-                      keyboardType: TextInputType.multiline,
-                      maxLines: 250,
-                      textCapitalization: TextCapitalization.sentences,
-                      decoration: InputDecoration(
-                        filled: true,
-                        alignLabelWithHint: true,
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        labelText: 'Agrega un comentario',
-                      ),
-                      controller: travelExpensesViewModel.textController1,
-                      onChanged: (value) =>
-                          travelExpensesViewModel.comentary = value,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 10, bottom: 10),
-              child: SizedBox(
-                width: double.infinity,
-                child: Column(
-                  children: [
-                    TextFormField(
-                      decoration: InputDecoration(
-                        border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(8)),
-                        labelText: 'Agrega un importe a registrar',
-                      ),
-                      controller: travelExpensesViewModel.textController,
-                      keyboardType: TextInputType.numberWithOptions(
-                        decimal: true,
-                        signed: true,
-                      ),
-                      onChanged: (value) =>
-                          travelExpensesViewModel.import = value,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: EdgeInsets.only(top: 10, bottom: 10),
-              child: SizedBox(
-                width: double.infinity,
-                child: Column(
-                  children: [
-                    Row(
-                      children: <Widget>[
-                        Expanded(
-                          child: SizedBox(
-                            height: 40,
-                            child: ElevatedButton(
-                              onPressed: () async {
-                                await travelExpensesViewModel.insertImport();
-                                if (travelExpensesViewModel.errorMessage !=
-                                    null) {
-                                  return showDialog<void>(
-                                    context: context,
-                                    builder: (BuildContext context) {
-                                      return AlertDialog(
-                                        //title: ,
-                                        insetPadding: const EdgeInsets.all(20),
-                                        content: Text(
-                                            '${travelExpensesViewModel.errorMessage}'),
-                                      );
-                                    },
-                                  );
-                                }
-                                if (travelExpensesViewModel.errorMessage ==
-                                    null) {
-                                  Navigator.of(context).pop();
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                shape: RoundedRectangleBorder(
-                                  borderRadius:
-                                      BorderRadius.circular(20), // <-- Radius
-                                ),
-                                backgroundColor: const Color(0xFF2C522A),
-                              ),
-                              child: Text(
-                                'Agregar',
-                                style: TextStyle(color: Colors.white),
-                              ),
-                            ),
-                          ),
-                        )
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
+  Widget _buildDropdown(TravelExpensesViewModel viewModel) {
+    return DropdownButtonFormField(
+      decoration: InputDecoration(
+        labelText: 'Selecciona un concepto',
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      hint: const Text('Selecciona un concepto'),
+      items: viewModel.items.map((e) {
+        return DropdownMenuItem(
+          value: e.id,
+          child: Text('${e.paymentConcept}  \$${e.paymentTotal}'),
+        );
+      }).toList(),
+      onChanged: (value) => viewModel.concetId = value!,
+      isDense: true,
+      isExpanded: true,
+    );
+  }
+
+  Widget _buildTextField({
+    required String label,
+    required TextEditingController controller,
+    void Function(String)? onChanged,
+    TextInputType? inputType,
+    int? minLines,
+    int? maxLines,
+  }) {
+    return TextFormField(
+      controller: controller,
+      onChanged: onChanged,
+      keyboardType: inputType,
+      minLines: minLines,
+      maxLines: maxLines,
+      decoration: InputDecoration(
+        labelText: label,
+        border: OutlineInputBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+    );
+  }
+
+  Widget _buildImageSection(TravelExpensesViewModel viewModel) {
+    return Row(
+      children: [
+        ElevatedButton.icon(
+          onPressed: viewModel.pickImageFromCamera,
+          icon: const Icon(Icons.camera_alt),
+          label: Text(
+            viewModel.selectedImage == null ? 'Tomar foto' : 'Cambiar foto',
+            style: const TextStyle(color: Colors.white),
+          ),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: Colors.teal,
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          ),
         ),
+        const SizedBox(width: 10),
+        viewModel.selectedImage != null
+            ? GestureDetector(
+                onTap: viewModel.pickImageFromCamera,
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
+                  child: Image.file(
+                    File(viewModel.selectedImage!.path),
+                    width: 60,
+                    height: 60,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+              )
+            : const Text("No hay imagen"),
+      ],
+    );
+  }
+
+  Widget _buildSubmitButton(
+      BuildContext context, TravelExpensesViewModel viewModel) {
+    return SizedBox(
+      width: double.infinity,
+      height: 45,
+      child: ElevatedButton(
+        onPressed: () async {
+          await viewModel.insertImport();
+
+          if (viewModel.errorMessage != null) {
+            showDialog(
+              context: context,
+              builder: (_) =>
+                  AlertDialog(content: Text(viewModel.errorMessage!)),
+            );
+          } else {
+            Navigator.of(context).pop();
+          }
+        },
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2C522A),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        ),
+        child: const Text('Agregar', style: TextStyle(color: Colors.white)),
       ),
     );
   }
