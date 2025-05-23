@@ -68,6 +68,12 @@ class ContainerMovement {
         comments: json["comments"],
       );
 
+  get areaDestino => null;
+
+  get espacioDestino => null;
+
+  get nivelDestino => null;
+
   Map<String, dynamic> toJson() => {
         "id": id,
         "crane_movement": craneMovement,

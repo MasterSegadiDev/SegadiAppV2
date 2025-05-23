@@ -14,13 +14,13 @@ class MovimientoView extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text(
+        title: const Text(
           'Movimiento de contenedores',
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: const Color.fromARGB(255, 33, 150, 91),
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: Color.fromARGB(255, 33, 150, 91),
       ),
       backgroundColor: Colors.white,
       drawer: DrawerScreen(),
@@ -35,8 +35,10 @@ class MovimientoView extends StatelessWidget {
 
               if (viewModel.error != null) {
                 return Center(
-                  child: Text("Error: ${viewModel.error}",
-                      style: const TextStyle(color: Colors.red)),
+                  child: Text(
+                    "Error: ${viewModel.error}",
+                    style: const TextStyle(color: Colors.red),
+                  ),
                 );
               }
 
@@ -45,22 +47,27 @@ class MovimientoView extends StatelessWidget {
                 itemCount: viewModel.movimientos.length,
                 itemBuilder: (context, index) {
                   final m = viewModel.movimientos[index];
+
                   return GestureDetector(
                     onTap: () {
-                      // final detailServiceModel = DetailService(id: item.id);
-                      // Provider.of<DetailViewModel>(context, listen: false)
-                      //     .setNewDetail(detailServiceModel);
-
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ContainersMapScreen()),
+                          builder: (_) => ContainersMapScreen(
+                            areaDestino: m.areaDestino,
+                            espacioDestino: m.espacioDestino,
+                            nivelDestino: m.nivelDestino,
+                            tipoMovimiento: 'Movimiento',
+                            movement_type: m.movementType,
+                          ),
+                        ),
                       );
                     },
                     child: Card(
                       elevation: 5,
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(16)),
+                        borderRadius: BorderRadius.circular(16),
+                      ),
                       margin: const EdgeInsets.symmetric(vertical: 10),
                       child: Padding(
                         padding: const EdgeInsets.all(16),
@@ -77,25 +84,30 @@ class MovimientoView extends StatelessWidget {
                             ),
                             const SizedBox(height: 8),
                             _buildInfoRow(
-                                icon: LucideIcons.type,
-                                label: "Tipo",
-                                value: m.movementType ?? 'N/A'),
+                              icon: LucideIcons.type,
+                              label: "Tipo",
+                              value: m.movementType ?? 'N/A',
+                            ),
                             _buildInfoRow(
-                                icon: LucideIcons.fileText,
-                                label: "Remisión",
-                                value: m.service ?? 'N/A'),
+                              icon: LucideIcons.fileText,
+                              label: "Remisión",
+                              value: m.service ?? 'N/A',
+                            ),
                             _buildInfoRow(
-                                icon: LucideIcons.package,
-                                label: "Contenedor a mover",
-                                value: m.status ?? 'Sin estatus'),
+                              icon: LucideIcons.package,
+                              label: "Contenedor a mover",
+                              value: m.status ?? 'Sin estatus',
+                            ),
                             _buildInfoRow(
-                                icon: LucideIcons.hash,
-                                label: "Contenedor A",
-                                value: m.containerNumberA ?? 'Sin contenedor'),
+                              icon: LucideIcons.hash,
+                              label: "Contenedor A",
+                              value: m.containerNumberA ?? 'Sin contenedor',
+                            ),
                             _buildInfoRow(
-                                icon: LucideIcons.hash,
-                                label: "Contenedor B",
-                                value: m.containerNumberB ?? 'Sin contenedor'),
+                              icon: LucideIcons.hash,
+                              label: "Contenedor B",
+                              value: m.containerNumberB ?? 'Sin contenedor',
+                            ),
                           ],
                         ),
                       ),
@@ -107,6 +119,54 @@ class MovimientoView extends StatelessWidget {
           ),
         ),
       ),
+      floatingActionButton: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          FloatingActionButton.extended(
+            heroTag: 'reacomodo',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ContainersMapScreen(
+                    areaDestino: '',
+                    espacioDestino: '',
+                    nivelDestino: '',
+                    tipoMovimiento: 'Reacomodo',
+                    movement_type: '',
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.swap_horiz),
+            label: const Text('Reacomodo'),
+            backgroundColor: Colors.teal,
+          ),
+          const SizedBox(height: 12),
+          FloatingActionButton.extended(
+            heroTag: 'pesaje',
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (_) => const ContainersMapScreen(
+                    areaDestino: '',
+                    espacioDestino: '',
+                    nivelDestino: '',
+                    tipoMovimiento: 'Pesaje',
+                    movement_type: '',
+                  ),
+                ),
+              );
+            },
+            icon: const Icon(Icons.scale),
+            label: const Text('Pesaje'),
+            backgroundColor: Colors.deepOrange,
+          ),
+        ],
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
     );
   }
 
