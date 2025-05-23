@@ -3,7 +3,22 @@ import 'package:provider/provider.dart';
 import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
 
 class ContainersMapScreen extends StatelessWidget {
-  const ContainersMapScreen({super.key});
+  final String? areaDestino;
+  final String? espacioDestino;
+  final String? nivelDestino;
+  final String? codigoUbicacionDestino;
+  final String? tipoMovimiento;
+  final String? movement_type;
+
+  const ContainersMapScreen({
+    super.key,
+    required this.areaDestino,
+    required this.espacioDestino,
+    required this.nivelDestino,
+    this.codigoUbicacionDestino,
+    required this.tipoMovimiento,
+    required this.movement_type,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -81,6 +96,7 @@ class ContainersMapScreen extends StatelessWidget {
     showDialog(
       context: context,
       builder: (context) {
+        var combinaciones;
         return AlertDialog(
           title: const Text('Selecciona Área y Espacio'),
           contentPadding:

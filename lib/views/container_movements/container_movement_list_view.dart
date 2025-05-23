@@ -53,7 +53,13 @@ class MovimientoView extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ContainersMapScreen()),
+                            builder: (context) => ContainersMapScreen(
+                                  areaDestino: '',
+                                  espacioDestino: '',
+                                  nivelDestino: '',
+                                  tipoMovimiento: 'Movimiento',
+                                  movement_type: '',
+                                )),
                       );
                     },
                     child: Card(
@@ -122,7 +128,7 @@ class MovimientoView extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const ContainersMapScreen(
+                  builder: (_) => ContainersMapScreen(
                     areaDestino: '',
                     espacioDestino: '',
                     nivelDestino: '',
@@ -143,7 +149,7 @@ class MovimientoView extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(
-                  builder: (_) => const ContainersMapScreen(
+                  builder: (_) => ContainersMapScreen(
                     areaDestino: '',
                     espacioDestino: '',
                     nivelDestino: '',
