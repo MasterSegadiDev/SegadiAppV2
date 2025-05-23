@@ -3,7 +3,18 @@ import 'package:provider/provider.dart';
 import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
 
 class ContainersMapScreen extends StatelessWidget {
-  const ContainersMapScreen({super.key});
+  final String areaDestino;
+  final String espacioDestino;
+  final String nivelDestino;
+  final String status;
+
+  const ContainersMapScreen({
+    super.key,
+    required this.areaDestino,
+    required this.espacioDestino,
+    required this.nivelDestino,
+    required this.status,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -22,36 +33,79 @@ class ContainersMapScreen extends StatelessWidget {
 
             return Scaffold(
               appBar: AppBar(title: const Text('Mapa de Contenedores')),
-              body: Padding(
-                padding: const EdgeInsets.all(16),
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 2.5,
-                  ),
-                  itemCount: areas.length,
-                  itemBuilder: (context, index) {
-                    final area = areas[index];
-                    return ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(20),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+              body: Column(
+                children: [
+                  // Tarjeta con información del destino
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Card(
+                      color: Colors.yellow[100],
+                      elevation: 2,
+                      child: ListTile(
+                        leading:
+                            const Icon(Icons.move_up, color: Colors.black87),
+                        title: const Text('Movimiento de Contenedor'),
+                        subtitle: Text(
+                          'Destino: Área: $areaDestino, Espacio: $espacioDestino, Nivel: $nivelDestino, Estatus: $status',
+                          style: const TextStyle(fontWeight: FontWeight.w500),
                         ),
-                        backgroundColor: Colors.blueAccent,
                       ),
-                      onPressed: () {
-                        _showEspaciosModal(context, area, vm);
-                      },
-                      child: Text(
-                        'Área $area',
-                        style:
-                            const TextStyle(fontSize: 18, color: Colors.white),
+                    ),
+                  ),
+                  // Mapa de áreas
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 2.5,
+                        ),
+                        itemCount: areas.length,
+                        itemBuilder: (context, index) {
+                          final area = areas[index];
+                          final isDestino = area == areaDestino;
+
+                          return ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.all(20),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                side: isDestino
+                                    ? const BorderSide(
+                                        color: Colors.black, width: 2)
+                                    : BorderSide.none,
+                              ),
+                              backgroundColor:
+                                  isDestino ? Colors.orange : Colors.blueAccent,
+                            ),
+                            onPressed: () {
+                              _showEspaciosModal(context, area, vm);
+                            },
+                            child: Text(
+                              'Área $area',
+                              style: const TextStyle(
+                                  fontSize: 18, color: Colors.white),
+                            ),
+                          );
+                        },
                       ),
-                    );
-                  },
+                    ),
+                  ),
+                ],
+              ),
+              // Banner fijo al fondo
+              bottomNavigationBar: Container(
+                padding: const EdgeInsets.all(16),
+                color: Colors.blueGrey[50],
+                child: Text(
+                  'Moviendo contenedor a: Área $areaDestino - Espacio $espacioDestino - Nivel $nivelDestino',
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold),
+                  textAlign: TextAlign.center,
                 ),
               ),
             );
@@ -63,8 +117,7 @@ class ContainersMapScreen extends StatelessWidget {
 
   void _showEspaciosModal(
       BuildContext context, String area, UbicacionesViewModel vm) {
-    final espacios =
-        vm.getEspaciosPorArea(area); // Asegúrate de implementar este método
+    final espacios = vm.getEspaciosPorArea(area);
 
     showModalBottomSheet(
       context: context,
@@ -123,7 +176,6 @@ class ContainersMapScreen extends StatelessWidget {
 
   void _showUbicacionesDialog(BuildContext context, String area, String espacio,
       String nivel, UbicacionesViewModel vm) {
-    final vm = Provider.of<UbicacionesViewModel>(context, listen: false);
     final ubicaciones =
         vm.getUbicacionesPorAreaEspacioYNivel(area, espacio, nivel);
 
@@ -168,7 +220,7 @@ class ContainersMapScreen extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text('Color: ${u.color}'),
-            // Más detalles si necesitas
+            // Agrega más información si es necesario
           ],
         ),
         actions: [

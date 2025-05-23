@@ -54,7 +54,12 @@ class MovimientoView extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ContainersMapScreen()),
+                            builder: (context) => ContainersMapScreen(
+                                  areaDestino: 'A',
+                                  espacioDestino: '1',
+                                  nivelDestino: '1',
+                                  status: 'Lleno',
+                                )),
                       );
                     },
                     child: Card(
