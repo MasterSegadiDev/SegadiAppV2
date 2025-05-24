@@ -25,7 +25,8 @@ class ContainersMapScreen extends StatelessWidget {
     final viewModel = Provider.of<UbicacionesViewModel>(context, listen: false);
 
     String texto;
-    if ((areaDestino ?? '').isNotEmpty) {
+    print('TIPO MOVIMIENTO: ${movement_type}');
+    if (movement_type == 'Camion-Piso' || movement_type == 'Piso-Camion') {
       texto =
           'Destino: Área $areaDestino, Espacio $espacioDestino, Nivel $nivelDestino';
     } else if (tipoMovimiento == 'Reacomodo') {
@@ -51,34 +52,98 @@ class ContainersMapScreen extends StatelessWidget {
               appBar: AppBar(title: const Text('Mapa de Contenedores')),
               body: Padding(
                 padding: const EdgeInsets.all(16),
-                child: GridView.builder(
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    crossAxisSpacing: 16,
-                    mainAxisSpacing: 16,
-                    childAspectRatio: 2.5,
-                  ),
-                  itemCount: areas.length,
-                  itemBuilder: (context, index) {
-                    final area = areas[index];
-                    return ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 12),
+                    if (movement_type == 'Camion-Piso' ||
+                        movement_type == 'Piso-Camion')
+                      Card(
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        backgroundColor: Colors.blueAccent,
+                        elevation: 4,
+                        color: Colors.white,
+                        child: ListTile(
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 20, vertical: 12),
+                          leading: const Icon(Icons.edit_location_alt,
+                              color: Colors.green, size: 32),
+                          title: const Text(
+                            'Editar destino',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w600,
+                              fontSize: 16,
+                            ),
+                          ),
+                          subtitle: Text(
+                            'Área: $areaDestino\nEspacio: $espacioDestino\nNivel: $nivelDestino',
+                            style: const TextStyle(fontSize: 17),
+                          ),
+                          onTap: () => _showEspaciosModal(
+                              context, areaDestino ?? '', vm),
+                          trailing: const Icon(Icons.chevron_right,
+                              color: Colors.grey),
+                        ),
                       ),
-                      onPressed: () {
-                        _showEspaciosModal(context, area, vm);
-                      },
-                      child: Text(
-                        'Área $area',
-                        style:
-                            const TextStyle(fontSize: 18, color: Colors.white),
+                    if (movement_type == 'Reacomodo' ||
+                        movement_type == 'Pesaje')
+                      Card(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        elevation: 4,
+                        color: Colors.white,
+                        child: ListTile(
+                            contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 20, vertical: 12),
+                            leading: const Icon(Icons.edit_location_alt,
+                                color: Colors.green, size: 32),
+                            title: const Text('Tipo De Movimiento'),
+                            subtitle: Text(
+                              ' ${movement_type} ',
+                              style: const TextStyle(fontSize: 17),
+                            ),
+                            onTap: null),
                       ),
-                    );
-                  },
+                    const SizedBox(height: 12),
+                    Expanded(
+                      child: GridView.builder(
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                          childAspectRatio: 2.5,
+                        ),
+                        itemCount: areas.length,
+                        itemBuilder: (context, index) {
+                          final area = areas[index];
+                          final isSelected = area == areaDestino;
+                          if (tipoMovimiento != 'Reacomodo' &&
+                              tipoMovimiento != 'Pesaje')
+                            return ElevatedButton(
+                              style: ElevatedButton.styleFrom(
+                                padding: const EdgeInsets.all(20),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                backgroundColor: isSelected
+                                    ? Colors.green
+                                    : Colors.blueAccent,
+                              ),
+                              onPressed: () =>
+                                  _showEspaciosModal(context, area, vm),
+                              child: Text(
+                                'Área $area',
+                                style: const TextStyle(
+                                    fontSize: 18, color: Colors.white),
+                              ),
+                            );
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ),
             );
@@ -90,28 +155,31 @@ class ContainersMapScreen extends StatelessWidget {
 
   void _showEspaciosModal(
       BuildContext context, String area, UbicacionesViewModel vm) {
-    final espacios =
-        vm.getEspaciosPorArea(area); // Asegúrate de implementar este método
+    final espacios = vm.getEspaciosPorArea(area);
+    final combinaciones = <Map<String, String>>[];
+
+    for (var espacio in espacios) {
+      combinaciones.add({'area': area, 'espacio': espacio});
+    }
 
     showDialog(
       context: context,
       builder: (context) {
-        var combinaciones;
         return AlertDialog(
           title: const Text('Selecciona Área y Espacio'),
           contentPadding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+              const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
           shape:
               RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           content: SizedBox(
             width: MediaQuery.of(context).size.width * 0.8,
-            height: 360,
+            height: 400,
             child: GridView.builder(
               padding: const EdgeInsets.only(top: 8),
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                crossAxisSpacing: 12,
-                mainAxisSpacing: 12,
+                crossAxisCount: 4,
+                crossAxisSpacing: 10,
+                mainAxisSpacing: 10,
                 childAspectRatio: 1.4,
               ),
               itemCount: combinaciones.length,
@@ -119,15 +187,20 @@ class ContainersMapScreen extends StatelessWidget {
                 final combo = combinaciones[index];
                 final area = combo['area']!;
                 final espacio = combo['espacio']!;
+                final isSelected =
+                    area == areaDestino && espacio == espacioDestino;
 
                 return GestureDetector(
                   onTap: () {
-                    Navigator.pop(context);
-                    _showNivelesModal(context, area, espacio, vm);
+                    if (tipoMovimiento != 'Reacomodo' &&
+                        tipoMovimiento != 'Pesaje') {
+                      Navigator.pop(context);
+                      _showNivelesModal(context, area, espacio, vm);
+                    }
                   },
                   child: Container(
                     decoration: BoxDecoration(
-                      color: Colors.blueAccent,
+                      color: isSelected ? Colors.green : Colors.blueAccent,
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: [
                         BoxShadow(
@@ -139,7 +212,7 @@ class ContainersMapScreen extends StatelessWidget {
                     ),
                     alignment: Alignment.center,
                     child: Text(
-                      '$area $espacio',
+                      '$area - $espacio',
                       textAlign: TextAlign.center,
                       style: const TextStyle(
                         color: Colors.white,
@@ -166,33 +239,50 @@ class ContainersMapScreen extends StatelessWidget {
       UbicacionesViewModel vm) {
     final niveles = vm.getNivelesPorEspacio(area, espacio).take(3).toList();
 
-    showModalBottomSheet(
+    showDialog(
       context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
       builder: (context) {
-        return ListView.builder(
-          padding: const EdgeInsets.all(16),
-          itemCount: niveles.length,
-          itemBuilder: (context, index) {
-            final nivel = niveles[index];
-            final isDestinoNivel = area == areaDestino &&
-                espacio == espacioDestino &&
-                nivel == nivelDestino;
+        return AlertDialog(
+          title: Text('Niveles de $espacio'),
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          content: SizedBox(
+            width: MediaQuery.of(context).size.width * 0.8,
+            height: 250,
+            child: ListView.builder(
+              itemCount: niveles.length,
+              itemBuilder: (context, index) {
+                final nivel = niveles[index];
+                final isDestinoNivel = area == areaDestino &&
+                    espacio == espacioDestino &&
+                    nivel == nivelDestino;
 
-            return ListTile(
-              tileColor: isDestinoNivel ? Colors.orange[100] : null,
-              title: Text('Nivel $nivel', style: const TextStyle(fontSize: 16)),
-              trailing: isDestinoNivel
-                  ? const Icon(Icons.star, color: Colors.orange)
-                  : const Icon(Icons.location_on_outlined),
-              onTap: () {
-                Navigator.pop(context);
-                _showUbicacionesDialog(context, area, espacio, nivel, vm);
+                return ListTile(
+                  tileColor: isDestinoNivel ? Colors.green[100] : null,
+                  title: Text('Nivel $nivel',
+                      style: const TextStyle(fontSize: 16)),
+                  trailing: isDestinoNivel
+                      ? const Icon(Icons.star, color: Colors.green)
+                      : const Icon(Icons.location_on_outlined),
+                  onTap: () {
+                    if (tipoMovimiento != 'Reacomodo' &&
+                        tipoMovimiento != 'Pesaje') {
+                      Navigator.pop(context);
+                      _showUbicacionesDialog(context, area, espacio, nivel, vm);
+                    }
+                  },
+                );
               },
-            );
-          },
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cerrar'),
+            )
+          ],
         );
       },
     );

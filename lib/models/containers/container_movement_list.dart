@@ -29,6 +29,10 @@ class ContainerMovement {
   String? status;
   String? comments;
 
+  String? area;
+  String? space;
+  String? level;
+
   ContainerMovement({
     required this.id,
     required this.craneMovement,
@@ -46,6 +50,9 @@ class ContainerMovement {
     required this.localUnit,
     required this.status,
     required this.comments,
+    this.area,
+    this.space,
+    this.level,
   });
 
   factory ContainerMovement.fromJson(Map<String, dynamic> json) =>
@@ -66,6 +73,9 @@ class ContainerMovement {
         localUnit: json["local_unit"],
         status: json["status"],
         comments: json["comments"],
+        area: json['area'],
+        space: json['space'],
+        level: json['level'],
       );
 
   get areaDestino => null;
@@ -91,5 +101,8 @@ class ContainerMovement {
         "local_unit": localUnit,
         "status": status,
         "comments": comments,
+        "areas": area,
+        "space": space,
+        "level": level,
       };
 }

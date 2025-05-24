@@ -12,6 +12,11 @@ class MovimientoView extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<ContainerMovementListViewModel>(context);
 
+    Future _handleRefresh() async {
+      viewModel.movimientos.clear();
+      await viewModel.loadMovimientos();
+    }
+
     return Scaffold(
       appBar: AppBar(
         title: const Text(
@@ -26,7 +31,7 @@ class MovimientoView extends StatelessWidget {
       drawer: DrawerScreen(),
       body: SafeArea(
         child: RefreshIndicator(
-          onRefresh: viewModel.loadMovimientos,
+          onRefresh: _handleRefresh,
           child: Builder(
             builder: (_) {
               if (viewModel.isLoading) {
@@ -54,11 +59,11 @@ class MovimientoView extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                             builder: (context) => ContainersMapScreen(
-                                  areaDestino: '',
-                                  espacioDestino: '',
-                                  nivelDestino: '',
+                                  areaDestino: m.area,
+                                  espacioDestino: m.space,
+                                  nivelDestino: m.level,
                                   tipoMovimiento: 'Movimiento',
-                                  movement_type: '',
+                                  movement_type: m.movementType,
                                 )),
                       );
                     },
@@ -132,8 +137,8 @@ class MovimientoView extends StatelessWidget {
                     areaDestino: '',
                     espacioDestino: '',
                     nivelDestino: '',
-                    tipoMovimiento: 'Reacomodo',
-                    movement_type: '',
+                    tipoMovimiento: '',
+                    movement_type: 'Reacomodo',
                   ),
                 ),
               );
@@ -153,8 +158,8 @@ class MovimientoView extends StatelessWidget {
                     areaDestino: '',
                     espacioDestino: '',
                     nivelDestino: '',
-                    tipoMovimiento: 'Pesaje',
-                    movement_type: '',
+                    tipoMovimiento: '',
+                    movement_type: 'Pesaje',
                   ),
                 ),
               );
