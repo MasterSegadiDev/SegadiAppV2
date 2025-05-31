@@ -1,10 +1,18 @@
+import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+import 'package:segadi/models/containers/container_movements.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:segadi/utils/global_variables.dart';
+
 class Ubicacion {
   final String id;
   final String area;
   final String espacio;
   final String nivel;
   final String codigo;
-  final String color;
+  final String? color;
+  final String estatus;
 
   Ubicacion({
     required this.id,
@@ -12,7 +20,8 @@ class Ubicacion {
     required this.espacio,
     required this.nivel,
     required this.codigo,
-    required this.color,
+    this.color,
+    required this.estatus,
   });
 
   factory Ubicacion.fromJson(Map<String, dynamic> json) {
@@ -23,6 +32,31 @@ class Ubicacion {
       nivel: json['ubicacion_contenedor'].split('-').last, // Ej: "1"
       codigo: json['ubicacion_contenedor'],
       color: json['color'],
+      estatus: json['estatus'],
     );
+  }
+}
+
+class UbicationMovement {
+  final Map<String, String> headers = GlobalVariables.headers;
+  Future<http.Response> saveMovement(Movimiento movimiento) async {
+    final String baseUrl = GlobalVariables.baseUrl;
+
+    final prefs = await SharedPreferences.getInstance();
+    var userId = prefs.getInt('id') ?? 0;
+
+    var body = json.encode(movimiento);
+    var url = Uri.parse('${baseUrl}index.php?r=esegadi/movimientosgruapost');
+
+    http.Response response = await http.post(
+      url,
+      headers: headers,
+      body: body,
+    );
+
+    print('Status code: ${response.statusCode}');
+    print('Response body: ${response.body}');
+
+    return response;
   }
 }

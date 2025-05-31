@@ -103,6 +103,9 @@ class TripClosureViewModel extends ChangeNotifier {
     _setLoading(true);
     try {
       if (closeTravel) {
+        await _prepareImageForUpload();
+        await _tripClosureService.insertImageTripClosure(
+            id, serviceId, _imageEncode, _exts);
         await _closeTrip(id);
         return true;
       } else {

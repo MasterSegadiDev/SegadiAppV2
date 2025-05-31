@@ -59,6 +59,7 @@ class MovimientoView extends StatelessWidget {
                         context,
                         MaterialPageRoute(
                             builder: (context) => ContainersMapScreen(
+                                  serviceId: m.service,
                                   areaDestino: m.area,
                                   espacioDestino: m.space,
                                   nivelDestino: m.level,
@@ -134,6 +135,7 @@ class MovimientoView extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => ContainersMapScreen(
+                    serviceId: '',
                     areaDestino: '',
                     espacioDestino: '',
                     nivelDestino: '',
@@ -155,6 +157,7 @@ class MovimientoView extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => ContainersMapScreen(
+                    serviceId: '',
                     areaDestino: '',
                     espacioDestino: '',
                     nivelDestino: '',

@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:segadi/models/containers/container_movement.dart';
 import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
 
 class ContainersMapScreen extends StatelessWidget {
+  final String? serviceId;
   final String? areaDestino;
   final String? espacioDestino;
   final String? nivelDestino;
@@ -12,6 +14,7 @@ class ContainersMapScreen extends StatelessWidget {
 
   const ContainersMapScreen({
     super.key,
+    required this.serviceId,
     required this.areaDestino,
     required this.espacioDestino,
     required this.nivelDestino,
@@ -25,7 +28,7 @@ class ContainersMapScreen extends StatelessWidget {
     final viewModel = Provider.of<UbicacionesViewModel>(context, listen: false);
 
     String texto;
-    print('TIPO MOVIMIENTO: ${movement_type}');
+
     if (movement_type == 'Camion-Piso' || movement_type == 'Piso-Camion') {
       texto =
           'Destino: Área $areaDestino, Espacio $espacioDestino, Nivel $nivelDestino';
@@ -49,7 +52,15 @@ class ContainersMapScreen extends StatelessWidget {
             final areas = vm.getAreas();
 
             return Scaffold(
-              appBar: AppBar(title: const Text('Mapa de Contenedores')),
+              appBar: AppBar(
+                title: const Text(
+                  'Mapa de contenedores',
+                  style: TextStyle(color: Colors.white),
+                ),
+                centerTitle: true,
+                iconTheme: const IconThemeData(color: Colors.white),
+                backgroundColor: Color.fromARGB(255, 33, 150, 91),
+              ),
               body: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
@@ -121,7 +132,8 @@ class ContainersMapScreen extends StatelessWidget {
                           final area = areas[index];
                           final isSelected = area == areaDestino;
                           if (tipoMovimiento != 'Reacomodo' &&
-                              tipoMovimiento != 'Pesaje')
+                              tipoMovimiento != 'Pesaje' &&
+                              tipoMovimiento != 'Camion-Piso')
                             return ElevatedButton(
                               style: ElevatedButton.styleFrom(
                                 padding: const EdgeInsets.all(20),
@@ -235,8 +247,12 @@ class ContainersMapScreen extends StatelessWidget {
     );
   }
 
-  void _showNivelesModal(BuildContext context, String area, String espacio,
-      UbicacionesViewModel vm) {
+  void _showNivelesModal(
+    BuildContext context,
+    String area,
+    String espacio,
+    UbicacionesViewModel vm,
+  ) {
     final niveles = vm.getNivelesPorEspacio(area, espacio).take(3).toList();
 
     showDialog(
@@ -259,20 +275,44 @@ class ContainersMapScreen extends StatelessWidget {
                     espacio == espacioDestino &&
                     nivel == nivelDestino;
 
+                final ubicacionesNivel = vm.getUbicacionesPorAreaEspacioYNivel(
+                  area,
+                  espacio,
+                  nivel,
+                );
+                final nivelOcupado = ubicacionesNivel.isNotEmpty &&
+                    ubicacionesNivel.every((u) => u.estatus == 'Used');
+
                 return ListTile(
-                  tileColor: isDestinoNivel ? Colors.green[100] : null,
-                  title: Text('Nivel $nivel',
-                      style: const TextStyle(fontSize: 16)),
+                  tileColor: isDestinoNivel
+                      ? Colors.green[100]
+                      : nivelOcupado
+                          ? Colors.red[100]
+                          : null,
+                  title: Text(
+                    'Nivel $nivel',
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: nivelOcupado ? Colors.red : null,
+                      fontWeight:
+                          isDestinoNivel ? FontWeight.bold : FontWeight.normal,
+                    ),
+                  ),
                   trailing: isDestinoNivel
                       ? const Icon(Icons.star, color: Colors.green)
-                      : const Icon(Icons.location_on_outlined),
-                  onTap: () {
-                    if (tipoMovimiento != 'Reacomodo' &&
-                        tipoMovimiento != 'Pesaje') {
-                      Navigator.pop(context);
-                      _showUbicacionesDialog(context, area, espacio, nivel, vm);
-                    }
-                  },
+                      : nivelOcupado
+                          ? const Icon(Icons.block, color: Colors.red)
+                          : const Icon(Icons.location_on_outlined),
+                  onTap: nivelOcupado
+                      ? null // Desactiva si está ocupado
+                      : () {
+                          if (tipoMovimiento != 'Reacomodo' &&
+                              tipoMovimiento != 'Pesaje') {
+                            Navigator.pop(context);
+                            _showUbicacionesDialog(
+                                context, area, espacio, nivel, vm);
+                          }
+                        },
                 );
               },
             ),
@@ -288,53 +328,100 @@ class ContainersMapScreen extends StatelessWidget {
     );
   }
 
-  void _showUbicacionesDialog(BuildContext context, String area, String espacio,
-      String nivel, UbicacionesViewModel vm) {
+  void _showUbicacionesDialog(
+    BuildContext context,
+    String area,
+    String espacio,
+    String nivel,
+    UbicacionesViewModel vm,
+  ) {
     final ubicaciones =
         vm.getUbicacionesPorAreaEspacioYNivel(area, espacio, nivel);
+    Ubicacion? ubicacionSeleccionada;
+    String? ubication_id;
 
     showDialog(
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text('Nivel $nivel - $espacio'),
-        content: SizedBox(
-          width: double.maxFinite,
-          child: ListView.builder(
-            shrinkWrap: true,
-            itemCount: ubicaciones.length,
-            itemBuilder: (context, index) {
-              final u = ubicaciones[index];
-              final isUbicacionDestino = u.codigo == codigoUbicacionDestino;
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          // 🔁 Para manejar estado dentro del diálogo
+          builder: (context, setState) {
+            return AlertDialog(
+              title: Text('Nivel de prueba $nivel - $espacio'),
+              content: SizedBox(
+                width: double.maxFinite,
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: ubicaciones.length,
+                  itemBuilder: (context, index) {
+                    final u = ubicaciones[index];
+                    final isSelected = u == ubicacionSeleccionada;
+                    final color = 'blue';
+                    print('ID ID ID ${u.id}');
+                    ubication_id = u.id;
 
-              return ListTile(
-                tileColor: isUbicacionDestino ? Colors.orange[100] : null,
-                leading: CircleAvatar(
-                  backgroundColor: _colorFromString(u.color),
-                  radius: 10,
+                    return ListTile(
+                      tileColor: isSelected ? Colors.green[100] : null,
+                      leading: CircleAvatar(
+                        backgroundColor: _colorFromString(color),
+                        radius: 10,
+                      ),
+                      title: Text(
+                        u.codigo,
+                        style: TextStyle(
+                          fontWeight:
+                              isSelected ? FontWeight.bold : FontWeight.normal,
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          ubicacionSeleccionada = u;
+                        });
+                      },
+                      trailing: isSelected
+                          ? const Icon(Icons.check_circle, color: Colors.green)
+                          : null,
+                    );
+                  },
                 ),
-                title: Text(
-                  u.codigo,
-                  style: TextStyle(
-                    fontWeight: isUbicacionDestino
-                        ? FontWeight.bold
-                        : FontWeight.normal,
-                  ),
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(),
+                  child: const Text('Cancelar'),
                 ),
-                trailing: isUbicacionDestino
-                    ? const Icon(Icons.star, color: Colors.orange)
-                    : null,
-                onTap: () => _showUbicacionDetalle(dialogContext, u),
-              );
-            },
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cerrar'),
-          )
-        ],
-      ),
+                ElevatedButton(
+                  onPressed: () async {
+                    if (ubicacionSeleccionada == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Debes seleccionar una ubicación.'),
+                        ),
+                      );
+                      return;
+                    }
+
+                    try {
+                      await vm.registrarMovimiento(
+                        movementType: movement_type ?? '',
+                        ubicacionSeleccionada: ubicacionSeleccionada!,
+                        ubicationId: ubication_id ?? '',
+                        serviceId: serviceId,
+                      );
+                      Navigator.of(dialogContext).pop();
+                    } catch (e) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(content: Text('Error: ${e.toString()}')),
+                      );
+                    }
+                  },
+                  child: const Text('Registrar movimiento'),
+                ),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 

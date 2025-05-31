@@ -26,8 +26,8 @@ class _HomeScreenState extends State<HomeScreen> {
     final session = UserSession();
     await session.loadFromPrefs();
 
-    // final String tipoUsuario = session.userRollApp ?? '';
-    final String tipoUsuario = 'Operador';
+    final String tipoUsuario = session.userRollApp ?? '';
+    //final String tipoUsuario = 'Operador';
     final allItems = [
       {
         'icon': FontAwesomeIcons.truck,
@@ -38,26 +38,26 @@ class _HomeScreenState extends State<HomeScreen> {
         },
         'tipo': 'Operador'
       },
-      {
-        'icon': Icons.folder,
-        'label': 'Expediente',
-        'onTap': (BuildContext context) {},
-        'tipo': 'Operador',
-      },
-      {
-        'icon': FontAwesomeIcons.tools,
-        'label': 'Mantenimiento',
-        'onTap': (BuildContext context) {},
-        'tipo': 'Operador',
-      },
+      // {
+      //   'icon': Icons.folder,
+      //   'label': 'Expediente',
+      //   'onTap': (BuildContext context) {},
+      //   'tipo': 'Operador',
+      // },
+      // {
+      //   'icon': FontAwesomeIcons.tools,
+      //   'label': 'Mantenimiento',
+      //   'onTap': (BuildContext context) {},
+      //   'tipo': 'Operador',
+      // },
       {
         'icon': FontAwesomeIcons.box,
         'label': 'Movimiento de contenedores',
         'onTap': (BuildContext context) {
           Navigator.pushNamed(context, '/container_map');
         },
-        //'tipo': 'Operador Grua'
-        'tipo': 'Operador'
+        'tipo': 'Operador Grua'
+        //'tipo': 'Operador'
       },
     ];
 

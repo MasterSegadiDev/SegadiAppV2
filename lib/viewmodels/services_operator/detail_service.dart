@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:segadi/utils/user_session.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+
 import 'package:segadi/models/services/checklist.dart';
 import 'package:segadi/models/services/detail_service.dart';
 import 'package:segadi/utils/global_variables.dart';
