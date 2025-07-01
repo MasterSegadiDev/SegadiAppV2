@@ -75,19 +75,45 @@ class _CheckListView extends State<CheckListView> {
                 RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
             minimumSize: const Size.fromHeight(50),
           ),
-          onPressed: () async {
-            await checkViewModel.save();
-            if (checkViewModel.errorMessage != null) {
-              showDialog<void>(
-                context: context,
-                builder: (context) => AlertDialog(
-                  content: Text(checkViewModel.errorMessage!),
-                ),
-              );
-            } else {
-              Navigator.pop(context);
-            }
-          },
+          // onPressed: () async {
+          //   await checkViewModel.save();
+          //   if (checkViewModel.errorMessage != null) {
+          //     showDialog<void>(
+          //       context: context,
+          //       builder: (context) => AlertDialog(
+          //         content: Text(checkViewModel.errorMessage!),
+          //       ),
+          //     );
+          //   } else {
+          //     Navigator.pop(context);
+          //   }
+          // },
+          onPressed: checkViewModel.isSaving
+              ? null
+              : () async {
+                  await checkViewModel.save();
+
+                  if (checkViewModel.errorMessage != null) {
+                    showDialog<void>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        content: Text(checkViewModel.errorMessage!),
+                      ),
+                    );
+                  } else {
+                    if (mounted) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Checklist registrado con éxito'),
+                          backgroundColor: Colors.green,
+                          behavior: SnackBarBehavior.floating,
+                          duration: Duration(seconds: 2),
+                        ),
+                      );
+                      Navigator.pop(context);
+                    }
+                  }
+                },
         ),
       ),
     );

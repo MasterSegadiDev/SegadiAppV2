@@ -27,7 +27,7 @@ class MovimientoService {
         },
       ),
     );
-
+    print('RESPUESTA .. ${response.statusCode}');
     if (response.statusCode == 200) {
       final List<dynamic> data = json.decode(response.body);
       return data.map((item) => ContainerMovement.fromJson(item)).toList();

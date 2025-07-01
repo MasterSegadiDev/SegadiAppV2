@@ -41,6 +41,9 @@ class DetailViewModel extends ChangeNotifier {
   String get url => _url;
   String get errorMessageUrl => _errorMessageUrl;
 
+  bool _isSaving = false;
+  bool get isSaving => _isSaving;
+
   // ===========================================================================
   // ACCIONES PÚBLICAS
   // ===========================================================================
@@ -71,9 +74,15 @@ class DetailViewModel extends ChangeNotifier {
   Future<void> save() async {
     _errorMessage = null;
 
+    if (_isSaving) return; // Evita doble ejecución
+
+    _isSaving = true;
+    notifyListeners();
+
     if (_optionSelect.isEmpty) {
       _errorMessage =
           'Necesitas seleccionar al menos una opción del checklist.';
+      _isSaving = false;
       notifyListeners();
       return;
     }
@@ -83,11 +92,14 @@ class DetailViewModel extends ChangeNotifier {
 
     if (response.statusCode == 200) {
       await _updateDetail();
+      await fetchItems(); // 🔄 Refrescar lista
     } else {
       _errorMessage =
           'Error al guardar el checklist. Código: ${response.statusCode}';
-      notifyListeners();
     }
+
+    _isSaving = false;
+    notifyListeners();
   }
 
   Future<void> changeStatusService(int statusId) async {
@@ -97,6 +109,8 @@ class DetailViewModel extends ChangeNotifier {
 
     final response =
         await _detailService.changeStatusService(_serviceDetailId, statusId);
+
+    print('ESTATUS ID CON EL QUE NECESITO INICIAR ${statusId}');
 
     if (statusId == 2 && user.userRoll == 'No') {
       print('SE VA ACTIVAR EL USUARIO EN AIRBAG');

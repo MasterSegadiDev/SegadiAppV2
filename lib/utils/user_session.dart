@@ -16,6 +16,7 @@ class UserSession {
   String? password;
   String? userRoll;
   String? userRollApp;
+  String? numberEmployee;
 
   Future<void> loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
@@ -26,6 +27,7 @@ class UserSession {
     token = prefs.getString('token');
     userRoll = prefs.getString('user_roll');
     userRollApp = prefs.getString('user_rol_app');
+    numberEmployee = prefs.getString('number_employe');
   }
 
   void clear() {
@@ -36,5 +38,6 @@ class UserSession {
     token = null;
     userRoll = null;
     userRollApp = null;
+    numberEmployee = null;
   }
 }

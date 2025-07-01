@@ -1,11 +1,23 @@
 import 'package:flutter/material.dart';
 
-scaffoldMessengerSuccess(BuildContext context) {
-  return ScaffoldMessenger.of(context).showSnackBar(
+void scaffoldMessengerSuccess(BuildContext context) {
+  ScaffoldMessenger.of(context).showSnackBar(
     const SnackBar(
+      content: Text('Bienvenido a SEGADI app'),
       backgroundColor: Colors.green,
-      content: Text('Bienvenido a SEGADI Operador'),
       behavior: SnackBarBehavior.floating,
+      duration: Duration(seconds: 2),
+    ),
+  );
+}
+
+void scaffoldMessengerSuccessStatus(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
+    SnackBar(
+      content: Text('${message}'),
+      backgroundColor: Colors.green,
+      behavior: SnackBarBehavior.floating,
+      duration: Duration(seconds: 2),
     ),
   );
 }
@@ -30,12 +42,13 @@ scaffoldMessengerWarning(BuildContext context, String message) {
   );
 }
 
-scaffoldMessengerError(BuildContext context, String message) {
-  return ScaffoldMessenger.of(context).showSnackBar(
+void scaffoldMessengerError(BuildContext context, String message) {
+  ScaffoldMessenger.of(context).showSnackBar(
     SnackBar(
+      content: Text(message),
       backgroundColor: Colors.red,
-      content: Text('${message}'),
       behavior: SnackBarBehavior.floating,
+      duration: const Duration(seconds: 3),
     ),
   );
 }

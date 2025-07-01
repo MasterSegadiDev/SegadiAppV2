@@ -118,6 +118,7 @@ class LoginViewModel extends ChangeNotifier {
     await prefs.setString('token', data['token']);
     await prefs.setString('user_roll', data['user']['empleado_permisionario']);
     await prefs.setString('user_rol_app', data['user']['user_rol_app']);
+    await prefs.setString('number_employe', data['user']['employee_number']);
 
     await UserSession().loadFromPrefs();
   }

@@ -53,19 +53,35 @@ class MovimientoView extends StatelessWidget {
                 itemBuilder: (context, index) {
                   final m = viewModel.movimientos[index];
 
+                  // Determinar qué contenedor se va a mover
+                  String? containerToMove = m.containerToMove?.toLowerCase();
+                  String? contenedorMover;
+
+                  if (containerToMove != null) {
+                    if (containerToMove.contains('a')) {
+                      contenedorMover = m.containerNumberA;
+                      print('CONTENEDOR A MOVER: ${contenedorMover}');
+                    } else if (containerToMove.contains('b')) {
+                      contenedorMover = m.containerNumberB;
+                      print('CONTENEDOR B MOVER: ${contenedorMover}');
+                    }
+                  }
+
                   return GestureDetector(
                     onTap: () {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                            builder: (context) => ContainersMapScreen(
-                                  serviceId: m.service,
-                                  areaDestino: m.area,
-                                  espacioDestino: m.space,
-                                  nivelDestino: m.level,
-                                  tipoMovimiento: 'Movimiento',
-                                  movement_type: m.movementType,
-                                )),
+                          builder: (context) => ContainersMapScreen(
+                            status: m.status,
+                            movementId: m.id,
+                            initialArea: m.area,
+                            initialEspacio: m.space,
+                            initialNivel: m.level,
+                            movementType: m.movementType!,
+                            containerNumber: contenedorMover,
+                          ),
+                        ),
                       );
                     },
                     child: Card(
@@ -135,12 +151,13 @@ class MovimientoView extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => ContainersMapScreen(
-                    serviceId: '',
-                    areaDestino: '',
-                    espacioDestino: '',
-                    nivelDestino: '',
-                    tipoMovimiento: '',
-                    movement_type: 'Reacomodo',
+                    status: '',
+                    movementId: 0,
+                    initialArea: '',
+                    initialEspacio: '',
+                    initialNivel: '',
+                    //tipoMovimiento: 'Movimiento',
+                    movementType: 'Reacomodo',
                   ),
                 ),
               );
@@ -157,12 +174,14 @@ class MovimientoView extends StatelessWidget {
                 context,
                 MaterialPageRoute(
                   builder: (_) => ContainersMapScreen(
-                    serviceId: '',
-                    areaDestino: '',
-                    espacioDestino: '',
-                    nivelDestino: '',
-                    tipoMovimiento: '',
-                    movement_type: 'Pesaje',
+                    status: '',
+                    movementId: 0,
+                    initialArea: '',
+                    initialEspacio: '',
+                    initialNivel: '',
+                    //tipoMovimiento: 'Movimiento',
+                    movementType: 'Pesaje',
+                    containerNumber: '',
                   ),
                 ),
               );

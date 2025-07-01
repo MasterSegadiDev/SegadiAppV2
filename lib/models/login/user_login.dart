@@ -31,7 +31,7 @@ class AuthService {
       headers: headers,
       body: body,
     );
-    print(response.statusCode);
+    print(response.body);
     return response;
   }
 }

@@ -77,8 +77,8 @@ class _LoginScreenState extends State<LoginView> {
                 const SizedBox(height: 16),
 
                 // Biometría si está disponible
-                if (biometricViewModel.isBiometricAvailable == true)
-                  _buildBiometricButton(biometricViewModel),
+                // if (biometricViewModel.isBiometricAvailable == true)
+                //   _buildBiometricButton(biometricViewModel),
               ],
             ),
           ),
@@ -150,7 +150,17 @@ class _LoginScreenState extends State<LoginView> {
         ),
         onPressed: () async {
           await loginViewModel.login();
-          if (loginViewModel.errorMessage == null) {
+
+          if (loginViewModel.errorMessage != null) {
+            scaffoldMessengerError(context, loginViewModel.errorMessage!);
+          }
+          //  else if (!loginViewModel.isValidScreen) {
+          //   scaffoldMessengerError(
+          //       context,
+          //       loginViewModel.deviceError ??
+          //           'Error en la validación del dispositivo');
+          // }
+          else {
             scaffoldMessengerSuccess(context);
             Future.delayed(const Duration(seconds: 2), () {
               Navigator.pushNamed(context, '/home_page');
@@ -162,32 +172,32 @@ class _LoginScreenState extends State<LoginView> {
     );
   }
 
-  Widget _buildBiometricButton(BiometricViewModel biometricViewModel) {
-    return SizedBox(
-      width: double.infinity,
-      height: 50,
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2C522A),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(100),
-          ),
-        ),
-        onPressed: () async {
-          await biometricViewModel.authenticate();
-          if (biometricViewModel.isAuthenticatedWithToken) {
-            scaffoldMessengerSuccess(context);
-            Future.delayed(const Duration(seconds: 2), () {
-              Navigator.pushNamed(context, '/home_page');
-            });
-          } else {
-            scaffoldMessengerError(
-                context, 'Inicia sesión con tu Usuario y Contraseña');
-          }
-        },
-        child: const Text('Acceder con biometría',
-            style: TextStyle(color: Colors.white)),
-      ),
-    );
-  }
+  // Widget _buildBiometricButton(BiometricViewModel biometricViewModel) {
+  //   return SizedBox(
+  //     width: double.infinity,
+  //     height: 50,
+  //     child: ElevatedButton(
+  //       style: ElevatedButton.styleFrom(
+  //         backgroundColor: const Color(0xFF2C522A),
+  //         shape: RoundedRectangleBorder(
+  //           borderRadius: BorderRadius.circular(100),
+  //         ),
+  //       ),
+  //       onPressed: () async {
+  //         await biometricViewModel.authenticate();
+  //         if (biometricViewModel.isAuthenticatedWithToken) {
+  //           scaffoldMessengerSuccess(context);
+  //           Future.delayed(const Duration(seconds: 2), () {
+  //             Navigator.pushNamed(context, '/home_page');
+  //           });
+  //         } else {
+  //           scaffoldMessengerError(
+  //               context, 'Inicia sesión con tu Usuario y Contraseña');
+  //         }
+  //       },
+  //       child: const Text('Acceder con biometría',
+  //           style: TextStyle(color: Colors.white)),
+  //     ),
+  //   );
+  // }
 }

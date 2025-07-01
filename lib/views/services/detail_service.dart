@@ -191,19 +191,42 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
                               borderRadius: BorderRadius.circular(100)),
                           minimumSize: const Size.fromHeight(50),
                         ),
+                        // onPressed: viewModel.item!.isEnableButton!
+                        //     ? () async {
+                        //         final statusId =
+                        //             viewModel.item!.mandatoryStatusId;
+                        //         if (statusId == null) {
+                        //           scaffoldMessengerError(context,
+                        //               'No se puede cambiar el estatus');
+                        //           return;
+                        //         }
+                        //         await viewModel.changeStatusService(statusId);
+                        //         if (viewModel.errorMessage != null) {
+                        //           scaffoldMessengerError(
+                        //               context, viewModel.errorMessage!);
+                        //         }
+                        //       }
+                        //     : null,
                         onPressed: viewModel.item!.isEnableButton!
                             ? () async {
                                 final statusId =
                                     viewModel.item!.mandatoryStatusId;
+
                                 if (statusId == null) {
                                   scaffoldMessengerError(context,
-                                      'No se puede cambiar el estatus');
+                                      'No se puede cambiar el estatus porque falta el ID de estatus obligatorio.');
                                   return;
                                 }
+
                                 await viewModel.changeStatusService(statusId);
+
                                 if (viewModel.errorMessage != null) {
                                   scaffoldMessengerError(
                                       context, viewModel.errorMessage!);
+                                } else {
+                                  scaffoldMessengerSuccessStatus(context,
+                                      'Estatus actualizado correctamente.');
+                                  // También puedes usar showDialog si prefieres
                                 }
                               }
                             : null,

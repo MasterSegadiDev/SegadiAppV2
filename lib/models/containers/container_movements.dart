@@ -1,8 +1,8 @@
 class Movimiento {
-  final String? crane_movement_id;
+  final int? crane_movement_id;
   final String? movement_type;
   final String? crane_operator_id;
-  final String? container_location_id;
+  final int? container_location_id;
   final String? container_number;
   final String? new_container_location_id;
   final String? status;
@@ -10,7 +10,7 @@ class Movimiento {
   final String weight;
   final String document_name;
   final String document;
-  final String? service_id;
+  final int? service_id;
 
   Movimiento({
     this.crane_movement_id,

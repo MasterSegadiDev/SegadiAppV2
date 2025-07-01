@@ -12,7 +12,8 @@ class Ubicacion {
   final String nivel;
   final String codigo;
   final String? color;
-  final String estatus;
+  final String estado;
+  final String? numberSerie;
 
   Ubicacion({
     required this.id,
@@ -21,19 +22,21 @@ class Ubicacion {
     required this.nivel,
     required this.codigo,
     this.color,
-    required this.estatus,
+    required this.estado,
+    this.numberSerie,
   });
 
   factory Ubicacion.fromJson(Map<String, dynamic> json) {
     return Ubicacion(
-      id: json['id'],
-      area: json['area_contenedor'],
-      espacio: json['espacio_contenedor'],
-      nivel: json['ubicacion_contenedor'].split('-').last, // Ej: "1"
-      codigo: json['ubicacion_contenedor'],
-      color: json['color'],
-      estatus: json['estatus'],
-    );
+        id: json['id'],
+        area: json['area_contenedor'],
+        espacio: json['espacio_contenedor'],
+        nivel: json['ubicacion_contenedor'].split('-').last, // Ej: "1"
+        codigo: json['ubicacion_contenedor'],
+        color: json['color'],
+        //estatus: json['estatus'],
+        estado: json['estatus'] ?? '',
+        numberSerie: json['container_number'] ?? 'N/A');
   }
 }
 
@@ -41,9 +44,6 @@ class UbicationMovement {
   final Map<String, String> headers = GlobalVariables.headers;
   Future<http.Response> saveMovement(Movimiento movimiento) async {
     final String baseUrl = GlobalVariables.baseUrl;
-
-    final prefs = await SharedPreferences.getInstance();
-    var userId = prefs.getInt('id') ?? 0;
 
     var body = json.encode(movimiento);
     var url = Uri.parse('${baseUrl}index.php?r=esegadi/movimientosgruapost');
