@@ -1,269 +1,476 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_file_downloader/flutter_file_downloader.dart';
-import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
-
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:segadi/helper/messages.dart';
 import 'package:segadi/models/services/detail_service.dart';
 import 'package:segadi/models/services/pdf_service.dart';
+import 'package:segadi/viewmodels/services_operator/travel_expenses.dart';
 
 import 'package:segadi/utils/user_session.dart';
+import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 import 'package:segadi/views/services/modals/check_list_service.dart';
 import 'package:segadi/views/services/modals/status_support.dart';
 import 'package:segadi/views/services/travel_expenses.dart';
 import 'package:segadi/views/services/trip_closure.dart';
-import 'package:segadi/viewmodels/services_operator/detail_service.dart';
-import 'package:segadi/viewmodels/services_operator/travel_expenses.dart';
 
 class DetailServiceScreen extends StatefulWidget {
-  DetailServiceScreen({Key? key}) : super(key: key);
+  const DetailServiceScreen({Key? key}) : super(key: key);
 
   @override
-  _DetailServiceScreen createState() => _DetailServiceScreen();
+  _DetailServiceScreenState createState() => _DetailServiceScreenState();
 }
 
-class _DetailServiceScreen extends State<DetailServiceScreen> {
+class _DetailServiceScreenState extends State<DetailServiceScreen> {
+  Timer? _refreshTimer;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<DetailViewModel>().updateDetail();
+    });
+
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      context.read<DetailViewModel>().updateDetail();
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final viewModel = context.watch<DetailViewModel>();
     final user = UserSession();
-    print('Nombre de usuario: ${UserSession().name}');
-    print('TIPO DE USUARIO: ${user.userRollApp}');
 
-    final viewModel = Provider.of<DetailViewModel>(context);
+    if (viewModel.item == null) {
+      return const Scaffold(
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Detalle Remisión', style: TextStyle(color: Colors.white)),
-        iconTheme: IconThemeData(color: Colors.white),
-        backgroundColor: Color(0xFF2C522A),
+        title: const Text('Detalle Remisión',
+            style: TextStyle(color: Colors.white)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: const Color(0xFF2C522A),
       ),
       backgroundColor: Colors.white,
-      body: viewModel.item == null
-          ? Center(child: CircularProgressIndicator())
-          : SingleChildScrollView(
-              child: Padding(
-                padding: const EdgeInsets.all(10.0),
-                child: Column(
-                  children: [
-                    Text(
-                      'REMISIÓN NÚMERO: ${viewModel.item!.service}',
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 18,
-                          color: Colors.black87),
-                    ),
-                    SizedBox(height: 10),
-                    dataCard(
-                      title: 'Remitente',
-                      icon: Icons.send,
-                      content: [
-                        infoRow(Icons.business, 'Razón Social',
-                            viewModel.item?.senderBusinessName ?? 'Sin datos'),
-                        infoRow(Icons.phone, 'Teléfono',
-                            viewModel.item?.senderPhoneNumber ?? 'Sin datos'),
-                        infoRow(Icons.person, 'Contacto',
-                            viewModel.item?.senderName ?? 'Sin datos'),
-                        infoRow(Icons.home, 'Domicilio',
-                            '${viewModel.item?.senderStreet ?? ''} ${viewModel.item?.senderOutdoorNumber ?? ''} CP ${viewModel.item?.senderZipCode ?? ''}'),
-                      ],
-                    ),
-                    dataCard(
-                      title: 'Destinatario',
-                      icon: Icons.location_on,
-                      content: [
-                        infoRow(
-                            Icons.business,
-                            'Razón Social',
-                            viewModel.item?.recipientBusinessName ??
-                                'Sin datos'),
-                        infoRow(
-                            Icons.phone,
-                            'Teléfono',
-                            viewModel.item?.recipientPhoneNumber ??
-                                'Sin datos'),
-                        infoRow(Icons.person, 'Contacto',
-                            viewModel.item?.recipientName ?? 'Sin datos'),
-                        infoRow(Icons.home, 'Domicilio',
-                            '${viewModel.item!.recipientStreet ?? ''} ${viewModel.item!.recipientOutdoorNumber ?? ''}, CP ${viewModel.item!.recipientZipCode ?? ''}, ${viewModel.item!.recipientState ?? ''}'),
-                      ],
-                    ),
-                    SizedBox(height: 10),
-                    Card(
-                      elevation: 8,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: const BorderSide(
-                            color: Color(0xFF84A756), width: 1),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 20),
-                        child: Column(
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _ActionButton(
-                                  icon: FontAwesomeIcons.clipboardList,
-                                  label: 'Lista de chequeo',
-                                  color: Colors.blue,
-                                  enabled: viewModel.item!.isEnableCheckList!,
-                                  onPressed: () => showChecklistModal(context),
-                                ),
-                                _ActionButton(
-                                  icon: FontAwesomeIcons.locationDot,
-                                  label: 'Estatus de soporte',
-                                  color: Colors.red,
-                                  enabled:
-                                      viewModel.item!.isEnableStatusSupport!,
-                                  onPressed: viewModel
-                                          .item!.isEnableStatusSupport!
-                                      ? () => _openModalStatusSupport(context)
-                                      : null,
-                                ),
-                                _ActionButton(
-                                  icon: FontAwesomeIcons.mapLocationDot,
-                                  label: 'Ruta Sugerida',
-                                  color: Colors.grey,
-                                  enabled: false,
-                                  onPressed: null,
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 20),
-                            Divider(),
-                            const SizedBox(height: 10),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                _ActionButton(
-                                  icon: FontAwesomeIcons.circleCheck,
-                                  label: 'Cierre de viaje',
-                                  color: Colors.green,
-                                  enabled: viewModel.item!.serviceClosed!,
-                                  onPressed: viewModel.item!.serviceClosed!
-                                      ? () => handleTripClosure(
-                                            context,
-                                            viewModel.item!.id!,
-                                            viewModel.item!.service.toString(),
-                                          )
-                                      : null,
-                                ),
-                                if (user.userRoll == 'No')
-                                  _ActionButton(
-                                    icon: FontAwesomeIcons.moneyBillTransfer,
-                                    label: 'Viáticos',
-                                    color: Colors.teal,
-                                    enabled:
-                                        viewModel.item!.pendingMoneyChecks!,
-                                    onPressed:
-                                        viewModel.item!.pendingMoneyChecks!
-                                            ? () => handleTravelExpenses(
-                                                context, viewModel.item!.id!)
-                                            : null,
-                                  ),
-                                _ActionButton(
-                                  icon: FontAwesomeIcons.solidFilePdf,
-                                  label: 'Descargar CCP',
-                                  color: Colors.red,
-                                  enabled: true,
-                                  onPressed: () => getPdf(
-                                    viewModel.item!.id!,
-                                    viewModel.item!.service!,
-                                    context,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                    SizedBox(height: 15),
-                    SizedBox(
-                      //height: 40,
-                      width: 380,
-                      child: ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Color(0xFF2C522A),
-                          shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(100)),
-                          minimumSize: const Size.fromHeight(50),
-                        ),
-                        // onPressed: viewModel.item!.isEnableButton!
-                        //     ? () async {
-                        //         final statusId =
-                        //             viewModel.item!.mandatoryStatusId;
-                        //         if (statusId == null) {
-                        //           scaffoldMessengerError(context,
-                        //               'No se puede cambiar el estatus');
-                        //           return;
-                        //         }
-                        //         await viewModel.changeStatusService(statusId);
-                        //         if (viewModel.errorMessage != null) {
-                        //           scaffoldMessengerError(
-                        //               context, viewModel.errorMessage!);
-                        //         }
-                        //       }
-                        //     : null,
-                        onPressed: viewModel.item!.isEnableButton!
-                            ? () async {
-                                final statusId =
-                                    viewModel.item!.mandatoryStatusId;
-
-                                if (statusId == null) {
-                                  scaffoldMessengerError(context,
-                                      'No se puede cambiar el estatus porque falta el ID de estatus obligatorio.');
-                                  return;
-                                }
-
-                                await viewModel.changeStatusService(statusId);
-
-                                if (viewModel.errorMessage != null) {
-                                  scaffoldMessengerError(
-                                      context, viewModel.errorMessage!);
-                                } else {
-                                  scaffoldMessengerSuccessStatus(context,
-                                      'Estatus actualizado correctamente.');
-                                  // También puedes usar showDialog si prefieres
-                                }
-                              }
-                            : null,
-                        child: Text(viewModel.item!.mandatoryStatus!,
-                            style: TextStyle(color: Colors.white)),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+      body: DetailServiceContent(
+        serviceDetail: viewModel.item!,
+        userSession: user,
+        onRefresh: viewModel.updateDetail,
+        onChangeStatus: viewModel.changeStatusService,
+      ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
-        child: Icon(Icons.phone, color: Colors.white),
-        onPressed: () {
-          FlutterPhoneDirectCaller.callNumber('+523311364928');
-        },
+        child: const Icon(Icons.phone, color: Colors.white),
+        onPressed: () => FlutterPhoneDirectCaller.callNumber('+523311364928'),
       ),
     );
   }
+}
 
-  Widget infoRow(IconData icon, String label, String value) {
+class DetailServiceContent extends StatelessWidget {
+  final DetailService serviceDetail;
+  final UserSession userSession;
+  final Future<void> Function(int statusId) onChangeStatus;
+  final VoidCallback onRefresh;
+
+  const DetailServiceContent({
+    Key? key,
+    required this.serviceDetail,
+    required this.userSession,
+    required this.onChangeStatus,
+    required this.onRefresh,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(10),
+      child: Column(
+        children: [
+          Text(
+            'REMISIÓN NÚMERO: ${serviceDetail.service}',
+            style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 18,
+                color: Colors.black87),
+          ),
+          SenderInfoCard(serviceDetail: serviceDetail),
+          RecipientInfoCard(serviceDetail: serviceDetail),
+          const SizedBox(height: 10),
+          ActionsCard(
+              serviceDetail: serviceDetail,
+              userSession: userSession,
+              onRefresh: onRefresh),
+          const SizedBox(height: 15),
+          StatusButton(
+            serviceDetail: serviceDetail,
+            onChangeStatus: onChangeStatus,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class SenderInfoCard extends StatelessWidget {
+  final DetailService serviceDetail;
+  const SenderInfoCard({Key? key, required this.serviceDetail})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return _InfoCard(
+      title: 'Remitente',
+      icon: Icons.send,
+      children: [
+        _InfoRow(
+            icon: Icons.business,
+            label: 'Razón Social',
+            value: serviceDetail.senderBusinessName ?? 'Sin datos'),
+        _InfoRow(
+            icon: Icons.phone,
+            label: 'Teléfono',
+            value: serviceDetail.senderPhoneNumber ?? 'Sin datos'),
+        _InfoRow(
+            icon: Icons.person,
+            label: 'Contacto',
+            value: serviceDetail.senderName ?? 'Sin datos'),
+        _InfoRow(
+          icon: Icons.home,
+          label: 'Domicilio',
+          value:
+              '${serviceDetail.senderStreet ?? ''} ${serviceDetail.senderOutdoorNumber ?? ''} CP ${serviceDetail.senderZipCode ?? ''}',
+        ),
+      ],
+    );
+  }
+}
+
+class RecipientInfoCard extends StatelessWidget {
+  final DetailService serviceDetail;
+  const RecipientInfoCard({Key? key, required this.serviceDetail})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return _InfoCard(
+      title: 'Destinatario',
+      icon: Icons.location_on,
+      children: [
+        _InfoRow(
+            icon: Icons.business,
+            label: 'Razón Social',
+            value: serviceDetail.recipientBusinessName ?? 'Sin datos'),
+        _InfoRow(
+            icon: Icons.phone,
+            label: 'Teléfono',
+            value: serviceDetail.recipientPhoneNumber ?? 'Sin datos'),
+        _InfoRow(
+            icon: Icons.person,
+            label: 'Contacto',
+            value: serviceDetail.recipientName ?? 'Sin datos'),
+        _InfoRow(
+          icon: Icons.home,
+          label: 'Domicilio',
+          value:
+              '${serviceDetail.recipientStreet ?? ''} ${serviceDetail.recipientOutdoorNumber ?? ''}, CP ${serviceDetail.recipientZipCode ?? ''}, ${serviceDetail.recipientState ?? ''}',
+        ),
+      ],
+    );
+  }
+}
+
+class ActionsCard extends StatelessWidget {
+  final DetailService serviceDetail;
+  final UserSession userSession;
+  final VoidCallback onRefresh;
+
+  const ActionsCard({
+    Key? key,
+    required this.serviceDetail,
+    required this.userSession,
+    required this.onRefresh,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final enabledCheckList = serviceDetail.isEnableCheckList ?? false;
+    final enabledStatusSupport = serviceDetail.isEnableStatusSupport ?? false;
+    final serviceClosed = serviceDetail.serviceClosed ?? false;
+    final pendingMoneyChecks = serviceDetail.pendingMoneyChecks ?? false;
+
+    return Card(
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF84A756), width: 1)),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        child: Column(
+          children: [
+            // Primera fila de acciones
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ActionButton(
+                  icon: FontAwesomeIcons.clipboardList,
+                  label: 'Lista de chequeo',
+                  color: Colors.blue,
+                  enabled: enabledCheckList,
+                  onPressed: enabledCheckList
+                      ? () => showModalBottomSheet(
+                          context: context,
+                          builder: (_) => const CheckListView())
+                      : null,
+                ),
+                ActionButton(
+                  icon: FontAwesomeIcons.locationDot,
+                  label: 'Estatus de soporte',
+                  color: Colors.red,
+                  enabled: enabledStatusSupport,
+                  onPressed: enabledStatusSupport
+                      ? () => showDialog(
+                            context: context,
+                            barrierDismissible: true,
+                            builder: (_) => Dialog(
+                              shape: RoundedRectangleBorder(
+                                  borderRadius:
+                                      BorderRadius.all(Radius.circular(20))),
+                              child: StatusSupport(),
+                            ),
+                          )
+                      : null,
+                ),
+                const ActionButton(
+                  icon: FontAwesomeIcons.mapLocationDot,
+                  label: 'Ruta Sugerida',
+                  color: Colors.grey,
+                  enabled: false,
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            const Divider(),
+            const SizedBox(height: 10),
+            // Segunda fila de acciones
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ActionButton(
+                  icon: FontAwesomeIcons.circleCheck,
+                  label: 'Cierre de viaje',
+                  color: Colors.green,
+                  enabled: serviceClosed,
+                  onPressed: serviceClosed
+                      ? () async {
+                          final result = await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => TripClosureScreen(
+                                    id: serviceDetail.id!,
+                                    serviceId: serviceDetail.service!)),
+                          );
+                          if (result == true) {
+                            onRefresh();
+                          }
+                        }
+                      : null,
+                ),
+                if (userSession.userRoll == 'No')
+                  ActionButton(
+                    icon: FontAwesomeIcons.moneyBillTransfer,
+                    label: 'Viáticos',
+                    color: Colors.teal,
+                    enabled: pendingMoneyChecks,
+                    onPressed: pendingMoneyChecks
+                        ? () {
+                            final vm = context.read<TravelExpensesViewModel>();
+                            vm.setNewDetail(serviceDetail.id!);
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) => TravelExpensesScreen()));
+                          }
+                        : null,
+                  ),
+                ActionButton(
+                  icon: FontAwesomeIcons.solidFilePdf,
+                  label: 'Descargar CCP',
+                  color: Colors.red,
+                  enabled: true,
+                  onPressed: () async {
+                    final res = await PdfService().getPdf(serviceDetail.id!);
+                    if (res == null) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text(
+                                'La remisión: ${serviceDetail.service} aun no cuenta con un CFDI timbrado')),
+                      );
+                    } else {
+                      FileDownloader.downloadFile(
+                        url: res["url"],
+                        name: "CFDI Remision: ${serviceDetail.service}",
+                        notificationType: NotificationType.all,
+                      );
+                    }
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class StatusButton extends StatelessWidget {
+  final DetailService serviceDetail;
+  final Future<void> Function(int statusId) onChangeStatus;
+
+  const StatusButton({
+    Key? key,
+    required this.serviceDetail,
+    required this.onChangeStatus,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final viewModel = Provider.of<DetailViewModel>(context);
+    final isEnabled =
+        (viewModel.item?.isEnableButton ?? false) && !viewModel.isLoading;
+
+    return SizedBox(
+      width: 380,
+      child: ElevatedButton(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: const Color(0xFF2C522A),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(100),
+          ),
+          minimumSize: const Size.fromHeight(50),
+        ),
+        onPressed: isEnabled
+            ? () async {
+                final statusId = viewModel.item?.mandatoryStatusId;
+
+                if (statusId == null) {
+                  scaffoldMessengerError(
+                    context,
+                    'No se puede cambiar el estatus porque falta el ID de estatus obligatorio.',
+                  );
+                  return;
+                }
+
+                await viewModel.changeStatusService(statusId);
+
+                if (viewModel.errorMessage != null) {
+                  scaffoldMessengerError(context, viewModel.errorMessage!);
+                } else {
+                  scaffoldMessengerSuccessStatus(
+                    context,
+                    'Estatus actualizado correctamente.',
+                  );
+                }
+              }
+            : null,
+        child: viewModel.isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
+              )
+            : Text(
+                viewModel.item?.mandatoryStatus ?? '',
+                style: const TextStyle(color: Colors.white),
+              ),
+      ),
+    );
+  }
+}
+
+class _InfoCard extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final List<Widget> children;
+
+  const _InfoCard(
+      {Key? key,
+      required this.title,
+      required this.icon,
+      required this.children})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 10),
+      elevation: 8,
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: Color(0xFF84A756), width: 1)),
+      child: Padding(
+        padding: const EdgeInsets.all(12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(children: [
+              Icon(icon, color: Colors.green),
+              const SizedBox(width: 8),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 16, fontWeight: FontWeight.bold)),
+            ]),
+            const Divider(),
+            ...children,
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoRow(
+      {Key? key, required this.icon, required this.label, required this.value})
+      : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(icon, size: 18, color: Colors.grey[700]),
-          SizedBox(width: 8),
+          const SizedBox(width: 8),
           Expanded(
             child: RichText(
               text: TextSpan(
-                style: TextStyle(color: Colors.black, fontSize: 14),
+                style: const TextStyle(color: Colors.black, fontSize: 14),
                 children: [
                   TextSpan(
                       text: '$label: ',
-                      style: TextStyle(fontWeight: FontWeight.bold)),
+                      style: const TextStyle(fontWeight: FontWeight.bold)),
                   TextSpan(text: value),
                 ],
               ),
@@ -273,134 +480,38 @@ class _DetailServiceScreen extends State<DetailServiceScreen> {
       ),
     );
   }
-
-  Widget dataCard(
-      {required String title,
-      required IconData icon,
-      required List<Widget> content}) {
-    return Card(
-      margin: EdgeInsets.symmetric(vertical: 10),
-      elevation: 8,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-        side: const BorderSide(color: Color(0xFF84A756), width: 1),
-      ),
-      child: Padding(
-        padding: const EdgeInsets.all(12.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: Colors.green),
-                SizedBox(width: 8),
-                Text(title,
-                    style:
-                        TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
-              ],
-            ),
-            Divider(),
-            ...content,
-          ],
-        ),
-      ),
-    );
-  }
-
-  void showChecklistModal(BuildContext context) {
-    showModalBottomSheet(
-      context: context,
-      builder: (_) => CheckListView(),
-    );
-  }
-
-  void _openModalStatusSupport(BuildContext context) {
-    showDialog(
-      context: context,
-      barrierDismissible: true,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          child: StatusSupport(),
-        );
-      },
-    );
-  }
-
-  void handleTripClosure(BuildContext context, int id, String serviceId) async {
-    final result = await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => TripClosureScreen(id: id, serviceId: serviceId),
-      ),
-    );
-    if (result == true) {
-      // Aquí actualizas el ViewModel del detalle
-      final detailServiceModel = DetailService(id: id);
-      Provider.of<DetailViewModel>(context, listen: false)
-          .setNewDetail(detailServiceModel);
-    }
-  }
-
-  void handleTravelExpenses(BuildContext context, int id) {
-    Provider.of<TravelExpensesViewModel>(context, listen: false)
-        .setNewDetail(id);
-    Navigator.push(
-      context,
-      MaterialPageRoute(builder: (_) => TravelExpensesScreen()),
-    );
-  }
-
-  void getPdf(int id, String serviceId, BuildContext context) async {
-    var res = await PdfService().getPdf(id);
-    if (res == null) {
-      scaffoldMessengerError(context,
-          'La remisión: $serviceId aun no cuenta con un CFDI timbrado');
-    } else {
-      FileDownloader.downloadFile(
-        url: res["url"],
-        name: "CFDI Remision: $serviceId",
-        notificationType: NotificationType.all,
-      );
-    }
-  }
 }
 
-class _ActionButton extends StatelessWidget {
+class ActionButton extends StatelessWidget {
   final IconData icon;
   final String label;
   final Color color;
   final bool enabled;
   final VoidCallback? onPressed;
 
-  const _ActionButton({
-    super.key,
+  const ActionButton({
+    Key? key,
     required this.icon,
     required this.label,
     required this.color,
-    required this.enabled,
-    required this.onPressed,
-  });
+    this.enabled = true,
+    this.onPressed,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    final iconColor = enabled ? color : Colors.grey.shade400;
-    final textColor = enabled ? Colors.black : Colors.grey;
-
-    return Expanded(
-      child: InkWell(
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.4,
+      child: GestureDetector(
         onTap: enabled ? onPressed : null,
-        borderRadius: BorderRadius.circular(12),
         child: Column(
           children: [
-            Icon(icon, color: iconColor, size: 28),
-            const SizedBox(height: 6),
-            Text(
-              label,
-              style: TextStyle(fontSize: 12, color: textColor),
-              textAlign: TextAlign.center,
-            ),
+            FaIcon(icon, color: color, size: 32),
+            const SizedBox(height: 5),
+            Text(label,
+                style: TextStyle(
+                    color: enabled ? color : Colors.grey,
+                    fontWeight: FontWeight.w500)),
           ],
         ),
       ),

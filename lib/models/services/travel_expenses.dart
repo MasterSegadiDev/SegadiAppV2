@@ -104,7 +104,7 @@ class TravelExpenses {
         'token': token,
       }),
     );
-    print(response.body);
+
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
       return data.map((json) => TravelExpenses.fromJson(json)).toList();

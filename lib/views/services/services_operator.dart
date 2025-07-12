@@ -1,62 +1,64 @@
-import 'package:auto_size_text/auto_size_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
-//import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/models/services/detail_service.dart';
 import 'package:segadi/models/services/services.dart';
-
 import 'package:segadi/views/home/sidebar.dart';
 import 'package:segadi/views/services/detail_service.dart';
 import 'package:segadi/viewmodels/services_operator/assigned_services.dart';
 import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 
 class ServiceListView extends StatelessWidget {
-  ServiceListView({super.key});
+  const ServiceListView({super.key});
 
   @override
   Widget build(BuildContext context) {
     final serviceViewModel = Provider.of<ServicesViewModel>(context);
 
-    Future _handleRefresh() async {
-      serviceViewModel.items.clear();
-      await serviceViewModel.fetchItems();
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Remisiones Asignadas',
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text('Remisiones Asignadas',
+            style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF2C522A), // verde oscuro
+        backgroundColor: const Color(0xFF2C522A),
       ),
-      backgroundColor: Colors.white, // gris verdoso claro
+      backgroundColor: Colors.white,
       drawer: DrawerScreen(),
-      body: Consumer<ServicesViewModel>(
-        builder: (context, serviceViewModel, child) {
-          return RefreshIndicator(
-            onRefresh: _handleRefresh,
-            child: ListView.builder(
-              padding: const EdgeInsets.all(10),
-              itemCount: serviceViewModel.items.length,
-              itemBuilder: (context, index) {
-                final item = serviceViewModel.items[index];
-                return _buildServiceCard(context, item);
-              },
-            ),
-          );
-        },
+      body: RefreshIndicator(
+        onRefresh: serviceViewModel.onRefresh,
+        child: _buildBody(context, serviceViewModel),
       ),
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
         child: const Icon(Icons.phone, color: Colors.white),
-        onPressed: () {
-          FlutterPhoneDirectCaller.callNumber('+523311364928');
-        },
+        onPressed: () => FlutterPhoneDirectCaller.callNumber('+523311364928'),
       ),
+    );
+  }
+
+  Widget _buildBody(BuildContext context, ServicesViewModel viewModel) {
+    if (viewModel.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    if (viewModel.errorMessage != null) {
+      return Center(
+          child: Text(viewModel.errorMessage!,
+              style: const TextStyle(color: Colors.red)));
+    }
+
+    if (viewModel.items.isEmpty) {
+      return const Center(child: Text('No hay servicios disponibles.'));
+    }
+
+    return ListView.builder(
+      padding: const EdgeInsets.all(10),
+      itemCount: viewModel.items.length,
+      itemBuilder: (context, index) {
+        final item = viewModel.items[index];
+        return _buildServiceCard(context, item);
+      },
     );
   }
 
@@ -73,7 +75,6 @@ class ServiceListView extends StatelessWidget {
         );
       },
       child: Card(
-        //color: const Color(0xFFA2C067), // verde oliva claro
         elevation: 8,
         margin: const EdgeInsets.symmetric(vertical: 8),
         shape: RoundedRectangleBorder(
@@ -88,23 +89,23 @@ class ServiceListView extends StatelessWidget {
               _buildTitleRow(item),
               const Divider(color: Colors.grey),
               _buildSection('Origen de Carga', Icons.location_on, [
-                _infoRow('Origen:', item.origin!),
-                _infoRow('Fecha:', item.loadDate!)
+                _infoRow('Origen:', item.origin ?? '-'),
+                _infoRow('Fecha:', item.loadDate ?? '-'),
               ]),
               const SizedBox(height: 8),
               _buildSection('Destino de Carga', Icons.flag, [
-                _infoRow('Destino:', item.destination!),
-                _infoRow('Fecha:', item.unloadDate!)
+                _infoRow('Destino:', item.destination ?? '-'),
+                _infoRow('Fecha:', item.unloadDate ?? '-'),
               ]),
               const SizedBox(height: 8),
               _buildSection('Escalas', Icons.map, [
-                _infoRow('Primera Escala:', item.scaleOne!),
-                _infoRow('Segunda Escala:', item.scaleTwo!)
+                _infoRow('Primera Escala:', item.scaleOne ?? '-'),
+                _infoRow('Segunda Escala:', item.scaleTwo ?? '-'),
               ]),
               const SizedBox(height: 8),
-              _infoRow('Documentador:', item.documenter!),
+              _infoRow('Documentador:', item.documenter ?? '-'),
               const SizedBox(height: 12),
-              _statusButton(item.status!)
+              _statusButton(item.status ?? 'Desconocido'),
             ],
           ),
         ),
@@ -117,14 +118,11 @@ class ServiceListView extends StatelessWidget {
       contentPadding: EdgeInsets.zero,
       leading: const Icon(FontAwesomeIcons.truck, color: Colors.green),
       title: Text(
-        'Remisión numero: ${item.service}',
-        style: const TextStyle(
-            color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16),
+        'Remisión número: ${item.service}',
+        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
       ),
-      subtitle: Text(
-        'Cliente: ${item.client}',
-        style: const TextStyle(color: Colors.black),
-      ),
+      subtitle: Text('Cliente: ${item.client}',
+          style: const TextStyle(color: Colors.black)),
     );
   }
 
@@ -136,29 +134,28 @@ class ServiceListView extends StatelessWidget {
           Icon(icon, size: 18, color: Colors.grey[700]),
           const SizedBox(width: 6),
           Text(title,
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Colors.black,
-                  fontSize: 15)),
+              style:
+                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
         ]),
         const SizedBox(height: 4),
-        ...children
+        ...children,
       ],
     );
   }
 
   Widget _infoRow(String label, String value) {
     return Padding(
-      padding: const EdgeInsets.only(top: 2, bottom: 2),
+      padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Text('$label ',
-              style: const TextStyle(color: Colors.black, fontSize: 13)),
+          Text('$label ', style: const TextStyle(fontSize: 13)),
           Expanded(
-            child: Text(value,
-                style: const TextStyle(color: Colors.black, fontSize: 13),
-                overflow: TextOverflow.ellipsis),
-          )
+            child: Text(
+              value,
+              style: const TextStyle(fontSize: 13),
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
         ],
       ),
     );
@@ -168,17 +165,14 @@ class ServiceListView extends StatelessWidget {
     return ElevatedButton(
       onPressed: null,
       style: ElevatedButton.styleFrom(
-        backgroundColor: Color(0xFF2C522A),
-        disabledForegroundColor: Colors.green,
+        backgroundColor: const Color(0xFF2C522A),
         disabledBackgroundColor: Colors.green,
         elevation: 0,
         minimumSize: const Size.fromHeight(40),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
       ),
-      child: Text(
-        status,
-        style: const TextStyle(fontSize: 13, color: Colors.white),
-      ),
+      child: Text(status,
+          style: const TextStyle(fontSize: 13, color: Colors.white)),
     );
   }
 }

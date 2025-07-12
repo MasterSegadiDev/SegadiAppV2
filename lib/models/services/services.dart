@@ -77,9 +77,6 @@ class Services {
     token = prefs.getString('token');
     var route = 'index.php';
 
-    print('USUARIO_ID : ${id}');
-    print('TOKEN : ${token}');
-
     var response = await http.get(
       Uri.parse(baseUrl + route).replace(
         queryParameters: {

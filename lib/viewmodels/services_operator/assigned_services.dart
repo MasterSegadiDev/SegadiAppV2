@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
 import 'package:segadi/models/services/services.dart';
+import 'package:segadi/services/operatorServices/ServicesListApi.dart';
 
 class ServicesViewModel extends ChangeNotifier {
-  final Services _itemService = Services();
-
   List<Services> _items = [];
-  final bool _isLoading = false;
+  bool _isLoading = false;
+  String? _errorMessage;
 
   List<Services> get items => _items;
   bool get isLoading => _isLoading;
+  String? get errorMessage => _errorMessage;
 
-  // ServicesViewModel() {
-  //   onRefresh();
-  // }
+  Future<void> fetchItems() async {
+    _isLoading = true;
+    notifyListeners();
 
-  Future fetchItems() async {
     try {
-      _items = await _itemService.fetchItems();
-      notifyListeners();
+      _items = await ServicesApi.fetchAssignedServices();
     } catch (e) {
-        throw Exception('Ha ocurrido un error');
+      _errorMessage = 'No se han podido obtener los servicios asignados.';
+      print('[ServicesViewModel] Error: $e');
+    } finally {
+      _isLoading = false;
+      notifyListeners();
     }
   }
 
-  Future onRefresh() async {
-    _items.clear();
-    await _itemService.fetchItems();
-    notifyListeners();
+  Future<void> onRefresh() async {
+    await fetchItems();
   }
 }

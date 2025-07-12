@@ -2,7 +2,6 @@ import 'dart:convert';
 
 import 'package:http/http.dart' as http;
 import 'package:segadi/models/containers/container_movements.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:segadi/utils/global_variables.dart';
 
 class Ubicacion {

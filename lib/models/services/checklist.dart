@@ -91,7 +91,7 @@ class NewCheckList {
       headers: headers,
       body: body,
     );
-
+    print('RESPUESTA DEL CHECK LIST : ${response.statusCode}');
     return response;
   }
 }

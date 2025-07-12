@@ -29,11 +29,28 @@ class UbicacionesViewModel extends ChangeNotifier {
 
   File? selectedImage;
 
+  bool _isSaving = false;
+  String? _registroMensaje;
+  bool get isSaving => _isSaving;
+  String? get registroMensaje => _registroMensaje;
+
+  void _setSaving(bool value) {
+    _isSaving = value;
+    notifyListeners();
+  }
+
+  void _setRegistroMensaje(String? mensaje) {
+    _registroMensaje = mensaje;
+    notifyListeners();
+  }
+
   /// Limpia la imagen seleccionada y notifica
   void clearSelectedImage() {
     selectedImage = null;
     notifyListeners();
   }
+
+  Future<void> cargarListado() async => await cargarUbicacionesDesdeApi();
 
   /// Carga ubicaciones desde API
   Future<void> cargarUbicacionesDesdeApi() async {
@@ -280,25 +297,33 @@ class UbicacionesViewModel extends ChangeNotifier {
   }
 
   /// Registra un reacomodo de contenedores
-  Future<void> registrarReacomodo({
+  Future<bool> registrarReacomodo({
     required String? contenedorActualId,
     required String? contenedorNuevoId,
     String? numberSerie,
   }) async {
     if (contenedorActualId == null || contenedorNuevoId == null) {
-      throw Exception('IDs de contenedor no válidos para reacomodo.');
+      print('IDs inválidos para reacomodo.');
+      return false;
     }
 
-    print(
-      'ID DE ORIGEN CONTENEDOR $contenedorActualId Y ID DE DESTINO CONTENEDOR $contenedorNuevoId',
-    );
+    try {
+      print(
+        'ID DE ORIGEN CONTENEDOR $contenedorActualId Y ID DE DESTINO CONTENEDOR $contenedorNuevoId',
+      );
 
-    await registrarMovimiento(
-      movementType: 'Reacomodo',
-      contenedorActualId: contenedorActualId,
-      contenedorNuevoId: contenedorNuevoId,
-      numberSerie: numberSerie,
-    );
+      await registrarMovimiento(
+        movementType: 'Reacomodo',
+        contenedorActualId: contenedorActualId,
+        contenedorNuevoId: contenedorNuevoId,
+        numberSerie: numberSerie,
+      );
+
+      return true;
+    } catch (e) {
+      print('Error en registrarReacomodo: $e');
+      return false;
+    }
   }
 
   /// Registra el pesaje con imagen convertida a base64
@@ -308,6 +333,8 @@ class UbicacionesViewModel extends ChangeNotifier {
     required String nameImage,
     required File image,
   }) async {
+    _setSaving(true);
+    _setRegistroMensaje(null);
     try {
       final imageBytes = await image.readAsBytes();
       final base64Image = base64Encode(imageBytes);
@@ -325,11 +352,16 @@ class UbicacionesViewModel extends ChangeNotifier {
         nameImage: nameImage,
         image: base64Image,
       );
+      await Future.delayed(const Duration(seconds: 2));
 
       clearSelectedImage();
       notifyListeners();
+      _setRegistroMensaje('✅ Registro de pesaje exitoso.');
     } catch (e) {
-      print('Error al registrar pesaje: $e');
+      debugPrint('Error al registrar pesaje: $e');
+      _setRegistroMensaje('❌ Error al registrar el pesaje. Intenta de nuevo.');
+    } finally {
+      _setSaving(false);
     }
   }
 
@@ -356,8 +388,8 @@ class UbicacionesViewModel extends ChangeNotifier {
         selectedImage = compressed;
         notifyListeners();
 
-        final imageBytes = await compressed.readAsBytes();
-        final base64Image = base64Encode(imageBytes);
+        //final imageBytes = await compressed.readAsBytes();
+        //final base64Image = base64Encode(imageBytes);
       }
     }
   }

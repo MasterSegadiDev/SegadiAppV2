@@ -1,12 +1,11 @@
 import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:segadi/utils/user_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:segadi/models/login/user_login.dart';
 import 'package:segadi/repo/device_info_respository.dart';
 import 'package:segadi/services/getDataDevice.dart';
+import 'package:segadi/utils/user_session.dart';
 import 'package:segadi/viewmodels/devices/device_view_model.dart';
 
 class LoginViewModel extends ChangeNotifier {
@@ -32,13 +31,12 @@ class LoginViewModel extends ChangeNotifier {
   String _username = '';
   String _password = '';
 
-  // Token actual
   String? _token;
   String? get token => _token;
 
-  // Setters que notifican cambios
+  // Setters para campos que notifican a la UI
   set username(String value) {
-    _username = value;
+    _username = value.trim();
     notifyListeners();
   }
 
@@ -51,32 +49,20 @@ class LoginViewModel extends ChangeNotifier {
     _loadUserFromPrefs();
   }
 
-  /// Cargar nombre del usuario almacenado
   Future<void> _loadUserFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
-    username = prefs.getString('username') ?? '';
+    final savedUser = prefs.getString('username') ?? '';
+    username = savedUser;
+    usernameController.text = savedUser;
   }
 
-  /// Elimina todo de SharedPreferences
-  Future<void> removeAllPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.clear();
-  }
-
-  /// Login principal
   Future<void> login() async {
-    _errorMessage = null;
-    _deviceError = null;
-    _isLoading = true;
-    notifyListeners();
+    _setLoading(true);
+    _clearErrors();
 
-    if (_username.trim().isEmpty) {
-      _setError('El campo usuario es requerido');
-      return;
-    }
-
-    if (_password.trim().isEmpty) {
-      _setError('El campo password es requerido');
+    if (_username.isEmpty || _password.isEmpty) {
+      _setError('Usuario y contraseña son obligatorios.');
+      _setLoading(false);
       return;
     }
 
@@ -84,41 +70,40 @@ class LoginViewModel extends ChangeNotifier {
       final response = await _authService.login(_username, _password);
 
       if (response.statusCode != 200 || response.body.isEmpty) {
-        _setError('Error al loguearte. Inténtalo de nuevo.');
-        return;
+        throw Exception('Error al iniciar sesión. Inténtalo nuevamente.');
       }
 
       final data = json.decode(response.body);
-
       if (data['token'] == null) {
-        _setError('No tienes acceso a la aplicación móvil');
-        return;
+        throw Exception('No tienes acceso a la aplicación móvil.');
       }
 
       _token = data['token'];
+
       await _clearUserData();
       await _saveUserData(data);
+
       await _validateDevice();
     } catch (e) {
-      _setError('Error de conexión o datos inválidos');
+      _setError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
-      _isLoading = false;
-      _clearForm();
-      notifyListeners();
+      _setLoading(false);
+      _clearForm(); // Opcional: quitar si deseas mantener campos tras error
     }
   }
 
-  /// Guarda los datos del usuario autenticado
   Future<void> _saveUserData(Map data) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setInt('id', data['user']['id']);
-    await prefs.setString('name', data['user']['name']);
+    final user = data['user'];
+
+    await prefs.setInt('id', user['id']);
+    await prefs.setString('name', user['name']);
     await prefs.setString('username', _username);
     await prefs.setString('password', _password);
     await prefs.setString('token', data['token']);
-    await prefs.setString('user_roll', data['user']['empleado_permisionario']);
-    await prefs.setString('user_rol_app', data['user']['user_rol_app']);
-    await prefs.setString('number_employe', data['user']['employee_number']);
+    await prefs.setString('user_roll', user['empleado_permisionario']);
+    await prefs.setString('user_rol_app', user['user_rol_app']);
+    await prefs.setString('number_employe', user['employee_number']);
 
     await UserSession().loadFromPrefs();
   }
@@ -126,36 +111,47 @@ class LoginViewModel extends ChangeNotifier {
   Future<void> _clearUserData() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.clear();
-    UserSession().clear(); // Borra también el singleton en memoria
+    UserSession().clear(); // ya no lleva await
   }
 
-  /// Valida información del dispositivo después de login
+  Future<void> removeAllPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.clear();
+    UserSession().clear();
+  }
+
   Future<void> _validateDevice() async {
     final result = await _deviceInfoViewModel.validateDeviceInfo();
 
-    if (result[0] != '' && result[1] == false && result[2] == null) {
-      _deviceError = result[0];
-      _isValidScreen = false;
-      return;
-    }
+    // result: [msg, isValid, null/null, null/null]
+    final String msg = result[0];
+    final bool isValid = result[1];
 
-    if (result[0] != '' && result[1] == false && result[3] == null) {
-      _deviceError = result[0];
+    if (msg.isNotEmpty && !isValid) {
+      _deviceError = msg;
       _isValidScreen = false;
-      return;
+    } else {
+      _deviceError = null;
+      _isValidScreen = true;
     }
-
-    _isValidScreen = true;
   }
 
-  /// Maneja error común
   void _setError(String message) {
     _errorMessage = message;
-    _isLoading = false;
     notifyListeners();
   }
 
-  /// Limpia campos del formulario
+  void _clearErrors() {
+    _errorMessage = null;
+    _deviceError = null;
+    notifyListeners();
+  }
+
+  void _setLoading(bool value) {
+    _isLoading = value;
+    notifyListeners();
+  }
+
   void _clearForm() {
     _username = '';
     _password = '';
@@ -163,7 +159,14 @@ class LoginViewModel extends ChangeNotifier {
     passwordController.clear();
   }
 
-  /// Método para recuperar token en otras ViewModels
+  void resetState() {
+    _setLoading(false);
+    _clearErrors();
+    _token = null;
+    _isValidScreen = false;
+    _clearForm();
+  }
+
   static Future<String?> getSavedToken() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getString('token');

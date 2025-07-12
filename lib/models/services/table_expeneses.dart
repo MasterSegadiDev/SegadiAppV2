@@ -66,7 +66,7 @@ class TableExpenses {
 
     if (response.statusCode == 200) {
       List<dynamic> data = json.decode(response.body);
-      print(data);
+
       return data.map((json) => TableExpenses.fromJson(json)).toList();
     } else {
       throw Exception('Ha ocurrido un error al consultar los viaticos');

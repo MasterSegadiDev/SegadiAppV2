@@ -1,18 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+
 import 'package:segadi/helper/navigator.dart';
 import 'package:segadi/repo/device_info_respository.dart';
 import 'package:segadi/services/getDataDevice.dart';
+
 import 'package:segadi/viewmodels/container_movement/container_movement_list_view_model.dart';
 import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
 import 'package:segadi/views/container_movements/container_movement_list_view.dart';
 
-//import 'package:segadi/repo/device_info_respository.dart';
-
 import 'package:segadi/views/home/routes.dart';
 import 'package:segadi/viewmodels/devices/device_view_model.dart';
-//import 'package:segadi/view_model/devices/device_view_model.dart';
 import 'package:segadi/viewmodels/home/home_view_model.dart';
 import 'package:segadi/viewmodels/login/biometric_viewmodel.dart';
 import 'package:segadi/viewmodels/login/user_login.dart';
@@ -22,6 +21,9 @@ import 'package:segadi/viewmodels/services_operator/check_list.dart';
 import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 import 'package:segadi/viewmodels/services_operator/travel_expenses.dart';
 import 'package:segadi/viewmodels/services_operator/trip_closure.dart';
+
+import 'package:segadi/views/login/splash_screen.dart'; // Asegúrate de importar el SplashScreen
+//import 'package:segadi/views/login/login_view.dart'; // Importar LoginView con la nueva ruta
 
 Future main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -88,7 +90,8 @@ class MyApp extends StatelessWidget {
           useMaterial3: true,
         ),
         routes: {
-          '/': (context) => LoginView(),
+          '/': (context) => const SplashScreen(), // Ruta SplashScreen
+          '/login': (context) => LoginView(), // Ruta login modificada
           '/home_page': (context) => HomeScreen(),
           '/services': (context) => ServiceListView(),
           '/services_finished': (context) => FinishServiceList(),

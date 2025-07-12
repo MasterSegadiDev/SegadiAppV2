@@ -10,4 +10,3 @@ export 'package:segadi/views/services/finished_services.dart';
 
 export 'package:segadi/views/services/trip_closure.dart';
 export 'package:segadi/views/services/travel_expenses.dart';
-import 'package:segadi/views/container_movements/container_movement_list_view.dart';

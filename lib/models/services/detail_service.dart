@@ -97,10 +97,10 @@ class DetailService {
     this.isEnableTripClosure,
     this.isEnableRouteFinished,
     this.isEnableStatusSupport,
+    this.isEnableContinueRute,
     this.serviceClosed,
     this.remainingEvidences,
     this.pendingMoneyChecks,
-    this.isEnableContinueRute,
     this.statusSupportModal,
     this.isButtonEnabledBano,
     this.isButtonEnabledComer,
@@ -136,6 +136,7 @@ class DetailService {
         mandatoryStatus: json["mandatory_status"],
         nextMandatoryStatusId: json["next_mandatory_status_id"],
         nextMandatoryStatus: json["next_mandatory_status"],
+        // Valores por defecto para evitar nulos
         isEnableButton: true,
         statusSupport: false,
         statusSupportId: 0,
@@ -146,10 +147,10 @@ class DetailService {
         isEnableTripClosure: false,
         isEnableRouteFinished: false,
         isEnableStatusSupport: false,
+        isEnableContinueRute: false,
         serviceClosed: json["service_closed"],
         remainingEvidences: json["remaining_evidences"],
         pendingMoneyChecks: json["pending_money_checks"],
-        isEnableContinueRute: false,
         isButtonEnabledBano: true,
         isButtonEnabledComer: true,
         isButtonEnabledDormir: true,
@@ -187,15 +188,17 @@ class DetailService {
         "is_enable_button": isEnableButton,
         "status_support": statusSupport,
         "statu_support_id": statusSupportId,
-        "list": Map.from(list!).map((k, v) => MapEntry<String, dynamic>(k, v)),
+        "list": list != null
+            ? Map.from(list!).map((k, v) => MapEntry<String, dynamic>(k, v))
+            : null,
         "is_enable_checklist": isEnableCheckList,
         "is_enable_trip_closure": isEnableTripClosure,
         "is_enable_route_finished": isEnableRouteFinished,
         "is_enable_status_support": isEnableStatusSupport,
+        "is_enable_continue_rute": isEnableContinueRute,
         "service_closed": serviceClosed,
         "remaining_evidences": remainingEvidences,
         "pending_money_checks": pendingMoneyChecks,
-        "is_enable_continue_rute": isEnableContinueRute,
       };
 }
 
@@ -207,88 +210,63 @@ class DetailServices {
   final Map<String, String> headersAirbag = GlobalVariablesAirbag.headers;
 
   Future<DetailService> getDetail(id) async {
-    String? token;
-
     final prefs = await SharedPreferences.getInstance();
-    var userId = prefs.getInt('id') ?? 0;
-    token = prefs.getString('token');
-    var route = 'index.php';
+    final userId = prefs.getInt('id') ?? 0;
+    final token = prefs.getString('token');
 
-    var response = await http.get(
-      Uri.parse(baseUrl + route).replace(
-        queryParameters: {
-          'r': 'esegadi/getdetalle',
-          'id_remision': id.toString(),
-          'token': token,
-          'id': userId.toString(),
-        },
-      ),
-    );
-    // print('BODY DEL DETALLE:' + response.body);
+    final route = 'index.php';
+
+    final uri = Uri.parse(baseUrl + route).replace(queryParameters: {
+      'r': 'esegadi/getdetalle',
+      'id_remision': id.toString(),
+      'token': token,
+      'id': userId.toString(),
+    });
+
+    final response = await http.get(uri);
+
     if (response.statusCode == 200) {
-      var body = json.decode(response.body);
-      var result = DetailService.fromJson(body);
+      final body = json.decode(response.body);
+      final result = DetailService.fromJson(body);
+
       result.isEnableButton = false;
 
-      print('VALORES DEL LISTADO DEL CHECK LIST .... ${result.id}');
-      print(
-          'ESTATUS ID ${result.statusId}, MANDATORY ESTATUS ID ${result.mandatoryStatusId}');
-
-      //valido cuando se envia un estatus de soporte, activo el boton para continuar ruta
-      // y el icono estatus soporte
-      // Validación de estado inicial
+      // Mantengo las validaciones originales sin tocar lógica
       if (result.type == '') {
         result.statusSupportModal = 'begin';
       }
 
-// Validación: Si hay checklist, bloquearlo y habilitar botones de estatus
       if (result.list != null &&
           result.statusId == 2 &&
           result.mandatoryStatusId == 0) {
-        print(
-            'CHECKLIST DETECTADO - BLOQUEANDO CHECKLIST, HABILITANDO ESTATUS');
         result.isEnableCheckList = false;
         result.isEnableStatusSupport = true;
         result.isEnableTripClosure = false;
         result.pendingMoneyChecks = false;
         result.isEnableButton = true;
-
         result.mandatoryStatusId = result.nextMandatoryStatusId;
         result.mandatoryStatus = result.nextMandatoryStatus;
-      }
-
-// Validación para habilitar el checklist si no hay status ni checklist
-      else if (result.statusId == 0 &&
+      } else if (result.statusId == 0 &&
           result.mandatoryStatusId == 0 &&
           result.list == null) {
-        print('ESTÁS EN CHECKLIST ...');
         result.isEnableStatusSupport = false;
         result.isEnableTripClosure = false;
         result.pendingMoneyChecks = false;
         result.isEnableCheckList = true;
-
         result.mandatoryStatusId = result.nextMandatoryStatusId;
         result.mandatoryStatus = result.nextMandatoryStatus;
-      }
-
-// Validación de inicio de ruta
-      else if ((result.statusId == 0 || result.statusId == 1) &&
+      } else if ((result.statusId == 0 || result.statusId == 1) &&
           result.mandatoryStatusId == 0 &&
           result.nextMandatoryStatusId == 2 &&
           result.list != null) {
-        print('ESTÁS EN INICIO DE RUTA ...');
         result.isEnableButton = true;
         result.isEnableStatusSupport = false;
         result.isEnableCheckList = false;
         result.isEnableTripClosure = false;
         result.pendingMoneyChecks = false;
-
         result.mandatoryStatusId = result.nextMandatoryStatusId;
         result.mandatoryStatus = result.nextMandatoryStatus;
-      }
-
-// Validación: Mostrar botón de estatus obligatorio y soporte
-      else if (result.nextMandatoryStatusId! > 2 &&
+      } else if (result.nextMandatoryStatusId! > 2 &&
           result.list != null &&
           result.type != "begin") {
         result.isEnableButton = true;
@@ -296,12 +274,10 @@ class DetailServices {
         result.isEnableCheckList = false;
         result.isEnableTripClosure = false;
         result.pendingMoneyChecks = false;
-
         result.mandatoryStatusId = result.nextMandatoryStatusId;
         result.mandatoryStatus = result.nextMandatoryStatus;
       }
 
-// Validaciones para estatus de soporte (agrupado 22, 24, 38, 39)
       if ([22, 24, 38, 39].contains(result.statusId) &&
           result.type == "begin") {
         result.isEnableButton = false;
@@ -310,7 +286,6 @@ class DetailServices {
         result.isEnableTripClosure = false;
         result.pendingMoneyChecks = false;
         result.isEnableCheckList = false;
-
         result.statusSupportId = result.statusId;
         result.mandatoryStatusId = result.nextMandatoryStatusId;
         result.mandatoryStatus = result.nextMandatoryStatus;
@@ -322,8 +297,7 @@ class DetailServices {
         result.isButtonEnabledGas = result.statusId == 39;
       }
 
-// Validaciones de remisión finalizada con diferentes condiciones
-      else if (result.statusId == 23 &&
+      if (result.statusId == 23 &&
           result.mandatoryStatusId == 23 &&
           result.nextMandatoryStatusId == 0 &&
           result.serviceClosed == false) {
@@ -331,7 +305,6 @@ class DetailServices {
         result.isEnableStatusSupport = false;
         result.serviceClosed = true;
         result.pendingMoneyChecks = false;
-
         result.mandatoryStatusId = result.mandatoryStatusId;
         result.mandatoryStatus = result.status;
       } else if (result.statusId == 23 &&
@@ -343,7 +316,6 @@ class DetailServices {
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;
         result.pendingMoneyChecks = true;
-
         result.mandatoryStatusId = result.mandatoryStatusId;
         result.mandatoryStatus = result.status;
       } else if (result.statusId == 23 &&
@@ -355,7 +327,6 @@ class DetailServices {
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;
         result.pendingMoneyChecks = false;
-
         result.mandatoryStatusId = result.mandatoryStatusId;
         result.mandatoryStatus = result.status;
       } else if (result.statusId == 23 &&
@@ -367,7 +338,6 @@ class DetailServices {
         result.isEnableStatusSupport = false;
         result.serviceClosed = false;
         result.pendingMoneyChecks = false;
-
         result.mandatoryStatusId = result.mandatoryStatusId;
         result.mandatoryStatus = result.status;
       }
@@ -379,64 +349,59 @@ class DetailServices {
   }
 
   Future<http.Response> changeStatusService(int serviceId, int statusId) async {
-    //String? token;
-    //final prefs = await SharedPreferences.getInstance();
     final token = await LoginViewModel.getSavedToken();
 
-    Map data = {"service_id": serviceId, "status_id": statusId, "token": token};
+    final data = {
+      "service_id": serviceId,
+      "status_id": statusId,
+      "token": token,
+    };
 
-    var body = json.encode(data);
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/estatuspost');
-    http.Response response = await http.post(
+    final body = json.encode(data);
+    final url = Uri.parse('${baseUrl}index.php?r=esegadi/estatuspost');
+
+    final response = await http.post(
       url,
       headers: headers,
       body: body,
     );
+
     return response;
   }
 
   Future<http.Response> changeStatusOperatorAirbag(String status) async {
     final prefs = await SharedPreferences.getInstance();
-    var userId = prefs.getString('number_employe') ?? 0;
+    final userId = prefs.getString('number_employe') ?? '';
 
-    print('NUMERO DE EMPLEADO:' + userId.toString());
+    final data = {"force": status};
+    final body = json.encode(data);
+    final url = Uri.parse('${baseUrlAirbag}$userId/changeAppStatus');
 
-    Map data = {"force": status};
-
-    var body = json.encode(data);
-    var url =
-        Uri.parse('${GlobalVariablesAirbag.baseUrl}$userId/changeAppStatus');
-
-    print('URL AIR BAG: $url');
-
-    http.Response response = await http.post(
+    final response = await http.post(
       url,
-      headers: GlobalVariablesAirbag.headers,
+      headers: headersAirbag,
       body: body,
     );
-
-    print('Status code: ${response.statusCode}');
-    print('Response body: ${response.body}');
 
     return response;
   }
 
   Future<http.Response> changeStatusSupport(
       int serviceId, int statusId, String type) async {
-    String? token;
     final prefs = await SharedPreferences.getInstance();
-    token = prefs.getString('token');
+    final token = prefs.getString('token');
 
-    Map data = {
+    final data = {
       "service_id": serviceId,
       "status_id": statusId,
       "type": type,
-      "token": token
+      "token": token,
     };
 
-    var body = json.encode(data);
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/estatus-soportepost');
-    http.Response response = await http.post(
+    final body = json.encode(data);
+    final url = Uri.parse('${baseUrl}index.php?r=esegadi/estatus-soportepost');
+
+    final response = await http.post(
       url,
       headers: headers,
       body: body,

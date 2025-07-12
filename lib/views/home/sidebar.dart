@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:segadi/models/user/UserInformation.dart';
+import 'package:segadi/viewmodels/login/user_login.dart';
 import 'package:segadi/views/home/routes.dart';
 import 'package:segadi/viewmodels/user/user_information.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -161,9 +163,7 @@ class _DrawerScreen extends State<DrawerScreen> {
                   'Expendiente',
                   style: TextStyle(color: Colors.white),
                 ),
-                onTap: () {
-                 
-                },
+                onTap: () {},
               ),
               ListTile(
                 leading: Icon(
@@ -197,9 +197,8 @@ class _DrawerScreen extends State<DrawerScreen> {
     );
   }
 
-  logout(context) async {
-    final prefs = await SharedPreferences.getInstance();
-    prefs.remove('token');
+  Future<void> logout(BuildContext context) async {
+    await context.read<LoginViewModel>().removeAllPrefs();
     Navigator.of(context)
         .pushNamedAndRemoveUntil('/', (Route<dynamic> route) => false);
   }

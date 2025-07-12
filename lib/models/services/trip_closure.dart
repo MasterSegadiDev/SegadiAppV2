@@ -1,17 +1,10 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:segadi/utils/global_variables.dart';
 import 'package:segadi/viewmodels/login/user_login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
-List<TripClosure> tripClosureFromJson(String str) => List<TripClosure>.from(
-    json.decode(str).map((x) => TripClosure.fromJson(x)));
-
-String tripClosureToJson(List<TripClosure> data) =>
-    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
 
 class TripClosure {
   int? id;
@@ -29,81 +22,27 @@ class TripClosure {
   });
 
   factory TripClosure.fromJson(Map<String, dynamic> json) => TripClosure(
-      id: json["id"],
-      serviceId: json["service_id"],
-      extension: json["extension"],
-      image: json["image"],
-      closeTravel: json["service_closed"]);
+        id: json["id"],
+        serviceId: json["service_id"],
+        extension: json["extension"],
+        // OJO: imagen no se puede construir directamente desde json en este modelo
+        closeTravel: json["service_closed"],
+      );
 
   Map<String, dynamic> toJson() => {
         "id": id,
         "service_id": serviceId,
         "extension": extension,
-        "image": image,
-        "service_closed": closeTravel
+        // No serializamos la imagen directamente
+        "service_closed": closeTravel,
       };
 
   final String baseUrl = GlobalVariables.baseUrl;
   final Map<String, String> headers = GlobalVariables.headers;
 
-  Future<http.Response> insertImage(
-      int id, String serviceId, String image, String extension) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? token;
-    token = prefs.getString('token');
-
-    Map data = {
-      "service_id": id,
-      "token": token,
-      "document_name": serviceId + extension,
-      "document_description": "Evidencia Operador",
-      "document_type": "POD Operador",
-      "document": image,
-    };
-
-    var body = json.encode(data);
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/evidenciaspost');
-    http.Response response = await http.post(
-      url,
-      headers: headers,
-      body: body,
-    );
-
-    if (response.statusCode == 200) {
-      return response;
-    } else {
-      throw Exception('Ha ocurriod un error al guardar la evidencia');
-    }
-  }
-
-  Future getTotalEvidentias(int serviceId) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? token;
-    token = prefs.getString('token');
-    var userId = prefs.getInt('id') ?? 0;
-    var route = 'index.php';
-
-    print('GET TOTAL EVIDENCIAS: ${serviceId}, ID DEL USUARIO ${userId}');
-
-    var response =
-        await http.get(Uri.parse(baseUrl + route).replace(queryParameters: {
-      'r': 'esegadi/getevidenciasfaltantes',
-      'token': token,
-      'id': userId.toString(),
-      'service_id': serviceId.toString(),
-    }));
-
-    if (response.statusCode == 200) {
-      var data = jsonDecode(response.body.toString());
-      //print('EVIDENCIAS RESTANTES:' + data['remaining_evidences']);
-      return data['remaining_evidences'];
-    } else {
-      throw Exception('Ha ocurrido un error al consultar las evidencias');
-    }
-  }
-
+  // Inserta una imagen como evidencia para cierre de viaje
   Future<http.Response> insertImageTripClosure(
-      int id, String serviceId, String image, String extension) async {
+      int id, String serviceId, String imageBase64, String extension) async {
     final token = await LoginViewModel.getSavedToken();
 
     if (token == null) {
@@ -113,10 +52,10 @@ class TripClosure {
     final Map<String, dynamic> data = {
       "service_id": id,
       "token": token,
-      "document_name": serviceId + extension,
+      "document_name": "$serviceId$extension",
       "document_description": "Evidencia Operador",
       "document_type": "POD Operador",
-      "document": image,
+      "document": imageBase64,
     };
 
     final url = Uri.parse('${baseUrl}index.php?r=esegadi/evidenciaspost');
@@ -126,38 +65,71 @@ class TripClosure {
       headers: headers,
       body: jsonEncode(data),
     );
-    print('ESTATUS:' + response.statusCode.toString());
+
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error al guardar la evidencia (status: ${response.statusCode})');
+    }
+
+    return response;
+  }
+
+  // Obtiene el total de evidencias pendientes para un servicio
+  Future<int> getTotalEvidentias(int serviceId) async {
+    final token = await LoginViewModel.getSavedToken();
+    final prefs = await SharedPreferences.getInstance();
+    final userId = prefs.getInt('id') ?? 0;
+
+    if (token == null) {
+      throw Exception('Token no disponible');
+    }
+
+    final uri = Uri.parse('${baseUrl}index.php').replace(queryParameters: {
+      'r': 'esegadi/getevidenciasfaltantes',
+      'token': token,
+      'id': userId.toString(),
+      'service_id': serviceId.toString(),
+    });
+
+    final response = await http.get(uri);
+
     if (response.statusCode == 200) {
-      return response;
+      final data = jsonDecode(response.body);
+      final remaining = data['remaining_evidences'];
+      return remaining is int ? remaining : int.parse(remaining.toString());
     } else {
-      debugPrint('Error: ${response.body}');
-      throw Exception('Ha ocurrido un error al guardar la evidencia');
+      throw Exception(
+          'Error al consultar las evidencias (status: ${response.statusCode})');
     }
   }
 
-  Future<http.Response> closeTravels(serviceId) async {
-    final prefs = await SharedPreferences.getInstance();
-    String? token;
-    token = prefs.getString('token');
+  // Cierra el viaje enviando la solicitud correspondiente
+  Future<http.Response> closeTravels(int serviceId) async {
+    final token = await LoginViewModel.getSavedToken();
 
-    Map data = {
+    if (token == null) {
+      throw Exception("Token no disponible");
+    }
+
+    final Map<String, dynamic> data = {
       "service_id": serviceId,
       "token": token,
       "close": 1,
     };
 
-    var body = json.encode(data);
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/cierreevidenciaspost');
-    http.Response response = await http.post(
+    final url = Uri.parse('${baseUrl}index.php?r=esegadi/cierreevidenciaspost');
+
+    final response = await http.post(
       url,
       headers: headers,
-      body: body,
+      body: jsonEncode(data),
     );
 
-    if (response.statusCode == 200) {
-      return response;
-    } else {
-      throw Exception('Ha ocurrido un error al cerrar el viaje');
+    if (response.statusCode != 200) {
+      throw Exception(
+          'Error al cerrar el viaje (status: ${response.statusCode})');
     }
+
+    return response;
   }
 }

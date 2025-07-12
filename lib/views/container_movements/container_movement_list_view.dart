@@ -12,20 +12,16 @@ class MovimientoView extends StatelessWidget {
   Widget build(BuildContext context) {
     final viewModel = Provider.of<ContainerMovementListViewModel>(context);
 
-    Future _handleRefresh() async {
-      viewModel.movimientos.clear();
-      await viewModel.loadMovimientos();
+    Future<void> _handleRefresh() async {
+      await viewModel.loadMovimientos(forceReload: true); // Si es posible
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Movimiento de contenedores',
-          style: TextStyle(color: Colors.white),
-        ),
-        centerTitle: true,
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: Color.fromARGB(255, 33, 150, 91),
+        title: Text('Movimiento de contenedores',
+            style: TextStyle(color: Colors.white)),
+        iconTheme: IconThemeData(color: Colors.white),
+        backgroundColor: Color(0xFF2C522A),
       ),
       backgroundColor: Colors.white,
       drawer: DrawerScreen(),
@@ -41,7 +37,7 @@ class MovimientoView extends StatelessWidget {
               if (viewModel.error != null) {
                 return Center(
                   child: Text(
-                    "Error: ${viewModel.error}",
+                    " ${viewModel.error}",
                     style: const TextStyle(color: Colors.red),
                   ),
                 );
@@ -68,8 +64,8 @@ class MovimientoView extends StatelessWidget {
                   }
 
                   return GestureDetector(
-                    onTap: () {
-                      Navigator.push(
+                    onTap: () async {
+                      final result = await Navigator.push(
                         context,
                         MaterialPageRoute(
                           builder: (context) => ContainersMapScreen(
@@ -83,6 +79,12 @@ class MovimientoView extends StatelessWidget {
                           ),
                         ),
                       );
+
+                      if (result == 'recargar') {
+                        // _recargarListado(); // Aquí refrescas tu lista
+                        _handleRefresh();
+                        print('RECARGAR LISTA ...');
+                      }
                     },
                     child: Card(
                       elevation: 5,
@@ -95,18 +97,23 @@ class MovimientoView extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(
-                              m.service ?? 'N/A',
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: FontWeight.bold,
-                                color: Color.fromARGB(255, 33, 150, 91),
-                              ),
+                            // Text(
+                            //   m.service ?? 'N/A',
+                            //   style: const TextStyle(
+                            //     fontSize: 18,
+                            //     fontWeight: FontWeight.bold,
+                            //     color: Color.fromARGB(255, 33, 150, 91),
+                            //   ),
+                            // ),
+
+                            _buildInfoRow(
+                              icon: LucideIcons.frame,
+                              label: "Movimiento de grua",
+                              value: m.craneMovement ?? 'S/N',
                             ),
-                            const SizedBox(height: 8),
                             _buildInfoRow(
                               icon: LucideIcons.type,
-                              label: "Tipo",
+                              label: "Tipo de movimiento",
                               value: m.movementType ?? 'N/A',
                             ),
                             _buildInfoRow(
@@ -115,19 +122,31 @@ class MovimientoView extends StatelessWidget {
                               value: m.service ?? 'N/A',
                             ),
                             _buildInfoRow(
-                              icon: LucideIcons.package,
-                              label: "Contenedor a mover",
-                              value: m.status ?? 'Sin estatus',
+                              icon: LucideIcons.user,
+                              label: "Operador",
+                              value: m.craneOperator ?? 'Sin operador',
                             ),
                             _buildInfoRow(
-                              icon: LucideIcons.hash,
-                              label: "Contenedor A",
-                              value: m.containerNumberA ?? 'Sin contenedor',
+                              icon: LucideIcons.truck,
+                              label: "Unidad",
+                              value: m.unit ?? 'No hay unidad',
+                            ),
+
+                            _buildInfoRow(
+                              icon: LucideIcons.truck,
+                              label: "Unidad Mov. Local",
+                              value:
+                                  m.localUnit ?? 'No hay unidad local asignada',
                             ),
                             _buildInfoRow(
-                              icon: LucideIcons.hash,
-                              label: "Contenedor B",
-                              value: m.containerNumberB ?? 'Sin contenedor',
+                              icon: LucideIcons.container,
+                              label: "Numero de contenedor",
+                              value: contenedorMover ?? 'S/N',
+                            ),
+                            _buildInfoRow(
+                              icon: LucideIcons.container,
+                              label: "Estado del contenedor",
+                              value: m.containerStatus ?? 'S/E',
                             ),
                           ],
                         ),
@@ -162,8 +181,14 @@ class MovimientoView extends StatelessWidget {
                 ),
               );
             },
-            icon: const Icon(Icons.swap_horiz),
-            label: const Text('Reacomodo'),
+            icon: const Icon(
+              Icons.swap_horiz,
+              color: Colors.white,
+            ),
+            label: const Text(
+              'Reacomodo',
+              style: TextStyle(color: Colors.white),
+            ),
             backgroundColor: Colors.teal,
           ),
           const SizedBox(height: 12),
@@ -186,8 +211,14 @@ class MovimientoView extends StatelessWidget {
                 ),
               );
             },
-            icon: const Icon(Icons.scale),
-            label: const Text('Pesaje'),
+            icon: const Icon(
+              Icons.scale,
+              color: Colors.white,
+            ),
+            label: const Text(
+              'Pesaje',
+              style: TextStyle(color: Colors.white),
+            ),
             backgroundColor: Colors.deepOrange,
           ),
         ],

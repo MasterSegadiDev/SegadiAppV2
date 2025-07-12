@@ -4,26 +4,22 @@ import 'package:segadi/services/containers/container_movement_list_service.dart'
 
 class ContainerMovementListViewModel extends ChangeNotifier {
   final MovimientoService _service = MovimientoService();
-  List<ContainerMovement> _movimientos = [];
-  bool _isLoading = false;
-  String? _error;
+  List<ContainerMovement> movimientos = [];
+  bool isLoading = false;
+  String? error;
 
-  List<ContainerMovement> get movimientos => _movimientos;
-  bool get isLoading => _isLoading;
-  String? get error => _error;
-
-  Future<void> loadMovimientos() async {
-    _isLoading = true;
-    _error = null;
-    notifyListeners();
-
+  Future<void> loadMovimientos({bool forceReload = false}) async {
     try {
-      _movimientos = await _service.fetchMovimientos();
+      isLoading = true;
+      notifyListeners();
+
+      final data = await _service.fetchMovimientos(forceReload: forceReload);
+      movimientos = data;
+      error = null;
     } catch (e) {
-      print('Error al cargar el listado: ${e}');
-      _error = e.toString();
+      error = 'Error al cargar movimientos';
     } finally {
-      _isLoading = false;
+      isLoading = false;
       notifyListeners();
     }
   }

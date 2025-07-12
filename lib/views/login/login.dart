@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/helper/messages.dart';
-import 'package:segadi/viewmodels/login/biometric_viewmodel.dart';
 import 'package:segadi/viewmodels/login/user_login.dart';
 
 class LoginView extends StatefulWidget {
@@ -14,6 +13,7 @@ class LoginView extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginView> {
+  final _formKey = GlobalKey<FormState>();
   late bool _passwordVisible;
 
   @override
@@ -25,7 +25,6 @@ class _LoginScreenState extends State<LoginView> {
   @override
   Widget build(BuildContext context) {
     final loginViewModel = Provider.of<LoginViewModel>(context);
-    final biometricViewModel = Provider.of<BiometricViewModel>(context);
     final size = MediaQuery.of(context).size;
 
     return Scaffold(
@@ -38,48 +37,44 @@ class _LoginScreenState extends State<LoginView> {
           padding: const EdgeInsets.symmetric(horizontal: 24),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 400),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                // Logo
-                Image.asset("assets/images/logo1.png", width: size.width * 0.5),
+            child: Form(
+              key: _formKey,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Logo
+                  Image.asset("assets/images/logo1.png",
+                      width: size.width * 0.5),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Bienvenida
-                AutoSizeText('Bienvenido',
-                    style: Theme.of(context).textTheme.titleLarge),
-                // AutoSizeText(loginViewModel.name,
-                //     style: Theme.of(context).textTheme.bodyLarge),
+                  // Bienvenida
+                  AutoSizeText('Bienvenido',
+                      style: Theme.of(context).textTheme.titleLarge),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Usuario
-                _buildTextField(
-                  controller: loginViewModel.usernameController,
-                  label: 'Usuario',
-                  icon: Icons.person,
-                  onChanged: (value) => loginViewModel.username = value,
-                ),
+                  // Usuario
+                  _buildTextField(
+                    controller: loginViewModel.usernameController,
+                    label: 'Usuario',
+                    icon: Icons.person,
+                    onChanged: (value) => loginViewModel.username = value,
+                  ),
 
-                const SizedBox(height: 16),
+                  const SizedBox(height: 16),
 
-                // Contraseña
-                _buildPasswordField(loginViewModel),
+                  // Contraseña
+                  _buildPasswordField(loginViewModel),
 
-                const SizedBox(height: 24),
+                  const SizedBox(height: 24),
 
-                // Botón de login o loading
-                loginViewModel.isLoading
-                    ? const CircularProgressIndicator()
-                    : _buildLoginButton(loginViewModel),
+                  // Botón de login
+                  _buildLoginButton(loginViewModel),
 
-                const SizedBox(height: 16),
-
-                // Biometría si está disponible
-                // if (biometricViewModel.isBiometricAvailable == true)
-                //   _buildBiometricButton(biometricViewModel),
-              ],
+                  const SizedBox(height: 16),
+                ],
+              ),
             ),
           ),
         ),
@@ -103,6 +98,8 @@ class _LoginScreenState extends State<LoginView> {
     return TextFormField(
       controller: controller,
       onChanged: onChanged,
+      validator: (value) =>
+          value == null || value.isEmpty ? 'Este campo es obligatorio' : null,
       decoration: InputDecoration(
         labelText: label,
         prefixIcon: Icon(icon),
@@ -117,6 +114,9 @@ class _LoginScreenState extends State<LoginView> {
     return TextFormField(
       controller: loginViewModel.passwordController,
       onChanged: (value) => loginViewModel.password = value,
+      validator: (value) => value == null || value.isEmpty
+          ? 'La contraseña es obligatoria'
+          : null,
       obscureText: !_passwordVisible,
       decoration: InputDecoration(
         hintText: 'Contraseña',
@@ -148,56 +148,34 @@ class _LoginScreenState extends State<LoginView> {
             borderRadius: BorderRadius.circular(100),
           ),
         ),
-        onPressed: () async {
-          await loginViewModel.login();
+        onPressed: loginViewModel.isLoading
+            ? null
+            : () async {
+                if (_formKey.currentState?.validate() != true) return;
 
-          if (loginViewModel.errorMessage != null) {
-            scaffoldMessengerError(context, loginViewModel.errorMessage!);
-          }
-          //  else if (!loginViewModel.isValidScreen) {
-          //   scaffoldMessengerError(
-          //       context,
-          //       loginViewModel.deviceError ??
-          //           'Error en la validación del dispositivo');
-          // }
-          else {
-            scaffoldMessengerSuccess(context);
-            Future.delayed(const Duration(seconds: 2), () {
-              Navigator.pushNamed(context, '/home_page');
-            });
-          }
-        },
-        child: const Text('Login', style: TextStyle(color: Colors.white)),
+                await loginViewModel.login();
+
+                if (loginViewModel.errorMessage != null &&
+                    loginViewModel.errorMessage!.isNotEmpty) {
+                  scaffoldMessengerError(context, loginViewModel.errorMessage!);
+                } else {
+                  scaffoldMessengerSuccess(context);
+                  Future.delayed(const Duration(seconds: 2), () {
+                    Navigator.pushReplacementNamed(context, '/home_page');
+                  });
+                }
+              },
+        child: loginViewModel.isLoading
+            ? const SizedBox(
+                width: 24,
+                height: 24,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.5,
+                  color: Colors.white,
+                ),
+              )
+            : const Text('Login', style: TextStyle(color: Colors.white)),
       ),
     );
   }
-
-  // Widget _buildBiometricButton(BiometricViewModel biometricViewModel) {
-  //   return SizedBox(
-  //     width: double.infinity,
-  //     height: 50,
-  //     child: ElevatedButton(
-  //       style: ElevatedButton.styleFrom(
-  //         backgroundColor: const Color(0xFF2C522A),
-  //         shape: RoundedRectangleBorder(
-  //           borderRadius: BorderRadius.circular(100),
-  //         ),
-  //       ),
-  //       onPressed: () async {
-  //         await biometricViewModel.authenticate();
-  //         if (biometricViewModel.isAuthenticatedWithToken) {
-  //           scaffoldMessengerSuccess(context);
-  //           Future.delayed(const Duration(seconds: 2), () {
-  //             Navigator.pushNamed(context, '/home_page');
-  //           });
-  //         } else {
-  //           scaffoldMessengerError(
-  //               context, 'Inicia sesión con tu Usuario y Contraseña');
-  //         }
-  //       },
-  //       child: const Text('Acceder con biometría',
-  //           style: TextStyle(color: Colors.white)),
-  //     ),
-  //   );
-  // }
 }
