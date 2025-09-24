@@ -8,14 +8,16 @@ import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:segadi/helper/messages.dart';
 import 'package:segadi/models/services/detail_service.dart';
 import 'package:segadi/models/services/pdf_service.dart';
+import 'package:segadi/viewmodels/services_operator/assigned_services.dart';
 import 'package:segadi/viewmodels/services_operator/travel_expenses.dart';
 
 import 'package:segadi/utils/user_session.dart';
 import 'package:segadi/viewmodels/services_operator/detail_service.dart';
+import 'package:segadi/views/services/MapGeocerca.dart';
 import 'package:segadi/views/services/modals/check_list_service.dart';
 import 'package:segadi/views/services/modals/status_support.dart';
+import 'package:segadi/views/services/sendEvidences.dart';
 import 'package:segadi/views/services/travel_expenses.dart';
-import 'package:segadi/views/services/trip_closure.dart';
 
 class DetailServiceScreen extends StatefulWidget {
   const DetailServiceScreen({Key? key}) : super(key: key);
@@ -24,30 +26,64 @@ class DetailServiceScreen extends StatefulWidget {
   _DetailServiceScreenState createState() => _DetailServiceScreenState();
 }
 
-class _DetailServiceScreenState extends State<DetailServiceScreen> {
+class _DetailServiceScreenState extends State<DetailServiceScreen>
+    with WidgetsBindingObserver {
   Timer? _refreshTimer;
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<DetailViewModel>().updateDetail();
+    WidgetsBinding.instance.addObserver(this);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final vm = context.read<DetailViewModel>();
+      await vm.updateDetail();
+
+      // Validar redirección al iniciar
+
+      if (vm.item?.mandatoryStatusId == 10) {
+        print('estas en la funcion de init state:' + vm.item!.serviceType!);
+        if (vm.item?.mandatoryStatusId == 10) {
+          Navigator.popAndPushNamed(context, '/send_evidence', arguments: {
+            'id': vm.item!.id!,
+            'serviceId': vm.item!.service!.toString(),
+          });
+        }
+      }
     });
 
-    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
-      context.read<DetailViewModel>().updateDetail();
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
+      final vm = context.read<DetailViewModel>();
+      await vm.updateDetail();
     });
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _refreshTimer?.cancel();
     super.dispose();
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.resumed) {
+      final vm = context.read<DetailViewModel>();
+      vm.updateDetail().then((_) {
+        if (vm.item?.mandatoryStatusId == 10) {
+          Navigator.popAndPushNamed(context, '/send_evidence', arguments: {
+            'id': vm.item!.id!,
+            'serviceId': vm.item!.service!.toString(),
+          });
+        }
+      });
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final viewModel = context.watch<DetailViewModel>();
+    //print('ESTATUS ID ${viewModel.item?.mandatoryStatusId}');
     final user = UserSession();
 
     if (viewModel.item == null) {
@@ -214,8 +250,9 @@ class ActionsCard extends StatelessWidget {
     return Card(
       elevation: 8,
       shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF84A756), width: 1)),
+        borderRadius: BorderRadius.circular(20),
+        side: const BorderSide(color: Color(0xFF84A756), width: 1),
+      ),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
@@ -231,8 +268,9 @@ class ActionsCard extends StatelessWidget {
                   enabled: enabledCheckList,
                   onPressed: enabledCheckList
                       ? () => showModalBottomSheet(
-                          context: context,
-                          builder: (_) => const CheckListView())
+                            context: context,
+                            builder: (_) => const CheckListView(),
+                          )
                       : null,
                 ),
                 ActionButton(
@@ -253,11 +291,16 @@ class ActionsCard extends StatelessWidget {
                           )
                       : null,
                 ),
-                const ActionButton(
+                ActionButton(
                   icon: FontAwesomeIcons.mapLocationDot,
-                  label: 'Ruta Sugerida',
-                  color: Colors.grey,
+                  label: 'Geocerca',
+                  color: Colors.blue,
                   enabled: false,
+                  // onPressed: () => Navigator.push(
+                  //   context,
+                  //   MaterialPageRoute(builder: (_) => const MapaGooglePage()),
+                  // ),
+                  onPressed: null,
                 ),
               ],
             ),
@@ -266,45 +309,78 @@ class ActionsCard extends StatelessWidget {
             const SizedBox(height: 10),
             // Segunda fila de acciones
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
+                // Botón Cierre de viaje (solo visible si el servicio es Contenedor)
+                if (serviceDetail.serviceType == 'Contenedor')
+                  ActionButton(
+                    icon: FontAwesomeIcons.circleCheck,
+                    label: 'Cierre de viaje',
+                    color: Colors.green,
+                    enabled: serviceClosed,
+                    onPressed: serviceClosed
+                        ? () async {
+                            final detailVM = Provider.of<DetailViewModel>(
+                                context,
+                                listen: false);
+                            final result = await Navigator.popAndPushNamed(
+                              context,
+                              '/trip_closure',
+                              arguments: {
+                                'id': serviceDetail.id!,
+                                'serviceId':
+                                    serviceDetail.service?.toString() ?? '',
+                              },
+                            );
+
+                            if (result == true) {
+                              final detailServiceModel =
+                                  DetailService(id: serviceDetail.id!);
+                              detailVM.setNewDetail(detailServiceModel);
+
+                              final x =
+                                  detailVM.item!.pendingMoneyChecks ?? false;
+                              if (x == false) {
+                                final serviceVm =
+                                    context.read<ServicesViewModel>();
+                                await serviceVm.onRefresh();
+                                Navigator.of(context).pop();
+                              }
+                            }
+                          }
+                        : null,
+                  ),
+
+                // Botón Viáticos (solo visible si el usuario lo permite)
+                //if (userSession.userRoll == 'No')
                 ActionButton(
-                  icon: FontAwesomeIcons.circleCheck,
-                  label: 'Cierre de viaje',
-                  color: Colors.green,
-                  enabled: serviceClosed,
-                  onPressed: serviceClosed
+                  icon: FontAwesomeIcons.moneyBillTransfer,
+                  label: 'Viáticos',
+                  color: Colors.teal,
+                  enabled: pendingMoneyChecks,
+                  onPressed: pendingMoneyChecks
                       ? () async {
-                          final result = await Navigator.push(
+                          final vm = context.read<TravelExpensesViewModel>();
+                          vm.setNewDetail(serviceDetail.id!);
+
+                          final result = await Navigator.push<bool>(
                             context,
                             MaterialPageRoute(
-                                builder: (_) => TripClosureScreen(
-                                    id: serviceDetail.id!,
-                                    serviceId: serviceDetail.service!)),
+                                builder: (_) => TravelExpensesScreen()),
                           );
+
                           if (result == true) {
-                            onRefresh();
+                            // final detailVm = context.read<DetailViewModel>();
+                            // await detailVm.updateDetail();
+                            final serviceVm = context.read<ServicesViewModel>();
+                            await serviceVm.onRefresh();
+                            return Navigator.of(context).pop();
                           }
                         }
                       : null,
                 ),
-                if (userSession.userRoll == 'No')
-                  ActionButton(
-                    icon: FontAwesomeIcons.moneyBillTransfer,
-                    label: 'Viáticos',
-                    color: Colors.teal,
-                    enabled: pendingMoneyChecks,
-                    onPressed: pendingMoneyChecks
-                        ? () {
-                            final vm = context.read<TravelExpensesViewModel>();
-                            vm.setNewDetail(serviceDetail.id!);
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) => TravelExpensesScreen()));
-                          }
-                        : null,
-                  ),
+
+                // Botón Descargar CCP (siempre visible)
                 ActionButton(
                   icon: FontAwesomeIcons.solidFilePdf,
                   label: 'Descargar CCP',
@@ -315,8 +391,10 @@ class ActionsCard extends StatelessWidget {
                     if (res == null) {
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(
-                            content: Text(
-                                'La remisión: ${serviceDetail.service} aun no cuenta con un CFDI timbrado')),
+                          content: Text(
+                            'La remisión: ${serviceDetail.service} aun no cuenta con un CFDI timbrado',
+                          ),
+                        ),
                       );
                     } else {
                       FileDownloader.downloadFile(
@@ -328,7 +406,7 @@ class ActionsCard extends StatelessWidget {
                   },
                 ),
               ],
-            ),
+            )
           ],
         ),
       ),
@@ -376,13 +454,32 @@ class StatusButton extends StatelessWidget {
 
                 await viewModel.changeStatusService(statusId);
 
-                if (viewModel.errorMessage != null) {
-                  scaffoldMessengerError(context, viewModel.errorMessage!);
-                } else {
-                  scaffoldMessengerSuccessStatus(
+                if (viewModel.item?.mandatoryStatusId == 10) {
+                  final result = await Navigator.pushNamed(
                     context,
-                    'Estatus actualizado correctamente.',
+                    '/send_evidence',
+                    arguments: {
+                      'id': viewModel.item!.id!,
+                      'serviceId': viewModel.item!.service!.toString(),
+                    },
                   );
+                  if (result == true) {
+                    await viewModel.updateDetail();
+                  }
+                } else if (statusId == 23 &&
+                    viewModel.item?.pendingMoneyChecks == false &&
+                    viewModel.item?.serviceType == "CajaSeca") {
+                  final result = await viewModel.closeTrip(viewModel.item!.id!);
+                  if (result.success) {
+                    scaffoldMessengerSuccessStatus(
+                      context,
+                      'El servicio se cerró correctamente.',
+                    );
+                    // Navigator.pop(context, true);
+                  } else {
+                    scaffoldMessengerError(
+                        context, result.message ?? 'Error desconocido');
+                  }
                 }
               }
             : null,

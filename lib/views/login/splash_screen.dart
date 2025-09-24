@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:segadi/models/user/UserSession.dart';
 import 'package:segadi/viewmodels/login/user_login.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -18,16 +18,29 @@ class _SplashScreenState extends State<SplashScreen> {
   }
 
   Future<void> _checkLoginStatus() async {
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token');
+    await Future.delayed(const Duration(seconds: 1)); // Simula splash
 
-    // Simula carga
-    await Future.delayed(const Duration(seconds: 1));
+    await UserSession().loadFromPrefs();
+    final token = UserSession().token;
 
-    if (token != null && token.isNotEmpty) {
-      Navigator.pushReplacementNamed(context, '/home_page');
+    if (token.isNotEmpty) {
+      // Redirigir según el rol del usuario
+      switch (UserSession().role) {
+        case UserRole.operador:
+          Navigator.pushReplacementNamed(context, '/home_page');
+          break;
+        case UserRole.operadorGrua:
+          Navigator.pushReplacementNamed(context, '/services');
+          break;
+        case UserRole.guardiaSeguridad:
+          Navigator.pushReplacementNamed(context, '/container_map');
+          break;
+        default:
+          Navigator.pushReplacementNamed(context, '/login');
+          break;
+      }
     } else {
-      // Antes de navegar, resetea el estado del LoginViewModel para evitar el loading eterno
+      // Si no hay token, ir al login y limpiar estado
       final loginViewModel =
           Provider.of<LoginViewModel>(context, listen: false);
       loginViewModel.resetState();

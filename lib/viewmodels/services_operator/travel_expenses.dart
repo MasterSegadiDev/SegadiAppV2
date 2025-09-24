@@ -58,7 +58,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
   int _conceptId = 0;
   int get conceptId => _conceptId;
 
-  set concetId(int value) {
+  set conceptId(int value) {
     _conceptId = value;
     notifyListeners();
   }
@@ -201,37 +201,41 @@ class TravelExpensesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> insertImport() async {
+  Future<bool> insertImport() async {
     _errorMessage = null;
 
-    // Validar ID de concepto
-    if (conceptId == '' || conceptId <= 0) {
+    // ✅ Validar ID de concepto (int, no String)
+    if (conceptId <= 0) {
       _errorMessage = 'Necesitas seleccionar un concepto';
       notifyListeners();
-      return;
+      return false;
     }
 
-    // Validar importe
+    // ✅ Validar importe
     if (import.isEmpty) {
       _errorMessage = 'Necesitas ingresar un importe a registrar';
       notifyListeners();
-      return;
+      return false;
     }
 
     double? parsedImport = double.tryParse(import);
     if (parsedImport == null || parsedImport <= 0) {
       _errorMessage = 'El importe ingresado no es válido (debe ser mayor a 0)';
       notifyListeners();
-      return;
+      return false;
     }
 
-    // Validar que el concepto exista
-    final concept = _data.firstWhere((e) => e.id == conceptId);
+    // ✅ Validar que el concepto exista
+    final concept = _data.firstWhere(
+      (e) => e.id == conceptId,
+      orElse: () =>
+          TravelExpenses(), // para evitar excepción si no lo encuentra
+    );
 
-    if (concept == '') {
+    if (concept.id == null || concept.id == 0) {
       _errorMessage = 'El concepto seleccionado no existe';
       notifyListeners();
-      return;
+      return false;
     }
 
     final paymentTotal = double.tryParse(concept.paymentTotal.toString()) ?? 0;
@@ -239,45 +243,70 @@ class TravelExpensesViewModel extends ChangeNotifier {
       _errorMessage =
           'El importe ingresado (\$$parsedImport) es mayor al permitido (\$$paymentTotal)';
       notifyListeners();
-      return;
+      return false;
     }
 
-    // Validar imagen
-    if (selectedImage == null) {
-      _errorMessage = 'Debes agregar una imagen como evidencia';
-      notifyListeners();
-      return;
-    }
-
-    // Procesar imagen y enviar datos
     try {
+      if (selectedImage == null) {
+        _errorMessage = 'No hay imagen seleccionada';
+        notifyListeners();
+        return false;
+      }
+
       Uint8List imageBytes = await selectedImage!.readAsBytes();
       String base64Image = base64Encode(imageBytes);
 
       var response = await _travelExpenses.insertImport(
-        GlobalVariables.serviceDetailId,
-        conceptId,
-        parsedImport,
-        comentary,
-        name,
-        base64Image,
+        GlobalVariables.serviceDetailId, // int
+        conceptId, // int
+        parsedImport, // double
+        comentary, // String
+        name, // String
+        base64Image, // String (Base64)
       );
 
-      if (response.statusCode == 200) {
+      if (response is bool && response) {
+        await clearSelectedImage(); // 🔹 liberar imagen
+        return true;
+      } else if (response is bool && !response) {
+        // Refrescar tabla si el backend no registró
         _tableItems = await _tableExpenses
             .getTravelExpenses(GlobalVariables.serviceDetailId);
+
         textController.clear();
         textController1.clear();
         evidenceNameController.clear();
-        selectedImage =
-            null; // Corregido: antes estaba usando `==` en vez de `=`
+        await clearSelectedImage(); // 🔹 liberar imagen aunque no se registre
       } else {
         _errorMessage = 'Ocurrió un error al registrar tu viático';
+        notifyListeners();
       }
     } catch (e) {
       _errorMessage = 'Error al procesar la imagen o enviar los datos: $e';
+      print(_errorMessage);
+      notifyListeners();
     }
 
     notifyListeners();
+    return false;
+  }
+
+  Future<void> clearSelectedImage() async {
+    try {
+      if (selectedImage != null) {
+        // Verifica si existe físicamente y elimina
+        if (await selectedImage!.exists()) {
+          await selectedImage!.delete();
+          print(
+              '🗑️ Imagen eliminada de memoria física: ${selectedImage!.path}');
+        }
+
+        // Limpia la referencia en memoria
+        selectedImage = null;
+        notifyListeners();
+      }
+    } catch (e) {
+      print('⚠️ Error al limpiar imagen: $e');
+    }
   }
 }

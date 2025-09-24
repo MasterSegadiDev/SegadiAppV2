@@ -74,6 +74,7 @@ class LoginViewModel extends ChangeNotifier {
       }
 
       final data = json.decode(response.body);
+      print('data login: $data');
       if (data['token'] == null) {
         throw Exception('No tienes acceso a la aplicación móvil.');
       }
@@ -92,6 +93,22 @@ class LoginViewModel extends ChangeNotifier {
     }
   }
 
+  // Future<void> _saveUserData(Map data) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final user = data['user'];
+
+  //   await prefs.setInt('id', user['id']);
+  //   await prefs.setString('name', user['name']);
+  //   await prefs.setString('username', _username);
+  //   await prefs.setString('password', _password);
+  //   await prefs.setString('token', data['token']);
+  //   await prefs.setString('user_roll', user['empleado_permisionario']);
+  //   await prefs.setString('user_rol_app', user['user_rol_app']);
+  //   await prefs.setString('number_employe', user['employee_number']);
+
+  //   await UserSession().loadFromPrefs();
+  // }
+
   Future<void> _saveUserData(Map data) async {
     final prefs = await SharedPreferences.getInstance();
     final user = data['user'];
@@ -101,9 +118,11 @@ class LoginViewModel extends ChangeNotifier {
     await prefs.setString('username', _username);
     await prefs.setString('password', _password);
     await prefs.setString('token', data['token']);
-    await prefs.setString('user_roll', user['empleado_permisionario']);
-    await prefs.setString('user_rol_app', user['user_rol_app']);
+    await prefs.setString(
+        'empleado_permisionario', user['empleado_permisionario'] ?? '');
+    await prefs.setString('user_rol_app', user['user_rol_app'] ?? '');
     await prefs.setString('number_employe', user['employee_number']);
+    await prefs.setString('site_id', user['site_id'] ?? '');
 
     await UserSession().loadFromPrefs();
   }

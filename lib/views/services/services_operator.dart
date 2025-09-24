@@ -63,16 +63,21 @@ class ServiceListView extends StatelessWidget {
   }
 
   Widget _buildServiceCard(BuildContext context, Services item) {
+    final serviceViewModel = Provider.of<ServicesViewModel>(context);
     return GestureDetector(
-      onTap: () {
+      onTap: () async {
         final detailServiceModel = DetailService(id: item.id);
         Provider.of<DetailViewModel>(context, listen: false)
             .setNewDetail(detailServiceModel);
 
-        Navigator.push(
+        final result = await Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => DetailServiceScreen()),
+          MaterialPageRoute(builder: (_) => DetailServiceScreen()),
         );
+
+        if (result == true) {
+          serviceViewModel.onRefresh(); // Refresca la lista
+        }
       },
       child: Card(
         elevation: 8,

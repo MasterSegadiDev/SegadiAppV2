@@ -11,6 +11,7 @@ class Movimiento {
   final String document_name;
   final String document;
   final int? service_id;
+  final String site_id;
 
   Movimiento({
     this.crane_movement_id,
@@ -25,22 +26,25 @@ class Movimiento {
     required this.document_name,
     required this.document,
     this.service_id,
+    required this.site_id,
   });
 
   factory Movimiento.fromJson(Map<String, dynamic> json) {
     return Movimiento(
-        crane_movement_id: json['crane_movement_id'] ?? '',
-        movement_type: json['movement_type'] ?? '',
-        crane_operator_id: json['crane_operator_id'] ?? '',
-        container_location_id: json['container_location_id'] ?? '',
-        container_number: json['container_number'],
-        new_container_location_id: json['new_container_location_id'] ?? '',
-        status: json['status'] ?? '',
-        token: json['token'] ?? '',
-        weight: json['weight'] ?? '',
-        document_name: json['document_name'] ?? '',
-        document: json['document'] ?? '',
-        service_id: json['service_id']);
+      crane_movement_id: json['crane_movement_id'] ?? '',
+      movement_type: json['movement_type'] ?? '',
+      crane_operator_id: json['crane_operator_id'] ?? '',
+      container_location_id: json['container_location_id'] ?? '',
+      container_number: json['container_number'],
+      new_container_location_id: json['new_container_location_id'] ?? '',
+      status: json['status'] ?? '',
+      token: json['token'] ?? '',
+      weight: json['weight'] ?? '',
+      document_name: json['document_name'] ?? '',
+      document: json['document'] ?? '',
+      service_id: json['service_id'],
+      site_id: json['site_id'],
+    );
   }
 
   Map<String, dynamic> toJson() {
@@ -56,7 +60,8 @@ class Movimiento {
       'weight': weight,
       'document_name': document_name,
       'document': document,
-      'service_id': service_id
+      'service_id': service_id,
+      'site_id': site_id,
     };
   }
 }

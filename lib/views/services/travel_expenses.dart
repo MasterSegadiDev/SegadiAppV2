@@ -62,7 +62,7 @@ class TravelExpensesScreen extends StatelessWidget {
             ),
             const SizedBox(height: 20),
             ...travelExpensesViewModel.tableItems.map((e) {
-              double result = double.tryParse(e.totalUsed.toString()) ?? 0;
+              //double result = double.tryParse(e.totalUsed.toString()) ?? 0;
               return Card(
                 margin: const EdgeInsets.only(bottom: 12),
                 elevation: 8,
@@ -108,12 +108,17 @@ class TravelExpensesScreen extends StatelessWidget {
   }
 }
 
-void _showBottomSheet(BuildContext context) {
-  showModalBottomSheet(
+Future<void> _showBottomSheet(BuildContext context) async {
+  final result = await showModalBottomSheet<bool>(
     isScrollControlled: true,
     context: context,
     builder: (ctx) => ListTravelExpensesView(),
   );
+
+  if (result == true) {
+    // 👇 y regresa "true" a la pantalla de detalle
+    Navigator.of(context).pop(true);
+  }
 }
 
 void showImageModal(BuildContext context, String conceptId) async {

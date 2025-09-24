@@ -8,16 +8,28 @@ class ContainerMovementListViewModel extends ChangeNotifier {
   bool isLoading = false;
   String? error;
 
-  Future<void> loadMovimientos({bool forceReload = false}) async {
+  Future<void> loadMovimientos({
+    bool forceReload = false,
+    required String siteId,
+  }) async {
     try {
       isLoading = true;
+      error = null;
       notifyListeners();
 
-      final data = await _service.fetchMovimientos(forceReload: forceReload);
+      final data = await _service.fetchMovimientos(
+        forceReload: forceReload,
+        siteId: siteId,
+      );
+
+      print("📦 Movimientos recibidos: ${data.length}");
+
       movimientos = data;
-      error = null;
-    } catch (e) {
-      error = 'Error al cargar movimientos';
+    } catch (e, stackTrace) {
+      print('❌ ERROR AL CARGAR LOS MOVIMIENTOS: $e');
+      print(stackTrace);
+      error = 'No hay movimientos asignados por el momento';
+      movimientos = [];
     } finally {
       isLoading = false;
       notifyListeners();

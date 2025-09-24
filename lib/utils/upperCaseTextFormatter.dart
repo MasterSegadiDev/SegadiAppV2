@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 
 class UpperCaseTextFormatter extends TextInputFormatter {
-  final RegExp _exp = RegExp(r'[A-Z0-9]'); // Solo letras y números en mayúscula
+  // final RegExp _exp = RegExp(r'[A-Z0-9]'); // Solo letras y números en mayúscula
 
   @override
   TextEditingValue formatEditUpdate(

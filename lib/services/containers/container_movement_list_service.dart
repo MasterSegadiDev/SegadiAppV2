@@ -6,33 +6,51 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class MovimientoService {
   final String baseUrl = GlobalVariables.baseUrl;
-  Future<List<ContainerMovement>> fetchMovimientos(
-      {required bool forceReload}) async {
-    late int id;
-    late String? token;
+  Future<List<ContainerMovement>> fetchMovimientos({
+    required bool forceReload,
+    required String siteId,
+  }) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final int userId = prefs.getInt('id') ?? 0;
+      final String? token = prefs.getString('token');
 
-    final prefs = await SharedPreferences.getInstance();
-    id = prefs.getInt('id') ?? 0;
-    print(('ID USUARIO MOVIMIENTOS APP ${id}'));
-    token = prefs.getString('token');
-    var route = 'index.php';
+      print('🔹 DEBUG fetchMovimientos');
+      print('🔸 userId: $userId');
+      print('🔸 token: $token');
+      print('🔸 siteId: $siteId');
 
-    var response = await http.get(
-      Uri.parse(baseUrl + route).replace(
-        queryParameters: {
-          'r': 'esegadi/getmovimientosgrua',
-          'id': id.toString(),
-          'token': token,
-        },
-      ),
-    );
+      if (userId == 0 || token == null || siteId.isEmpty) {
+        throw Exception('Usuario, token o site_id inválido');
+      }
+      print('SITE ID NUMERO: ${siteId}');
 
-    if (response.statusCode == 200) {
+      final route = 'index.php';
+      final uri = Uri.parse(baseUrl + route).replace(queryParameters: {
+        'r': 'esegadi/getmovimientosgrua',
+        'id': userId.toString(),
+        'token': token,
+        'site_id': siteId,
+      });
+      print('URL DE MOVIMIENTOS: ${uri}');
+
+      final response = await http.get(uri);
+
+      print('ESTATUS LISTADO DE MOVIMIENTOS: ${response.statusCode}');
+
+      if (response.statusCode != 200) {
+        throw Exception('Error HTTP al cargar los movimientos');
+      }
+
       final List<dynamic> data = json.decode(response.body);
       print('📦 CANTIDAD DE MOVIMIENTOS RECIBIDOS: ${data.length}');
+
       return data.map((item) => ContainerMovement.fromJson(item)).toList();
-    } else {
-      throw Exception('Error al cargar los movimientos');
+    } catch (e, stackTrace) {
+      print('ERROR fetchMovimientos: $e');
+      print(stackTrace);
+      throw Exception(
+          'No se pudieron cargar los movimientos. Intente de nuevo.');
     }
   }
 }

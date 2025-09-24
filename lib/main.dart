@@ -8,6 +8,8 @@ import 'package:segadi/services/getDataDevice.dart';
 
 import 'package:segadi/viewmodels/container_movement/container_movement_list_view_model.dart';
 import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
+import 'package:segadi/viewmodels/services_operator/send_evidences.dart';
+import 'package:segadi/viewmodels/services_operator/trip_closure.dart';
 import 'package:segadi/views/container_movements/container_movement_list_view.dart';
 
 import 'package:segadi/views/home/routes.dart';
@@ -20,9 +22,10 @@ import 'package:segadi/viewmodels/services_operator/check_list.dart';
 
 import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 import 'package:segadi/viewmodels/services_operator/travel_expenses.dart';
-import 'package:segadi/viewmodels/services_operator/trip_closure.dart';
 
-import 'package:segadi/views/login/splash_screen.dart'; // Asegúrate de importar el SplashScreen
+import 'package:segadi/views/login/splash_screen.dart';
+
+// Asegúrate de importar el SplashScreen
 //import 'package:segadi/views/login/login_view.dart'; // Importar LoginView con la nueva ruta
 
 Future main() async {
@@ -63,7 +66,8 @@ class MyApp extends StatelessWidget {
         ),
         ChangeNotifierProvider(create: (_) => DetailViewModel()),
         ChangeNotifierProvider(create: (_) => CheckListViewModel()),
-        ChangeNotifierProvider(create: (_) => TripClosureViewModel()),
+        ChangeNotifierProvider(
+            create: (_) => TripClosureViewModel(detailViewModel: null)),
         ChangeNotifierProvider(
           create: (_) {
             final loadTableTravelExpenses = TravelExpensesViewModel();
@@ -76,10 +80,11 @@ class MyApp extends StatelessWidget {
                 DeviceInfoRespository(), InfoDeviceSystemERP())),
         ChangeNotifierProvider(create: (_) {
           final data = ContainerMovementListViewModel();
-          data.loadMovimientos();
+          data.loadMovimientos(siteId: '');
           return data;
         }),
         ChangeNotifierProvider(create: (_) => UbicacionesViewModel()),
+        ChangeNotifierProvider(create: (_) => SendEvidenceViewModel()),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,
@@ -96,12 +101,39 @@ class MyApp extends StatelessWidget {
           '/services': (context) => ServiceListView(),
           '/services_finished': (context) => FinishServiceList(),
           '/detail_service': (context) => DetailServiceScreen(),
+          '/send_evidence': (context) {
+            final args = ModalRoute.of(context)!.settings.arguments
+                as Map<String, dynamic>;
+            return SendEvidenceScreen(
+              id: args['id'], // id siempre int
+              serviceId:
+                  args['serviceId']?.toString(), // serviceId siempre String
+            );
+          },
+          '/trip_confirmation': (context) {
+            final args = ModalRoute.of(context)!.settings.arguments
+                as Map<String, dynamic>;
+            return TripConfirmationScreen(
+              id: args['id'],
+              serviceId: args['serviceId'],
+              images: args['images'],
+            );
+          },
           '/detail_service_finished': (context) =>
               DetailServicesFinishedScreen(id: 0),
-          'trip_closure': (context) => TripClosureScreen(
-                id: 0,
-                serviceId: '',
-              ),
+          '/pdf_preview': (context) => PdfPreviewScreen(),
+
+          '/trip_closure': (context) {
+            final args = ModalRoute.of(context)!.settings.arguments
+                as Map<String, dynamic>;
+            return TripClosureScreen(
+              id: args['id'] as int, // id siempre int
+              serviceId:
+                  args['serviceId'] as String, // serviceId siempre String
+              // type siempre String
+            );
+          },
+
           '/user': (context) => UserScreen(),
           '/travel_expenses': (context) => TravelExpensesScreen(),
           '/container_map': (context) => MovimientoView(),

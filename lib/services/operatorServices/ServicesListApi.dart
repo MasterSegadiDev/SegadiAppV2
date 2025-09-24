@@ -25,8 +25,8 @@ class ServicesApi {
 
       final response = await http.get(uri);
 
-      print('[ServicesApi] STATUS: ${response.statusCode}');
-      print('[ServicesApi] BODY: ${response.body}');
+      // print('[ServicesApi] STATUS: ${response.statusCode}');
+      // print('[ServicesApi] BODY: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -35,7 +35,7 @@ class ServicesApi {
         throw Exception('Error al obtener servicios: ${response.statusCode}');
       }
     } catch (e) {
-      print('[ServicesApi] Error: $e');
+      // print('[ServicesApi] Error: $e');
       return [];
     }
   }

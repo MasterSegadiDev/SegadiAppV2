@@ -183,7 +183,7 @@ class _DetailServicesFinishedScreen
 }
 
 extension on String? {
-  toStringAsFixed(int i) {}
+  // toStringAsFixed(int i) {}
 }
 
 Widget dataCard(

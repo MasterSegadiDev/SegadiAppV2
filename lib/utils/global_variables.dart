@@ -1,8 +1,8 @@
 class GlobalVariables {
   //delete on production
-  static String baseUrl = 'http://198.251.68.42/DesarrolloSEGADI/web/';
+  //static String baseUrl = 'http://198.251.68.42/DesarrolloSEGADI/web/';
   // add only production
-  //static String baseUrl = 'http://198.251.68.42/SEGADI/web/';
+  static String baseUrl = 'http://198.251.68.42/SEGADI/web/';
 
   //headers to call api develop or production
   static const Map<String, String> headers = {

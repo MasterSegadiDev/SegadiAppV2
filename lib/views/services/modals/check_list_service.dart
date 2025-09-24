@@ -101,14 +101,14 @@ class _CheckListView extends State<CheckListView> {
                   }
                 } else {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Checklist registrado con éxito'),
-                        backgroundColor: Colors.green,
-                        behavior: SnackBarBehavior.floating,
-                        duration: Duration(seconds: 2),
-                      ),
-                    );
+                    //     ScaffoldMessenger.of(context).showSnackBar(
+                    //       const SnackBar(
+                    //         content: Text('Checklist registrado con éxito'),
+                    //         backgroundColor: Colors.green,
+                    //         behavior: SnackBarBehavior.floating,
+                    //         duration: Duration(seconds: 2),
+                    //       ),
+                    //     );
                     Navigator.pop(context);
                   }
                 }

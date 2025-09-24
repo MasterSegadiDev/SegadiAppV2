@@ -62,7 +62,7 @@ class ListTravelExpensesView extends StatelessWidget {
           child: Text('${e.paymentConcept}  \$${e.paymentTotal}'),
         );
       }).toList(),
-      onChanged: (value) => viewModel.concetId = value!,
+      onChanged: (value) => viewModel.conceptId = value!,
       isDense: true,
       isExpanded: true,
     );
@@ -131,16 +131,17 @@ class ListTravelExpensesView extends StatelessWidget {
       height: 45,
       child: ElevatedButton(
         onPressed: () async {
-          await viewModel.insertImport();
+          final result = await viewModel.insertImport();
 
-          if (viewModel.errorMessage != null) {
+          if (!result) {
             showDialog(
               context: context,
               builder: (_) =>
-                  AlertDialog(content: Text(viewModel.errorMessage!)),
+                  AlertDialog(content: Text(viewModel.errorMessage ?? 'Error')),
             );
           } else {
-            Navigator.of(context).pop();
+            // ✅ Devuelve true a TravelExpensesScreen
+            Navigator.of(context).pop(true);
           }
         },
         style: ElevatedButton.styleFrom(

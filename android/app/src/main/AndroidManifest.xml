@@ -4,6 +4,7 @@
  <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
  <uses-permission android:name="android.permission.INTERNET"/>
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 
     
     <application
@@ -12,8 +13,9 @@
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
         >
-      <!--  android:icon="@mipmap/ic_launcher" -->
-        
+         <meta-data
+            android:name="com.google.android.geo.API_KEY"
+            android:value="AIzaSyAp3-Rm6LLxDVypbnpI6SbeFbNf-b_0F6o"/>
         
         <activity
             android:name=".MainActivity"

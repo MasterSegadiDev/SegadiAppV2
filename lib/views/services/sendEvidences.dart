@@ -3,22 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/viewmodels/services_operator/send_evidences.dart';
 
-class TripClosureScreen extends StatefulWidget {
+class SendEvidenceScreen extends StatefulWidget {
   final int id;
   final String? serviceId;
 
-  const TripClosureScreen({
+  const SendEvidenceScreen({
     Key? key,
     required this.id,
     this.serviceId,
   }) : super(key: key);
 
   @override
-  State<TripClosureScreen> createState() => _SendEvidenceScreenState();
+  State<SendEvidenceScreen> createState() => _SendEvidenceScreenState();
 }
 
-class _SendEvidenceScreenState extends State<TripClosureScreen> {
-  late String type;
+class _SendEvidenceScreenState extends State<SendEvidenceScreen> {
   @override
   void initState() {
     super.initState();
@@ -30,7 +29,7 @@ class _SendEvidenceScreenState extends State<TripClosureScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Enviar Captura EIR"),
+        title: const Text("Enviar Evidencias"),
         centerTitle: true,
         backgroundColor: const Color(0xFF2C522A),
         foregroundColor: Colors.white,
@@ -165,12 +164,12 @@ class _SendEvidenceScreenState extends State<TripClosureScreen> {
 
                             final result = await Navigator.pushNamed(
                               context,
-                              '/pdf_preview',
+                              '/trip_confirmation',
                               arguments: {
                                 'id': widget.id,
                                 'serviceId': widget.serviceId,
                                 'images': files,
-                                'type': '1',
+                                'type': '0'
                               },
                             );
                             if (!mounted) return;

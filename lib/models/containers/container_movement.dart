@@ -44,8 +44,12 @@ class UbicationMovement {
   Future<http.Response> saveMovement(Movimiento movimiento) async {
     final String baseUrl = GlobalVariables.baseUrl;
 
-    var body = json.encode(movimiento);
+    // Preparar cuerpo del request
+    var body = json.encode(movimiento.toJson()); // Asegúrate de tener toJson()
     var url = Uri.parse('${baseUrl}index.php?r=esegadi/movimientosgruapost');
+
+    print('Enviando movimiento:');
+    //print(body);
 
     http.Response response = await http.post(
       url,
@@ -53,8 +57,8 @@ class UbicationMovement {
       body: body,
     );
 
-    print('Status code: ${response.statusCode}');
-    print('Response body: ${response.body}');
+    //print('Status code: ${response.statusCode}');
+    // print('Response body: ${response.body}');
 
     return response;
   }

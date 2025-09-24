@@ -42,35 +42,50 @@ class _LoginScreenState extends State<LoginView> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  // Logo
-                  Image.asset("assets/images/logo1.png",
-                      width: size.width * 0.5),
+                  // Logo con descripción accesible
+                  Semantics(
+                    label: 'Logo de la aplicación',
+                    child: Image.asset(
+                      "assets/images/logo1.png",
+                      width: size.width * 0.5,
+                      semanticLabel: 'App logo',
+                    ),
+                  ),
 
                   const SizedBox(height: 24),
 
-                  // Bienvenida
                   AutoSizeText('Bienvenido',
                       style: Theme.of(context).textTheme.titleLarge),
 
                   const SizedBox(height: 24),
 
-                  // Usuario
-                  _buildTextField(
-                    controller: loginViewModel.usernameController,
-                    label: 'Usuario',
-                    icon: Icons.person,
-                    onChanged: (value) => loginViewModel.username = value,
+                  // Campo usuario con Semantics
+                  Semantics(
+                    label: 'Campo para ingresar el nombre de usuario',
+                    child: _buildTextField(
+                      controller: loginViewModel.usernameController,
+                      label: 'Usuario',
+                      icon: Icons.person,
+                      onChanged: (value) => loginViewModel.username = value,
+                    ),
                   ),
 
                   const SizedBox(height: 16),
 
-                  // Contraseña
-                  _buildPasswordField(loginViewModel),
+                  // Campo contraseña con Semantics
+                  Semantics(
+                    label: 'Campo para ingresar la contraseña',
+                    child: _buildPasswordField(loginViewModel),
+                  ),
 
                   const SizedBox(height: 24),
 
-                  // Botón de login
-                  _buildLoginButton(loginViewModel),
+                  // Botón de login con Semantics
+                  Semantics(
+                    button: true,
+                    label: 'Botón para iniciar sesión',
+                    child: _buildLoginButton(loginViewModel),
+                  ),
 
                   const SizedBox(height: 16),
                 ],
@@ -79,8 +94,11 @@ class _LoginScreenState extends State<LoginView> {
           ),
         ),
       ),
+
+      // Botón de llamada con tooltip
       floatingActionButton: FloatingActionButton(
         backgroundColor: Colors.red,
+        tooltip: 'Llamar al soporte técnico',
         child: const Icon(Icons.phone, color: Colors.white),
         onPressed: () {
           FlutterPhoneDirectCaller.callNumber('+523311364928');

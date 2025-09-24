@@ -55,6 +55,7 @@ android {
         targetSdkVersion 35 //flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
+        //multiDexEnabled true
     }
 
     signingConfigs {

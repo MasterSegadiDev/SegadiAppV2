@@ -4,20 +4,17 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:image_picker/image_picker.dart';
+import 'package:segadi/models/user/UserSession.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:collection/collection.dart';
-
 import 'package:path_provider/path_provider.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
-
 import 'package:segadi/models/containers/container_movement.dart';
 import 'package:segadi/models/containers/container_movements.dart';
 
 class UbicacionesViewModel extends ChangeNotifier {
-  // Instancia para llamadas a la API de movimientos
   final UbicationMovement _ubicationMovement = UbicationMovement();
 
-  // Lista interna de ubicaciones
   List<Ubicacion> _ubicaciones = [];
   List<Ubicacion> get ubicaciones => _ubicaciones;
 
@@ -27,12 +24,32 @@ class UbicacionesViewModel extends ChangeNotifier {
   String? _token;
   String? get token => _token;
 
-  File? selectedImage;
+  File? _selectedImage;
+  File? get selectedImage => _selectedImage;
 
   bool _isSaving = false;
   String? _registroMensaje;
   bool get isSaving => _isSaving;
   String? get registroMensaje => _registroMensaje;
+
+  // -------------------- NUEVAS VARIABLES --------------------
+  bool isLoading = false;
+  String? areaSeleccionada;
+  String? espacioSeleccionado;
+  String? nivelSeleccionado;
+
+  // Reacomodo
+  String? origenArea;
+  String? origenEspacio;
+  String? origenNivel;
+  String? destinoArea;
+  String? destinoEspacio;
+  String? destinoNivel;
+
+  final TextEditingController numeroSerieController = TextEditingController();
+  final TextEditingController pesoBrutoController = TextEditingController();
+  final TextEditingController nombreImagenPesoController =
+      TextEditingController();
 
   void _setSaving(bool value) {
     _isSaving = value;
@@ -44,68 +61,94 @@ class UbicacionesViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  /// Limpia la imagen seleccionada y notifica
   void clearSelectedImage() {
-    selectedImage = null;
+    _selectedImage = null;
     notifyListeners();
+  }
+
+  void clearForm() {
+    numeroSerieController.clear();
+    pesoBrutoController.clear();
+    nombreImagenPesoController.clear();
+    selectedImage == null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    numeroSerieController.dispose();
+    pesoBrutoController.dispose();
+    nombreImagenPesoController.dispose();
+    super.dispose();
   }
 
   Future<void> cargarListado() async => await cargarUbicacionesDesdeApi();
 
-  /// Carga ubicaciones desde API
+  /// -------------------- CARGA DE UBICACIONES --------------------
   Future<void> cargarUbicacionesDesdeApi() async {
+    final user = UserSession();
+    final siteId = user.siteId;
+    print('🔄 Cargando ubicaciones para SITE ID: $siteId');
+
+    isLoading = true;
+    notifyListeners();
+
     final url = Uri.parse(
-      'http://198.251.68.42/DesarrolloSEGADI/web/index.php?r=esegadi/getubicaciones&id=100&token=1000',
+      'http://198.251.68.42/SEGADI/web/index.php?r=esegadi/getubicaciones&id=100&site_id=$siteId&token=1000',
     );
+    print('🌐 URL de sitios: $url');
 
     try {
       final response = await http.get(url);
+      print('📡 Código de respuesta: ${response.statusCode}');
+
       if (response.statusCode == 200) {
         final jsonData = json.decode(response.body);
-        final ubicacionesList = jsonData['ubicaciones'] as List<dynamic>;
-        _ubicaciones =
-            ubicacionesList.map((e) => Ubicacion.fromJson(e)).toList();
-        notifyListeners();
+        if (jsonData.containsKey('ubicaciones') &&
+            jsonData['ubicaciones'] is List) {
+          final ubicacionesList = jsonData['ubicaciones'] as List<dynamic>;
+          _ubicaciones =
+              ubicacionesList.map((e) => Ubicacion.fromJson(e)).toList();
+
+          _errorMessage = null;
+        } else {
+          _ubicaciones = [];
+          _errorMessage =
+              'No se encontraron ubicaciones para el sitio seleccionado.';
+        }
       } else {
-        throw Exception('Error al cargar ubicaciones: ${response.statusCode}');
+        _ubicaciones = [];
+        _errorMessage = 'Error al cargar ubicaciones: ${response.statusCode}';
       }
-    } catch (e) {
-      debugPrint('Exception al cargar ubicaciones: $e');
-      _errorMessage = 'Error al cargar ubicaciones';
+    } catch (e, stacktrace) {
+      debugPrint('❌ Exception al cargar ubicaciones: $e');
+      debugPrint('$stacktrace');
+      _errorMessage = 'Error al cargar ubicaciones. Revisa tu conexión.';
+      _ubicaciones = [];
+    } finally {
+      isLoading = false;
       notifyListeners();
     }
   }
 
-  /// Obtiene las áreas únicas
+  // -------------------- FILTROS --------------------
   List<String> getAreas() => _ubicaciones.map((u) => u.area).toSet().toList();
-
-  /// Obtiene espacios filtrados por área
   List<String> getEspaciosPorArea(String area) => _ubicaciones
       .where((u) => u.area == area)
       .map((u) => u.espacio)
       .toSet()
       .toList();
-
-  // Obtiene niveles filtrados por área y espacio
   List<String> getNivelesPorEspacio(String area, String espacio) => _ubicaciones
       .where((u) => u.area == area && u.espacio == espacio)
       .map((u) => u.nivel)
       .toSet()
       .toList();
-
   List<String> getNivelesPorEspacioCamionPiso(String area, String espacio) =>
       _ubicaciones
           .where((u) => u.area == area && u.espacio == espacio)
           .map((u) => u.nivel)
           .toSet()
           .toList();
-
-  bool esNivelLibreCamionPiso(String area, String espacio, String nivel) {
-    final ubicacion = getUbicacion(area, espacio, nivel);
-    return ubicacion != null && ubicacion.estado.toLowerCase().trim() != 'used';
-  }
-
-  /// Obtiene ubicaciones filtradas por área, espacio y opcional nivel
   List<Ubicacion> getUbicacionesPorAreaEspacioYNivel(
           String area, String espacio, [String? nivel]) =>
       _ubicaciones
@@ -114,12 +157,57 @@ class UbicacionesViewModel extends ChangeNotifier {
               u.espacio == espacio &&
               (nivel == null || u.nivel == nivel))
           .toList();
+  List<Ubicacion> getTodasUbicacionesOcupadas() => _ubicaciones
+      .where((u) => u.estado.toLowerCase().trim() == 'used')
+      .toList();
+  Ubicacion? getUbicacion(String area, String espacio, String nivel) =>
+      _ubicaciones.firstWhereOrNull(
+          (u) => u.area == area && u.espacio == espacio && u.nivel == nivel);
+  bool esNivelLibre(String area, String espacio, String nivel) {
+    final ubicacion = getUbicacion(area, espacio, nivel);
+    return ubicacion != null && ubicacion.estado.toLowerCase().trim() != 'used';
+  }
 
-  /// Guarda un movimiento llamando al repositorio
+  bool nivelEstaOcupado(String area, String espacio, String nivel) =>
+      !esNivelLibre(area, espacio, nivel);
+  bool nivelEstaOcupadoCamionPiso(String area, String espacio, String nivel) =>
+      !esNivelLibre(area, espacio, nivel);
+  bool esNivelLibreCamionPiso(String area, String espacio, String nivel) =>
+      esNivelLibre(area, espacio, nivel);
+
+  // -------------------- SELECCIÓN --------------------
+  void setAreaSeleccionada(String area) {
+    areaSeleccionada = area;
+    espacioSeleccionado = null;
+    nivelSeleccionado = null;
+    notifyListeners();
+  }
+
+  void setSeleccion({
+    required String area,
+    required String espacio,
+    required String nivel,
+    required bool isOrigen,
+    required Ubicacion ubicacion,
+  }) {
+    if (isOrigen) {
+      origenArea = area;
+      origenEspacio = espacio;
+      origenNivel = nivel;
+    } else {
+      destinoArea = area;
+      destinoEspacio = espacio;
+      destinoNivel = nivel;
+    }
+    notifyListeners();
+  }
+
+  // -------------------- MÉTODOS DE MOVIMIENTO --------------------
   Future<void> saveMovement(Movimiento movimiento) async {
     _errorMessage = null;
     try {
       final response = await _ubicationMovement.saveMovement(movimiento);
+      print('RESPUESTA ${response.statusCode}');
       if (response.statusCode == 200) {
         print('Movimiento registrado con éxito.');
       } else {
@@ -137,13 +225,13 @@ class UbicacionesViewModel extends ChangeNotifier {
     required String craneMovementId,
     String? numberSerie,
     String? movementType,
+    String? siteId,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     _token = prefs.getString('token');
     final userId = prefs.getInt('id') ?? 0;
 
-    Movimiento movimiento;
-    movimiento = Movimiento(
+    Movimiento movimiento = Movimiento(
       crane_movement_id: int.tryParse(craneMovementId) ?? 0,
       movement_type: 'Camion-Piso',
       crane_operator_id: userId.toString(),
@@ -155,17 +243,18 @@ class UbicacionesViewModel extends ChangeNotifier {
       weight: '',
       document_name: '',
       document: '',
+      site_id: siteId ?? '',
     );
 
     await saveMovement(movimiento);
   }
 
-  /// Registra un movimiento con los datos correspondientes
   Future<void> registrarMovimiento({
     required String movementType,
     String? contenedorActualId,
     String? contenedorNuevoId,
     String? numberSerie,
+    String? siteId,
     int? serviceId,
     String? status,
     String? serie,
@@ -184,8 +273,6 @@ class UbicacionesViewModel extends ChangeNotifier {
 
     switch (movementType) {
       case 'Camion-Piso':
-        print(
-            'CONTENEDOR ACTUAL ID O NUVEO A REGISTRAR: ${containerLocationId}');
         if (contenedorActualId == null) {
           throw Exception('Ubicación origen requerida para este movimiento.');
         }
@@ -201,6 +288,7 @@ class UbicacionesViewModel extends ChangeNotifier {
           weight: '',
           document_name: '',
           document: '',
+          site_id: siteId ?? '',
         );
         break;
       case 'Piso-Camion':
@@ -219,11 +307,21 @@ class UbicacionesViewModel extends ChangeNotifier {
           weight: '',
           document_name: '',
           document: '',
+          site_id: siteId ?? '',
         );
         break;
-
       case 'Reacomodo':
-        if (contenedorActualId == null || contenedorNuevoId == null) {
+        print("📦 Registrando Reacomodo en funcion");
+        // print("Número de serie: $numberSerie");
+        // print("Origen: ${contenedorActualId}");
+        // print("Destino: ${contenedorNuevoId}");
+        // print("Site ID: $siteId");
+
+        if (contenedorActualId == null ||
+            contenedorNuevoId == null ||
+            contenedorNuevoId == '' ||
+            numberSerie == '') {
+          print("Error al guardar el reacomodo ...");
           throw Exception('Se requieren IDs para reacomodo');
         }
         movimiento = Movimiento(
@@ -238,13 +336,11 @@ class UbicacionesViewModel extends ChangeNotifier {
           weight: '',
           document_name: '',
           document: '',
+          site_id: siteId ?? '',
         );
+        print('MOVIMIENTO REACOMODO: ${movimiento.container_number}');
         break;
-
       case 'Pesaje':
-        // if (contenedorActualId == null) {
-        //   throw Exception('Ubicación requerida para pesaje.');
-        // }
         movimiento = Movimiento(
           crane_movement_id: null,
           movement_type: 'Pesaje',
@@ -257,15 +353,14 @@ class UbicacionesViewModel extends ChangeNotifier {
           weight: peso ?? '',
           document_name: nameImage ?? '',
           document: image ?? '',
+          site_id: siteId ?? '',
         );
-        print('MOVIMIENTO DE PESAJE: ${movimiento}');
+        print(
+            'MOVIMIENTO Y VARIABLES ${movimiento.movement_type} ${movimiento.crane_operator_id} ${movimiento.container_number}  document name ${movimiento.document_name} imagen ${movimiento.document}');
         break;
-
       default:
         throw Exception('Tipo de movimiento desconocido: $movementType');
     }
-    print(
-        'MOVIMIENTO A GUARDAR : ${movimiento.crane_movement_id} ${movimiento.container_location_id} ${movimiento.container_number}');
     await saveMovement(movimiento);
   }
 
@@ -273,89 +368,87 @@ class UbicacionesViewModel extends ChangeNotifier {
     required String destinoId,
     required String movementId,
     required String numberSerie,
+    required String siteId,
   }) async {
-    print(
-        'UBICACION ID  : ${destinoId}, TIPO DE MOVIMIENTO : ${movementId} NUMERO DE SERIE : ${numberSerie}');
-    // Lógica de llamada a la API
     await registrarMovimiento(
         movementType: 'Piso-Camion',
         craneMovementId: movementId,
         contenedorActualId: destinoId,
-        numberSerie: numberSerie);
+        numberSerie: numberSerie,
+        siteId: siteId);
   }
 
   Future<void> registrarMovimientoCamionPiso({
     required dynamic destinoId,
     required String movementId,
     required String numberSerie,
+    required String siteId,
   }) async {
-    print(
-        'UBICACION ID  : ${destinoId}, TIPO DE MOVIMIENTO : ${movementId} NUMERO DE SERIE : ${numberSerie}');
-
+    print('''
+          ============================
+          DESTINO ID: $destinoId
+          MOVIMIENTO ID: $movementId
+          NUMERO DE SERIE: $numberSerie
+          SITE ID: $siteId
+          ============================
+          ''');
     await saveTruckFloor(
-        id: destinoId, craneMovementId: movementId, numberSerie: numberSerie);
+        id: destinoId,
+        craneMovementId: movementId,
+        numberSerie: numberSerie,
+        siteId: siteId);
   }
 
-  /// Registra un reacomodo de contenedores
   Future<bool> registrarReacomodo({
     required String? contenedorActualId,
     required String? contenedorNuevoId,
     String? numberSerie,
+    required String? siteId,
   }) async {
-    if (contenedorActualId == null || contenedorNuevoId == null) {
-      print('IDs inválidos para reacomodo.');
-      return false;
-    }
-
-    try {
+    if (contenedorActualId == null ||
+        contenedorNuevoId == null ||
+        siteId == null ||
+        numberSerie == null ||
+        numberSerie.isEmpty) {
       print(
-        'ID DE ORIGEN CONTENEDOR $contenedorActualId Y ID DE DESTINO CONTENEDOR $contenedorNuevoId',
-      );
-
-      await registrarMovimiento(
-        movementType: 'Reacomodo',
-        contenedorActualId: contenedorActualId,
-        contenedorNuevoId: contenedorNuevoId,
-        numberSerie: numberSerie,
-      );
-
-      return true;
-    } catch (e) {
-      print('Error en registrarReacomodo: $e');
+          'Parámetros inválidos: contenedorActualId=$contenedorActualId, contenedorNuevoId=$contenedorNuevoId, siteId=$siteId, numberSerie=$numberSerie');
       return false;
+    } else {
+      try {
+        await registrarMovimiento(
+            movementType: 'Reacomodo',
+            contenedorActualId: contenedorActualId,
+            contenedorNuevoId: contenedorNuevoId,
+            numberSerie: numberSerie,
+            siteId: siteId);
+        return true;
+      } catch (e) {
+        print('Error en registrarReacomodo: $e');
+        return false;
+      }
     }
   }
 
-  /// Registra el pesaje con imagen convertida a base64
   Future<void> registrarPesaje({
     required String serie,
     required String peso,
     required String nameImage,
     required File image,
+    required String siteId,
   }) async {
     _setSaving(true);
     _setRegistroMensaje(null);
     try {
       final imageBytes = await image.readAsBytes();
       final base64Image = base64Encode(imageBytes);
-
-      print('=== REGISTRO DE PESAJE ===');
-      print('Serie: $serie');
-      print('Peso: $peso Toneladas');
-      print('Nombre Imagen: $nameImage');
-      print('Imagen (Base64): ${base64Image.substring(0, 50)}...');
-
       await registrarMovimiento(
-        movementType: 'Pesaje',
-        peso: peso,
-        serie: serie,
-        nameImage: nameImage,
-        image: base64Image,
-      );
-      await Future.delayed(const Duration(seconds: 2));
-
+          movementType: 'Pesaje',
+          peso: peso,
+          serie: serie,
+          nameImage: nameImage,
+          image: base64Image,
+          siteId: siteId);
       clearSelectedImage();
-      notifyListeners();
       _setRegistroMensaje('✅ Registro de pesaje exitoso.');
     } catch (e) {
       debugPrint('Error al registrar pesaje: $e');
@@ -365,62 +458,28 @@ class UbicacionesViewModel extends ChangeNotifier {
     }
   }
 
-  /// Obtiene todas las ubicaciones que están marcadas como "used"
-  List<Ubicacion> getTodasUbicacionesOcupadas() => _ubicaciones
-      .where((u) => u.estado.toLowerCase().trim() == 'used')
-      .toList();
-
-  /// Obtiene la primera ubicación que coincide con area, espacio y nivel
-  Ubicacion? getUbicacion(String area, String espacio, String nivel) =>
-      _ubicaciones.firstWhereOrNull(
-          (u) => u.area == area && u.espacio == espacio && u.nivel == nivel);
-
-  /// Selecciona una imagen usando la cámara y la comprime antes de guardar
   Future<void> pickImageFromCamera() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
-
     if (pickedFile != null) {
       final originalFile = File(pickedFile.path);
       final compressed = await compressImage(originalFile);
-
       if (compressed != null) {
-        selectedImage = compressed;
+        _selectedImage = compressed;
         notifyListeners();
-
-        //final imageBytes = await compressed.readAsBytes();
-        //final base64Image = base64Encode(imageBytes);
       }
     }
   }
 
-  /// Comprime una imagen y devuelve un archivo comprimido
   Future<File?> compressImage(File file) async {
     final dir = await getTemporaryDirectory();
     final targetPath =
         '${dir.path}/compressed_${DateTime.now().millisecondsSinceEpoch}.jpg';
-
     final XFile? result = await FlutterImageCompress.compressAndGetFile(
       file.path,
       targetPath,
       quality: 70,
     );
-
     return result != null ? File(result.path) : null;
-  }
-
-  bool esNivelLibre(String area, String espacio, String nivel) {
-    final ubicacion = getUbicacion(area, espacio, nivel);
-    return ubicacion != null && ubicacion.estado.toLowerCase().trim() != 'used';
-  }
-
-  bool nivelEstaOcupado(String area, String espacio, String nivel) {
-    final ubicacion = getUbicacion(area, espacio, nivel);
-    return ubicacion != null && ubicacion.estado.toLowerCase().trim() == 'used';
-  }
-
-  bool nivelEstaOcupadoCamionPiso(String area, String espacio, String nivel) {
-    final ubicacion = getUbicacion(area, espacio, nivel);
-    return ubicacion != null && ubicacion.estado.toLowerCase().trim() == 'used';
   }
 }

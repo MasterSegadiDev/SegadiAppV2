@@ -1,9 +1,13 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:segadi/models/services/trip_closure.dart';
+import 'package:segadi/services/operatorServices/ServicesListApi.dart';
+import 'package:segadi/utils/closeTripResult.dart';
 import 'package:segadi/utils/user_session.dart';
 import 'package:segadi/models/services/checklist.dart';
 import 'package:segadi/models/services/detail_service.dart';
 import 'package:segadi/utils/global_variables.dart';
+import 'package:segadi/views/services/sendEvidences.dart';
 
 class DetailViewModel extends ChangeNotifier {
   // ===========================================================================
@@ -11,6 +15,8 @@ class DetailViewModel extends ChangeNotifier {
   // ===========================================================================
   final DetailServices _detailService = DetailServices();
   final NewCheckList _itemCheckList = NewCheckList();
+
+  final TripClosure _tripClosureService = TripClosure();
 
   // ===========================================================================
   // PROPIEDADES DE ESTADO
@@ -49,6 +55,23 @@ class DetailViewModel extends ChangeNotifier {
 
   bool _isLoading = false;
   bool get isLoading => _isLoading;
+
+  void checkMandatoryStatus(BuildContext context) async {
+    if (item?.mandatoryStatusId == 10) {
+      final result = Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(
+            builder: (_) => SendEvidenceScreen(
+                  id: item!.id!,
+                  serviceId: item!.service!,
+                )),
+      );
+
+      if (result == true) {
+        updateDetail();
+      }
+    }
+  }
 
   void setLoading(bool value) {
     _isLoading = value;
@@ -137,11 +160,18 @@ class DetailViewModel extends ChangeNotifier {
     try {
       final response =
           await _detailService.changeStatusService(_serviceDetailId, statusId);
+      print('ESTATUS DEL RESPONSE AIRBAG: $response');
 
       if (statusId == 2 && user.userRoll == 'No') {
-        await _detailService.changeStatusOperatorAirbag('active');
+        print('YA PASASTE EL FILTRO DEL ESTATUS Y DEL USER ROLL');
+        final restInit =
+            await _detailService.changeStatusOperatorAirbag('active');
+        print(
+            'YA PASASTE EL FILTRO DEL ESTATUS Y DEL USER ROLL: ${restInit.body}');
       } else if (statusId == 23) {
-        await _detailService.changeStatusOperatorAirbag('inactive');
+        final restFinshed =
+            await _detailService.changeStatusOperatorAirbag('inactive');
+        print('YA PASASTE EL FILTRO DEL ESTATUS Y DEL USER ROLL: $restFinshed');
       }
 
       if (response.statusCode == 200) {
@@ -195,6 +225,47 @@ class DetailViewModel extends ChangeNotifier {
       }
     } catch (e) {
       _errorMessage = 'Error inesperado: $e';
+      notifyListeners();
+    }
+  }
+
+  Future<void> refreshDetail(int id) async {
+    _item = await _detailService.getDetail(id);
+    notifyListeners();
+  }
+
+  Future<CloseTripResult> closeTrip(int id) async {
+    try {
+      final response = await _tripClosureService.closeTravels(id);
+
+      if (response.statusCode == 200) {
+        getItemsOperator();
+        return CloseTripResult(success: true);
+      } else {
+        return CloseTripResult(
+          success: false,
+          message: 'Error al cerrar el viaje: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      return CloseTripResult(
+        success: false,
+        message: 'Excepción al cerrar el viaje: $e',
+      );
+    }
+  }
+
+  Future<void> getItemsOperator() async {
+    _isLoading = true;
+    notifyListeners();
+
+    try {
+      await ServicesApi.fetchAssignedServices();
+    } catch (e) {
+      _errorMessage = 'No se han podido obtener los servicios asignados.';
+      print('[ServicesViewModel] Error: $e');
+    } finally {
+      _isLoading = false;
       notifyListeners();
     }
   }

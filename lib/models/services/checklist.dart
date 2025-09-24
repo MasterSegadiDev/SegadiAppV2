@@ -85,13 +85,13 @@ class NewCheckList {
     var body = json.encode(data);
 
     var url = Uri.parse('${baseUrl}index.php?r=esegadi/checklistpost');
-    print('URL CHECKLIST:' + url.toString());
+    // print('URL CHECKLIST:' + url.toString());
     http.Response response = await http.post(
       url,
       headers: headers,
       body: body,
     );
-    print('RESPUESTA DEL CHECK LIST : ${response.statusCode}');
+    // print('RESPUESTA DEL CHECK LIST : ${response.statusCode}');
     return response;
   }
 }
