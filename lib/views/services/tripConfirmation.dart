@@ -1,17 +1,14 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:provider/provider.dart';
-import 'package:segadi/viewmodels/services_operator/trip_closure.dart';
 import 'package:signature/signature.dart';
-import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 
-class TripConfirmationScreen extends StatefulWidget {
+class TripConfirmationScreenOld extends StatefulWidget {
   final List<File> images;
   final int id;
   final String serviceId;
 
-  const TripConfirmationScreen({
+  const TripConfirmationScreenOld({
     Key? key,
     required this.images,
     required this.id,
@@ -19,10 +16,11 @@ class TripConfirmationScreen extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  State<TripConfirmationScreen> createState() => _TripConfirmationScreenState();
+  State<TripConfirmationScreenOld> createState() =>
+      _TripConfirmationScreenState();
 }
 
-class _TripConfirmationScreenState extends State<TripConfirmationScreen> {
+class _TripConfirmationScreenState extends State<TripConfirmationScreenOld> {
   final SignatureController _signatureController = SignatureController(
     penStrokeWidth: 2,
     penColor: Colors.black,
@@ -36,9 +34,12 @@ class _TripConfirmationScreenState extends State<TripConfirmationScreen> {
   @override
   void initState() {
     super.initState();
+
     final now = DateTime.now();
-    _currentDate = DateFormat('yyyy-MM-dd').format(now);
-    _currentTime = DateFormat('HH:mm').format(now);
+    final local = now.toLocal();
+
+    _currentDate = DateFormat('yyyy-MM-dd').format(local);
+    _currentTime = DateFormat('HH:mm').format(local);
   }
 
   @override
@@ -185,40 +186,7 @@ class _TripConfirmationScreenState extends State<TripConfirmationScreen> {
                         borderRadius: BorderRadius.circular(100),
                       ),
                     ),
-                    onPressed: () async {
-                      if (_signatureController.isEmpty) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                            content: Text('Por favor, firme antes de enviar.'),
-                            backgroundColor: Colors.red,
-                          ),
-                        );
-                        return;
-                      }
-
-                      final signatureBytes =
-                          await _signatureController.toPngBytes();
-                      if (signatureBytes == null) return;
-
-                      final success = await Navigator.pushNamed(
-                        context,
-                        '/pdf_preview',
-                        arguments: {
-                          'id': widget.id,
-                          //'serviceId': widget.serviceId.toString(),
-                          'images': widget.images,
-                          'receiverName': _nameController.text,
-                          'dateTime': _currentDate,
-                          'signatureBytes': signatureBytes,
-                          'type': '0'
-                        },
-                      );
-
-                      if (!mounted) return;
-                      if (success == true) {
-                        Navigator.pop(context, true);
-                      }
-                    },
+                    onPressed: null,
                     icon: const Icon(
                       Icons.check,
                       color: Colors.white,

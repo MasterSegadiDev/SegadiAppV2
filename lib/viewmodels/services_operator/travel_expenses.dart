@@ -204,7 +204,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
   Future<bool> insertImport() async {
     _errorMessage = null;
 
-    // ✅ Validar ID de concepto (int, no String)
+    // ✅ Validar ID de concepto
     if (conceptId <= 0) {
       _errorMessage = 'Necesitas seleccionar un concepto';
       notifyListeners();
@@ -228,8 +228,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
     // ✅ Validar que el concepto exista
     final concept = _data.firstWhere(
       (e) => e.id == conceptId,
-      orElse: () =>
-          TravelExpenses(), // para evitar excepción si no lo encuentra
+      orElse: () => TravelExpenses(),
     );
 
     if (concept.id == null || concept.id == 0) {
@@ -247,6 +246,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
     }
 
     try {
+      // ✅ Validar imagen
       if (selectedImage == null) {
         _errorMessage = 'No hay imagen seleccionada';
         notifyListeners();
@@ -256,39 +256,44 @@ class TravelExpensesViewModel extends ChangeNotifier {
       Uint8List imageBytes = await selectedImage!.readAsBytes();
       String base64Image = base64Encode(imageBytes);
 
+      // ✅ Llamada al backend
       var response = await _travelExpenses.insertImport(
-        GlobalVariables.serviceDetailId, // int
-        conceptId, // int
-        parsedImport, // double
-        comentary, // String
-        name, // String
-        base64Image, // String (Base64)
+        GlobalVariables.serviceDetailId,
+        conceptId,
+        parsedImport,
+        comentary,
+        name,
+        base64Image,
       );
 
-      if (response is bool && response) {
-        await clearSelectedImage(); // 🔹 liberar imagen
-        return true;
-      } else if (response is bool && !response) {
-        // Refrescar tabla si el backend no registró
-        _tableItems = await _tableExpenses
-            .getTravelExpenses(GlobalVariables.serviceDetailId);
+      // 🔍 Depuración
+      print('Respuesta insertImport(): $response');
+      print('Tipo de respuesta: ${response.runtimeType}');
 
+      // ✅ Verificar respuesta
+      if (response == true) {
+        await clearSelectedImage();
         textController.clear();
         textController1.clear();
         evidenceNameController.clear();
-        await clearSelectedImage(); // 🔹 liberar imagen aunque no se registre
+        return true;
       } else {
-        _errorMessage = 'Ocurrió un error al registrar tu viático';
-        notifyListeners();
+        // Caso: el backend devuelve algo válido pero no exactamente true
+        _tableItems = await _tableExpenses
+            .getTravelExpenses(GlobalVariables.serviceDetailId);
       }
+
+      textController.clear();
+      textController1.clear();
+      evidenceNameController.clear();
+      await clearSelectedImage();
+      return true; // 🔹 marcar como éxito
     } catch (e) {
       _errorMessage = 'Error al procesar la imagen o enviar los datos: $e';
       print(_errorMessage);
       notifyListeners();
+      return false;
     }
-
-    notifyListeners();
-    return false;
   }
 
   Future<void> clearSelectedImage() async {

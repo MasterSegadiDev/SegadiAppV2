@@ -3,6 +3,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/models/user/UserSession.dart';
 import 'package:segadi/viewmodels/container_movement/container_movement_list_view_model.dart';
+import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
 import 'package:segadi/views/container_movements/containers_map.dart';
 import 'package:segadi/views/home/sidebar.dart';
 
@@ -14,6 +15,8 @@ class MovimientoView extends StatefulWidget {
 }
 
 class _MovimientoViewState extends State<MovimientoView> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
   String? _currentSiteId;
   String? _error;
   bool _isLoading = true;
@@ -75,9 +78,9 @@ class _MovimientoViewState extends State<MovimientoView> {
   }
 
   @override
-  @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<ContainerMovementListViewModel>(context);
+    final ubicacionesvM = Provider.of<UbicacionesViewModel>(context);
 
     if (_isLoading) {
       return const Scaffold(
@@ -111,7 +114,6 @@ class _MovimientoViewState extends State<MovimientoView> {
         child: RefreshIndicator(
           onRefresh: _handleRefresh,
           child: viewModel.isLoading
-              // ✅ Carga inicial
               ? ListView(
                   physics: const AlwaysScrollableScrollPhysics(),
                   children: const [
@@ -120,7 +122,6 @@ class _MovimientoViewState extends State<MovimientoView> {
                   ],
                 )
               : viewModel.error != null
-                  // ✅ Mostrar error
                   ? ListView(
                       physics: const AlwaysScrollableScrollPhysics(),
                       children: [
@@ -134,7 +135,6 @@ class _MovimientoViewState extends State<MovimientoView> {
                       ],
                     )
                   : viewModel.movimientos.isEmpty
-                      // ✅ Lista vacía
                       ? ListView(
                           physics: const AlwaysScrollableScrollPhysics(),
                           children: const [
@@ -148,160 +148,243 @@ class _MovimientoViewState extends State<MovimientoView> {
                             ),
                           ],
                         )
-                      // ✅ Lista de movimientos
-                      : ListView.builder(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.all(12),
-                          itemCount: viewModel.movimientos.length,
-                          itemBuilder: (context, index) {
-                            final m = viewModel.movimientos[index];
 
-                            // Determinar contenedor a mover
-                            String? containerToMove =
-                                m.containerToMove?.toLowerCase();
-                            String? contenedorMover;
-                            if (containerToMove != null) {
-                              if (containerToMove.contains('a')) {
-                                contenedorMover = m.containerNumberA;
-                              } else if (containerToMove.contains('b')) {
-                                contenedorMover = m.containerNumberB;
-                              }
-                            }
-
-                            // Lista de filas de información
-                            final infoRows = [
-                              _buildInfoRow(
-                                icon: LucideIcons.frame,
-                                label: "Movimiento de grúa",
-                                value: m.craneMovement ?? 'S/N',
-                              ),
-                              _buildInfoRow(
-                                icon: LucideIcons.type,
-                                label: "Tipo de movimiento",
-                                value: m.movementType ?? 'N/A',
-                              ),
-                              _buildInfoRow(
-                                icon: LucideIcons.fileText,
-                                label: "Remisión",
-                                value: m.service ?? 'N/A',
-                              ),
-                              _buildInfoRow(
-                                icon: LucideIcons.user,
-                                label: "Operador",
-                                value: m.craneOperator ?? 'Sin operador',
-                              ),
-                              _buildInfoRow(
-                                icon: LucideIcons.truck,
-                                label: "Unidad",
-                                value: m.unit ?? 'No hay unidad',
-                              ),
-                              _buildInfoRow(
-                                icon: LucideIcons.truck,
-                                label: "Unidad Mov. Local",
-                                value: m.localUnit ??
-                                    'No hay unidad local asignada',
-                              ),
-                              _buildInfoRow(
-                                icon: LucideIcons.container,
-                                label: "Número de contenedor",
-                                value: contenedorMover ?? 'S/N',
-                              ),
-                              _buildInfoRow(
-                                icon: LucideIcons.container,
-                                label: "Estado del contenedor",
-                                value: m.containerStatus ?? 'S/E',
-                              ),
-                            ];
-
-                            // Datos principales para vista resumida
-                            final resumenRows = infoRows.take(3).toList();
-
-                            final isExpanded = expandedIndex.contains(index);
-
-                            return GestureDetector(
-                              onTap: () async {
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => ContainersMapScreen(
-                                      status: m.status,
-                                      movementId: m.id,
-                                      initialArea: m.area,
-                                      initialEspacio: m.space,
-                                      initialNivel: m.level,
-                                      movementType: m.movementType!,
-                                      containerNumber: contenedorMover,
-                                      siteId: _currentSiteId!,
-                                    ),
+                      // ================================
+                      // LISTA + BUSCADOR
+                      // ================================
+                      : Column(
+                          children: [
+                            // 🔍 BUSCADOR
+                            Padding(
+                              padding: const EdgeInsets.all(12),
+                              child: TextField(
+                                controller: _searchController,
+                                decoration: InputDecoration(
+                                  hintText:
+                                      "Buscar por serie, tipo o número de movimiento...",
+                                  prefixIcon: Icon(Icons.search),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                );
-
-                                if (result == 'recargar') {
-                                  await _handleRefresh();
-                                }
-                              },
-                              child: Card(
-                                color: Colors.white,
-                                elevation: 3,
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
                                 ),
-                                margin: const EdgeInsets.symmetric(
-                                    vertical: 10, horizontal: 12),
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                      horizontal: 14, vertical: 12),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      AnimatedCrossFade(
-                                        firstChild:
-                                            Column(children: resumenRows),
-                                        secondChild: Column(children: infoRows),
-                                        crossFadeState: isExpanded
-                                            ? CrossFadeState.showSecond
-                                            : CrossFadeState.showFirst,
-                                        duration:
-                                            const Duration(milliseconds: 250),
-                                      ),
-                                      const SizedBox(height: 8),
-                                      Align(
-                                        alignment: Alignment.centerRight,
-                                        child: TextButton.icon(
-                                          onPressed: () {
-                                            setState(() {
-                                              if (isExpanded) {
-                                                expandedIndex.remove(index);
-                                              } else {
-                                                expandedIndex.add(index);
-                                              }
-                                            });
-                                          },
-                                          icon: Icon(
-                                            isExpanded
-                                                ? LucideIcons.chevronUp
-                                                : LucideIcons.chevronDown,
-                                            size: 18,
-                                            color: Colors.green,
-                                          ),
-                                          label: Text(
-                                            isExpanded
-                                                ? "Ver menos"
-                                                : "Ver más",
-                                            style: const TextStyle(
-                                              color: Colors.green,
-                                              fontWeight: FontWeight.w600,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _searchQuery = value;
+                                  });
+                                },
+                              ),
+                            ),
+
+                            // LISTA FILTRADA
+                            Expanded(
+                              child: Builder(
+                                builder: (_) {
+                                  final query = _searchQuery.toLowerCase();
+
+                                  final movimientosFiltrados =
+                                      viewModel.movimientos.where((m) {
+                                    if (query.isEmpty) return true;
+
+                                    final serieA = (m.containerNumberA ?? "")
+                                        .toLowerCase();
+                                    final serieB = (m.containerNumberB ?? "")
+                                        .toLowerCase();
+                                    final tipo =
+                                        (m.movementType ?? "").toLowerCase();
+                                    final mov =
+                                        (m.craneMovement ?? "").toLowerCase();
+
+                                    return serieA.contains(query) ||
+                                        serieB.contains(query) ||
+                                        tipo.contains(query) ||
+                                        mov.contains(query);
+                                  }).toList();
+
+                                  return ListView.builder(
+                                    physics:
+                                        const AlwaysScrollableScrollPhysics(),
+                                    padding: const EdgeInsets.all(12),
+                                    itemCount: movimientosFiltrados.length,
+                                    itemBuilder: (context, index) {
+                                      final m = movimientosFiltrados[index];
+
+                                      // Determinar contenedor a mover
+                                      String? containerToMove =
+                                          m.containerToMove?.toLowerCase();
+                                      String? contenedorMover;
+                                      if (containerToMove != null) {
+                                        if (containerToMove.contains('a')) {
+                                          contenedorMover = m.containerNumberA;
+                                        } else if (containerToMove
+                                            .contains('b')) {
+                                          contenedorMover = m.containerNumberB;
+                                        }
+                                      }
+
+                                      // Lista de filas de información
+                                      final infoRows = [
+                                        _buildInfoRow(
+                                          icon: LucideIcons.frame,
+                                          label: "Movimiento de grúa",
+                                          value: m.craneMovement ?? 'S/N',
+                                        ),
+                                        _buildInfoRow(
+                                          icon: LucideIcons.type,
+                                          label: "Tipo de movimiento",
+                                          value: m.movementType ?? 'N/A',
+                                        ),
+                                        _buildInfoRow(
+                                          icon: LucideIcons.fileText,
+                                          label: "Remisión",
+                                          value: m.service ?? 'N/A',
+                                        ),
+                                        _buildInfoRow(
+                                          icon: LucideIcons.user,
+                                          label: "Operador",
+                                          value:
+                                              m.craneOperator ?? 'Sin operador',
+                                        ),
+                                        _buildInfoRow(
+                                          icon: LucideIcons.truck,
+                                          label: "Unidad",
+                                          value: m.unit ?? 'No hay unidad',
+                                        ),
+                                        _buildInfoRow(
+                                          icon: LucideIcons.truck,
+                                          label: "Unidad Mov. Local",
+                                          value: m.localUnit ??
+                                              'No hay unidad local asignada',
+                                        ),
+                                        _buildInfoRow(
+                                          icon: LucideIcons.container,
+                                          label: "Número de contenedor",
+                                          value: contenedorMover ?? 'S/N',
+                                        ),
+                                        _buildInfoRow(
+                                          icon: LucideIcons.container,
+                                          label: "Estado del contenedor",
+                                          value: m.containerStatus ?? 'S/E',
+                                        ),
+                                      ];
+
+                                      return GestureDetector(
+                                        onTap: () async {
+                                          viewModel.setSelectedMovement(
+                                              m,
+                                              _currentSiteId!,
+                                              contenedorMover,
+                                              ubicacionesvM);
+
+                                          final result = await Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder: (context) =>
+                                                  ContainersMapScreen(),
+                                            ),
+                                          );
+
+                                          if (result == 'recargar') {
+                                            await _handleRefresh();
+                                          }
+                                        },
+                                        child: Container(
+                                          margin: const EdgeInsets.symmetric(
+                                              vertical: 10),
+                                          padding: const EdgeInsets.all(18),
+                                          decoration: BoxDecoration(
+                                            color: Colors.grey.shade50,
+                                            borderRadius:
+                                                BorderRadius.circular(18),
+                                            border: Border.all(
+                                              color: Colors.grey.shade300,
+                                              width: 1,
                                             ),
                                           ),
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              // ENCABEZADO
+                                              Row(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment
+                                                        .spaceBetween,
+                                                children: [
+                                                  Expanded(
+                                                    child: Text(
+                                                      "MOV ${m.craneMovement ?? 'S/N'}",
+                                                      style: const TextStyle(
+                                                        fontSize: 20,
+                                                        fontWeight:
+                                                            FontWeight.w600,
+                                                        letterSpacing: 0.2,
+                                                        height: 1.2,
+                                                        color:
+                                                            Color(0xFF1A1A1A),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    "Número de contenedor: ${contenedorMover}",
+                                                    style: const TextStyle(
+                                                      fontSize: 18,
+                                                      fontWeight:
+                                                          FontWeight.w700,
+                                                      letterSpacing: 0.3,
+                                                      color: Colors.black87,
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+
+                                              const SizedBox(height: 12),
+
+                                              // CHIPS
+                                              Wrap(
+                                                spacing: 8,
+                                                runSpacing: 6,
+                                                children: [
+                                                  _chipPremium(
+                                                    m.movementType ??
+                                                        "Tipo no definido",
+                                                    Colors.green,
+                                                  ),
+                                                  _chipPremium(
+                                                    "Remisión ${m.service ?? 'N/A'}",
+                                                    Colors.green,
+                                                  ),
+                                                ],
+                                              ),
+
+                                              const SizedBox(height: 16),
+                                              Divider(
+                                                  color: Colors.grey.shade300),
+                                              const SizedBox(height: 16),
+
+                                              // DETALLES
+                                              _detallePremium(
+                                                  "Operador",
+                                                  m.craneOperator ??
+                                                      "Sin operador"),
+                                              _detallePremium("Unidad",
+                                                  m.unit ?? "No hay unidad"),
+                                              _detallePremium(
+                                                  "Unidad Local",
+                                                  m.localUnit ??
+                                                      "No hay unidad local"),
+                                              _detallePremium(
+                                                  "Estado del contenedor",
+                                                  m.containerStatus ?? "S/E"),
+                                            ],
+                                          ),
                                         ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
+                                      );
+                                    },
+                                  );
+                                },
                               ),
-                            );
-                          },
+                            ),
+                          ],
                         ),
         ),
       ),
@@ -310,27 +393,85 @@ class _MovimientoViewState extends State<MovimientoView> {
     );
   }
 
+  Widget _chipPremium(String label, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: color.withOpacity(0.25),
+          width: 1,
+        ),
+      ),
+      child: Text(
+        label,
+        style: TextStyle(
+          color: color,
+          fontWeight: FontWeight.w500,
+          fontSize: 13,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
+  }
+
+  Widget _detallePremium(String title, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: Text(
+              title,
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w600,
+                color: Colors.black87,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ),
+          Expanded(
+            flex: 4,
+            child: Text(
+              value,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.black87,
+                height: 1.25,
+                letterSpacing: 0.1,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// 🔹 Botones flotantes
   Widget _buildFloatingButtons() {
+    final movementVm =
+        Provider.of<ContainerMovementListViewModel>(context, listen: false);
+
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
+        // 🔵 BOTÓN REACOMODO MANUAL
         FloatingActionButton.extended(
           heroTag: 'reacomodo',
           onPressed: () {
+            movementVm.setManualMovement(
+              type: "Reacomodo",
+            );
+
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => ContainersMapScreen(
-                  status: '',
-                  movementId: 0,
-                  initialArea: '',
-                  initialEspacio: '',
-                  initialNivel: '',
-                  movementType: 'Reacomodo',
-                  siteId: _currentSiteId!,
-                ),
+                builder: (_) => const ContainersMapScreen(),
               ),
             );
           },
@@ -338,23 +479,21 @@ class _MovimientoViewState extends State<MovimientoView> {
           label: const Text('Reacomodo', style: TextStyle(color: Colors.white)),
           backgroundColor: Colors.teal,
         ),
+
         const SizedBox(height: 12),
+
+        // 🟠 BOTÓN PESAJE MANUAL
         FloatingActionButton.extended(
           heroTag: 'pesaje',
           onPressed: () {
+            movementVm.setManualMovement(
+              type: "Pesaje",
+            );
+
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (_) => ContainersMapScreen(
-                  status: '',
-                  movementId: 0,
-                  initialArea: '',
-                  initialEspacio: '',
-                  initialNivel: '',
-                  movementType: 'Pesaje',
-                  containerNumber: '',
-                  siteId: _currentSiteId!,
-                ),
+                builder: (_) => const ContainersMapScreen(),
               ),
             );
           },
@@ -386,7 +525,7 @@ class _MovimientoViewState extends State<MovimientoView> {
                     text: "$label: ",
                     style: TextStyle(
                       fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade800,
+                      color: Colors.black,
                       fontSize: 13.5,
                     ),
                   ),
@@ -407,31 +546,4 @@ class _MovimientoViewState extends State<MovimientoView> {
       ),
     );
   }
-
-  /// 🔹 Widget para mostrar info de cada movimiento
-  // Widget _buildInfoRow({
-  //   required IconData icon,
-  //   required String label,
-  //   required String value,
-  // }) {
-  //   return Padding(
-  //     padding: const EdgeInsets.symmetric(vertical: 4),
-  //     child: Row(
-  //       children: [
-  //         Icon(icon, size: 20, color: Colors.grey.shade700),
-  //         const SizedBox(width: 10),
-  //         Text(
-  //           "$label: ",
-  //           style: const TextStyle(fontWeight: FontWeight.bold),
-  //         ),
-  //         Expanded(
-  //           child: Text(
-  //             value,
-  //             overflow: TextOverflow.ellipsis,
-  //           ),
-  //         ),
-  //       ],
-  //     ),
-  //   );
-  // }
 }

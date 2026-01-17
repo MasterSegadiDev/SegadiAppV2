@@ -7,7 +7,7 @@ import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 class TripClosureViewModel extends ChangeNotifier {
   late int id;
   late String serviceId;
-  final DetailViewModel? detailViewModel;
+  final DetailViewModelOld? detailViewModel;
 
   TripClosureViewModel({required this.detailViewModel});
 

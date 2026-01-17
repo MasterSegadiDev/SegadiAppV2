@@ -35,6 +35,7 @@ class Services {
     this.status,
     this.scaleOne,
     this.scaleTwo,
+    required String name,
   });
 
   factory Services.fromJson(Map<String, dynamic> json) => Services(
@@ -48,7 +49,8 @@ class Services {
       documenter: json["documenter"],
       status: json["status"] ?? 'Sin Estatus',
       scaleOne: json["stopover_1"],
-      scaleTwo: json["stopover_2"]);
+      scaleTwo: json["stopover_2"],
+      name: '');
 
   Map<String, dynamic> toJson() => {
         "id": id,

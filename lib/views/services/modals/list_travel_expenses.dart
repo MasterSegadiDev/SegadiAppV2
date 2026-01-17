@@ -133,15 +133,22 @@ class ListTravelExpensesView extends StatelessWidget {
         onPressed: () async {
           final result = await viewModel.insertImport();
 
-          if (!result) {
+          if (result == false) {
+            print('error message: ' + (viewModel.errorMessage ?? ''));
             showDialog(
               context: context,
-              builder: (_) =>
-                  AlertDialog(content: Text(viewModel.errorMessage ?? 'Error')),
+              builder: (_) => AlertDialog(
+                content: Text(
+                    viewModel.errorMessage ?? 'Error al registrar el viático'),
+              ),
             );
           } else {
-            // ✅ Devuelve true a TravelExpensesScreen
-            Navigator.of(context).pop(true);
+            print('Importe registrado correctamente');
+            // Puedes mostrar un mensaje de éxito si quieres
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(content: Text('Viático registrado correctamente')),
+            );
+            Navigator.of(context).pop(); // Cerrar el modal
           }
         },
         style: ElevatedButton.styleFrom(

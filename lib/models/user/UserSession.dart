@@ -9,7 +9,7 @@ class UserSession {
   String password = '';
   String token = '';
   String employeeNumber = '';
-  String? siteId = '';
+  String siteId = '';
   UserRole role = UserRole.desconocido;
 
   static final UserSession _instance = UserSession._internal();
@@ -25,7 +25,7 @@ class UserSession {
     token = prefs.getString('token') ?? '';
     employeeNumber = prefs.getString('number_employe') ?? '';
     role = _parseRole(prefs.getString('user_rol_app') ?? '');
-    siteId = prefs.getString('site_id');
+    siteId = prefs.getString('site_id') ?? '';
   }
 
   Future<void> updateSiteId(String newSiteId) async {

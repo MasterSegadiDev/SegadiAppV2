@@ -100,7 +100,7 @@ class SendEvidenceViewModel extends ChangeNotifier {
     required String receiverName,
     required String receiverDate,
     required Uint8List signatureBytes,
-    DetailViewModel? detailViewModel,
+    DetailViewModelOld? detailViewModel,
   }) async {
     if (_isLoading) return false;
     _setLoading(true);
@@ -215,7 +215,7 @@ class SendEvidenceViewModel extends ChangeNotifier {
     required String receiverName,
     required String receiverDate,
     required Uint8List signatureBytes,
-    DetailViewModel? detailViewModel,
+    DetailViewModelOld? detailViewModel,
   }) async {
     if (_isLoading) return false;
     _setLoading(true);

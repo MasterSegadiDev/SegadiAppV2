@@ -1,3 +1,5 @@
+import 'dart:ffi';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/viewmodels/services_operator/detail_service.dart';
@@ -5,7 +7,7 @@ import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 class StatusSupport extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    final detail = Provider.of<DetailViewModel>(context);
+    final detail = Provider.of<DetailViewModelOld>(context);
 
     final statusId = detail.item!.statusId;
     final type = detail.item!.type;
@@ -135,10 +137,10 @@ class StatusSupport extends StatelessWidget {
           const SizedBox(height: 20),
           ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.grey[300],
-              foregroundColor: Colors.black87,
+              backgroundColor: Colors.red,
+              foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8)),
+                  borderRadius: BorderRadius.circular(100)),
             ),
             icon: const Icon(Icons.close),
             label: const Text('Cancelar'),

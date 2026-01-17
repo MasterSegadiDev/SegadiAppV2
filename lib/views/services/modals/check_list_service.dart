@@ -14,7 +14,7 @@ class _CheckListView extends State<CheckListView> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      Provider.of<DetailViewModel>(context, listen: false).fetchItems();
+      Provider.of<DetailViewModelOld>(context, listen: false).fetchItems();
     });
   }
 
@@ -22,11 +22,14 @@ class _CheckListView extends State<CheckListView> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: _buildAppBar(),
-      body: Consumer<DetailViewModel>(
+      body: Consumer<DetailViewModelOld>(
         builder: (context, viewModel, _) => _buildChecklist(viewModel),
       ),
-      bottomNavigationBar: Consumer<DetailViewModel>(
-        builder: (context, viewModel, _) => _buildSaveButton(viewModel),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.only(bottom: 16), // Evita pegarse al borde
+        child: Consumer<DetailViewModelOld>(
+          builder: (context, viewModel, _) => _buildSaveButton(viewModel),
+        ),
       ),
     );
   }
@@ -39,7 +42,7 @@ class _CheckListView extends State<CheckListView> {
     );
   }
 
-  Widget _buildChecklist(DetailViewModel viewModel) {
+  Widget _buildChecklist(DetailViewModelOld viewModel) {
     if (viewModel.items.isEmpty) {
       return const Center(child: Text('No hay puntos de revisión.'));
     }
@@ -70,7 +73,7 @@ class _CheckListView extends State<CheckListView> {
     );
   }
 
-  Widget _buildSaveButton(DetailViewModel viewModel) {
+  Widget _buildSaveButton(DetailViewModelOld viewModel) {
     return Padding(
       padding: const EdgeInsets.all(16),
       child: ElevatedButton.icon(

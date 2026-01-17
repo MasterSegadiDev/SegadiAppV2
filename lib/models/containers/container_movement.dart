@@ -10,9 +10,9 @@ class Ubicacion {
   final String espacio;
   final String nivel;
   final String codigo;
-  final String? color;
-  final String estado;
-  final String? numberSerie;
+  String? color;
+  String estado;
+  String? numberSerie;
 
   Ubicacion({
     required this.id,
@@ -29,13 +29,13 @@ class Ubicacion {
     return Ubicacion(
         id: json['id'],
         area: json['area_contenedor'],
-        espacio: json['espacio_contenedor'],
+        espacio: json['espacio_contenedor'] ?? " ",
         nivel: json['ubicacion_contenedor'].split('-').last, // Ej: "1"
         codigo: json['ubicacion_contenedor'],
         color: json['color'],
         //estatus: json['estatus'],
         estado: json['estatus'] ?? '',
-        numberSerie: json['container_number'] ?? 'N/A');
+        numberSerie: json['container_number'] ?? '');
   }
 }
 

@@ -7,14 +7,14 @@ import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 import 'package:segadi/viewmodels/services_operator/send_evidences.dart';
 import 'package:syncfusion_flutter_pdf/pdf.dart';
 
-class PdfPreviewScreen extends StatefulWidget {
-  const PdfPreviewScreen({Key? key}) : super(key: key);
+class PdfPreviewScreenOld extends StatefulWidget {
+  const PdfPreviewScreenOld({Key? key}) : super(key: key);
 
   @override
-  State<PdfPreviewScreen> createState() => _PdfPreviewScreenState();
+  State<PdfPreviewScreenOld> createState() => _PdfPreviewScreenState();
 }
 
-class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
+class _PdfPreviewScreenState extends State<PdfPreviewScreenOld> {
   late int id;
   // late String serviceId;
   late List<File> images;
@@ -57,15 +57,63 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
   }
 
   /// Genera el PDF a partir de las imágenes
+  // Future<void> _generatePdf() async {
+  //   final document = PdfDocument();
+
+  //   try {
+  //     for (var imageFile in images) {
+  //       final page = document.pages.add();
+  //       final bytes = await imageFile.readAsBytes();
+  //       final pdfImage = PdfBitmap(bytes);
+  //       page.graphics.drawImage(pdfImage, const Rect.fromLTWH(0, 0, 500, 500));
+  //     }
+
+  //     final bytes = await document.save();
+  //     document.dispose();
+
+  //     if (!mounted) return;
+
+  //     setState(() {
+  //       _pdfBytes = Uint8List.fromList(bytes);
+  //       _isLoading = false;
+  //     });
+  //   } catch (e) {
+  //     if (!mounted) return;
+  //     setState(() {
+  //       _isLoading = false;
+  //       _message = 'Error generando PDF: $e';
+  //       _messageColor = Colors.red;
+  //     });
+  //   }
+  // }
+
   Future<void> _generatePdf() async {
     final document = PdfDocument();
 
     try {
-      for (var imageFile in images) {
+      if (images.isEmpty) throw "No hay imágenes para generar el PDF";
+
+      print("Total de imágenes: ${images.length}");
+
+      for (var img in images) {
+        final bytes = await img.readAsBytes();
+
+        if (bytes.isEmpty) {
+          print("⚠️ Imagen inválida, se omite");
+          continue;
+        }
+
         final page = document.pages.add();
-        final bytes = await imageFile.readAsBytes();
         final pdfImage = PdfBitmap(bytes);
-        page.graphics.drawImage(pdfImage, const Rect.fromLTWH(0, 0, 500, 500));
+
+        page.graphics.drawImage(
+          pdfImage,
+          const Rect.fromLTWH(0, 0, 400, 400),
+        );
+      }
+
+      if (document.pages.count == 0) {
+        throw "PDF sin páginas (todas las imágenes fallaron)";
       }
 
       final bytes = await document.save();
@@ -73,12 +121,14 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
       if (!mounted) return;
 
-      setState(() {
-        _pdfBytes = Uint8List.fromList(bytes);
-        _isLoading = false;
-      });
+      _pdfBytes = Uint8List.fromList(bytes);
+
+      // Tamaño final del PDF
+      print(
+          "📄 Tamaño PDF: ${_pdfBytes!.lengthInBytes} bytes (${(_pdfBytes!.lengthInBytes / 1024).toStringAsFixed(2)} KB)");
+
+      setState(() => _isLoading = false);
     } catch (e) {
-      if (!mounted) return;
       setState(() {
         _isLoading = false;
         _message = 'Error generando PDF: $e';
@@ -98,7 +148,7 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
 
     final viewModel =
         Provider.of<SendEvidenceViewModel>(context, listen: false);
-    final detailVM = Provider.of<DetailViewModel>(context, listen: false);
+    final detailVM = Provider.of<DetailViewModelOld>(context, listen: false);
 
     bool success = false;
 
@@ -160,36 +210,42 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
         ),
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF2C522A),
+        elevation: 2,
       ),
-      body: Column(
-        children: [
-          if (_message != null)
-            Container(
-              width: double.infinity,
-              color: _messageColor?.withOpacity(0.1),
-              padding: const EdgeInsets.all(12),
-              margin: const EdgeInsets.all(8),
-              child: Text(
-                _message!,
-                style: TextStyle(color: _messageColor, fontSize: 16),
-                textAlign: TextAlign.center,
+      body: SafeArea(
+        child: Column(
+          children: [
+            if (_message != null)
+              Container(
+                width: double.infinity,
+                color: _messageColor?.withOpacity(0.1),
+                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.all(8),
+                child: Text(
+                  _message!,
+                  style: TextStyle(color: _messageColor, fontSize: 16),
+                  textAlign: TextAlign.center,
+                ),
               ),
+            Expanded(
+              child: _isLoading
+                  ? const Center(child: CircularProgressIndicator())
+                  : Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: PdfPreview(
+                        build: (format) async => _pdfBytes!,
+                        canChangePageFormat: false,
+                        canChangeOrientation: false,
+                        allowPrinting: false,
+                        allowSharing: false,
+                      ),
+                    ),
             ),
-          Expanded(
-            child: _isLoading
-                ? const Center(child: CircularProgressIndicator())
-                : PdfPreview(
-                    build: (format) async => _pdfBytes!,
-                    canChangePageFormat: false,
-                    canChangeOrientation: false,
-                    allowPrinting: false,
-                    allowSharing: false,
-                  ),
-          ),
-        ],
+          ],
+        ),
       ),
-      bottomNavigationBar: Padding(
-        padding: const EdgeInsets.all(16.0),
+      bottomNavigationBar: SafeArea(
+        minimum: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
         child: ElevatedButton.icon(
           icon: _isSending
               ? const SizedBox(
@@ -206,8 +262,11 @@ class _PdfPreviewScreenState extends State<PdfPreviewScreen> {
             style: const TextStyle(color: Colors.white),
           ),
           style: ElevatedButton.styleFrom(
-            backgroundColor: const Color(0xFF2C522A),
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            backgroundColor: Colors.green,
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(100),
+            ),
           ),
           onPressed: _isSending || _isLoading ? null : _sendPdfToServer,
         ),

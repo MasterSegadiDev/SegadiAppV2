@@ -9,12 +9,16 @@ import 'package:segadi/models/services/detail_service.dart';
 import 'package:segadi/utils/global_variables.dart';
 import 'package:segadi/views/services/sendEvidences.dart';
 
-class DetailViewModel extends ChangeNotifier {
+class DetailViewModelOld extends ChangeNotifier {
   // ===========================================================================
   // DEPENDENCIAS Y SERVICIOS
   // ===========================================================================
   final DetailServices _detailService = DetailServices();
   final NewCheckList _itemCheckList = NewCheckList();
+
+  final ServicesApi servicesApi;
+
+  DetailViewModelOld({required this.servicesApi});
 
   final TripClosure _tripClosureService = TripClosure();
 
@@ -61,7 +65,7 @@ class DetailViewModel extends ChangeNotifier {
       final result = Navigator.pushReplacement(
         context,
         MaterialPageRoute(
-            builder: (_) => SendEvidenceScreen(
+            builder: (_) => SendEvidenceScreenOld(
                   id: item!.id!,
                   serviceId: item!.service!,
                 )),
@@ -133,23 +137,6 @@ class DetailViewModel extends ChangeNotifier {
       notifyListeners();
     }
   }
-
-  // Future<void> changeStatusService(int statusId) async {
-  //   final user = UserSession();
-  //   _errorMessage = null;
-
-  //   await _handleResponse(
-  //     _detailService.changeStatusService(_serviceDetailId, statusId),
-  //     onSuccess: () async {
-  //       // Lógica especial según el rol del usuario
-  //       if (statusId == 2 && user.userRoll == 'No') {
-  //         await _detailService.changeStatusOperatorAirbag('active');
-  //       } else if (statusId == 23) {
-  //         await _detailService.changeStatusOperatorAirbag('inactive');
-  //       }
-  //     },
-  //   );
-  // }
 
   Future<void> changeStatusService(int statusId) async {
     final user = UserSession();
@@ -260,10 +247,9 @@ class DetailViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
-      await ServicesApi.fetchAssignedServices();
+      await servicesApi.fetchAssignedServices();
     } catch (e) {
       _errorMessage = 'No se han podido obtener los servicios asignados.';
-      print('[ServicesViewModel] Error: $e');
     } finally {
       _isLoading = false;
       notifyListeners();

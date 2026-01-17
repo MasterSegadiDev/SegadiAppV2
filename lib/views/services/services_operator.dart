@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
+
 import 'package:segadi/models/services/detail_service.dart';
 import 'package:segadi/models/services/services.dart';
 import 'package:segadi/views/home/sidebar.dart';
@@ -9,108 +10,219 @@ import 'package:segadi/views/services/detail_service.dart';
 import 'package:segadi/viewmodels/services_operator/assigned_services.dart';
 import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 
-class ServiceListView extends StatelessWidget {
+class ServiceListView extends StatefulWidget {
   const ServiceListView({super.key});
 
   @override
+  State<ServiceListView> createState() => _ServiceListViewState();
+}
+
+class _ServiceListViewState extends State<ServiceListView> {
+  @override
+  void initState() {
+    super.initState();
+    // Carga inicial segura
+    Future.microtask(() {
+      context.read<ServicesViewModel>().fetchItems();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final serviceViewModel = Provider.of<ServicesViewModel>(context);
+    final viewModel = context.watch<ServicesViewModel>();
+
+    if (viewModel.sessionExpired) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        Navigator.of(context).pushNamedAndRemoveUntil(
+          '/login',
+          (route) => false,
+        );
+      });
+    }
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Remisiones Asignadas',
-            style: TextStyle(color: Colors.white)),
-        iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: const Color(0xFF2C522A),
-      ),
-      backgroundColor: Colors.white,
+      appBar: _buildAppBar(),
       drawer: DrawerScreen(),
+      backgroundColor: Colors.white,
       body: RefreshIndicator(
-        onRefresh: serviceViewModel.onRefresh,
-        child: _buildBody(context, serviceViewModel),
+        onRefresh: viewModel.onRefresh,
+        child: _buildBody(viewModel),
       ),
-      floatingActionButton: FloatingActionButton(
-        backgroundColor: Colors.red,
-        child: const Icon(Icons.phone, color: Colors.white),
-        onPressed: () => FlutterPhoneDirectCaller.callNumber('+523311364928'),
-      ),
+      floatingActionButton: _buildCallButton(),
     );
   }
 
-  Widget _buildBody(BuildContext context, ServicesViewModel viewModel) {
-    if (viewModel.isLoading) {
+  // ==================== UI STATES ====================
+
+  Widget _buildBody(ServicesViewModel vm) {
+    // Loading inicial
+    if (vm.isLoading && vm.items.isEmpty) {
       return const Center(child: CircularProgressIndicator());
     }
 
-    if (viewModel.errorMessage != null) {
-      return Center(
-          child: Text(viewModel.errorMessage!,
-              style: const TextStyle(color: Colors.red)));
+    // Error
+    if (vm.errorMessage != null) {
+      return _buildErrorState(vm);
     }
 
-    if (viewModel.items.isEmpty) {
-      return const Center(child: Text('No hay servicios disponibles.'));
+    // Lista vacía (mantiene scroll para RefreshIndicator)
+    if (vm.items.isEmpty) {
+      return ListView(
+        physics: const AlwaysScrollableScrollPhysics(),
+        children: const [
+          SizedBox(height: 200),
+          Center(
+            child: Text(
+              'No hay servicios disponibles',
+              style: TextStyle(fontSize: 16),
+            ),
+          ),
+        ],
+      );
     }
 
+    // Lista con datos
     return ListView.builder(
       padding: const EdgeInsets.all(10),
-      itemCount: viewModel.items.length,
-      itemBuilder: (context, index) {
-        final item = viewModel.items[index];
-        return _buildServiceCard(context, item);
+      itemCount: vm.items.length,
+      itemBuilder: (_, index) {
+        return _ServiceCard(item: vm.items[index]);
       },
     );
   }
 
-  Widget _buildServiceCard(BuildContext context, Services item) {
-    final serviceViewModel = Provider.of<ServicesViewModel>(context);
+  Widget _buildErrorState(ServicesViewModel vm) {
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        const SizedBox(height: 150),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.warning_amber_rounded,
+              size: 60,
+              color: Colors.redAccent,
+            ),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24),
+              child: Text(
+                vm.errorMessage ?? 'Ocurrió un error inesperado',
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontSize: 16, color: Colors.red),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: vm.fetchItems,
+              icon: const Icon(Icons.refresh, color: Colors.white),
+              label: const Text(
+                'Reintentar',
+                style: TextStyle(color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFF2C522A),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  // ==================== COMPONENTS ====================
+
+  AppBar _buildAppBar() {
+    return AppBar(
+      title: const Text(
+        'Remisiones Asignadas',
+        style: TextStyle(color: Colors.white),
+      ),
+      backgroundColor: const Color(0xFF2C522A),
+      iconTheme: const IconThemeData(color: Colors.white),
+    );
+  }
+
+  FloatingActionButton _buildCallButton() {
+    return FloatingActionButton(
+      backgroundColor: Colors.red,
+      child: const Icon(Icons.phone, color: Colors.white),
+      onPressed: () async {
+        try {
+          await FlutterPhoneDirectCaller.callNumber('523311364928');
+        } catch (e) {
+          debugPrint('Error al realizar llamada: $e');
+        }
+      },
+    );
+  }
+}
+
+// ==================== SERVICE CARD ====================
+
+class _ServiceCard extends StatelessWidget {
+  final Services item;
+
+  const _ServiceCard({required this.item});
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () async {
-        final detailServiceModel = DetailService(id: item.id);
-        Provider.of<DetailViewModel>(context, listen: false)
-            .setNewDetail(detailServiceModel);
-
-        final result = await Navigator.push(
+        final result = await Navigator.pushNamed(
           context,
-          MaterialPageRoute(builder: (_) => DetailServiceScreen()),
+          '/detail_service',
+          arguments: item.id,
         );
 
         if (result == true) {
-          serviceViewModel.onRefresh(); // Refresca la lista
+          context.read<ServicesViewModel>().onRefresh();
         }
       },
       child: Card(
-        elevation: 8,
+        elevation: 6,
         margin: const EdgeInsets.symmetric(vertical: 8),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF84A756), width: 1),
+          side: const BorderSide(color: Color(0xFF84A756)),
         ),
         child: Padding(
-          padding: const EdgeInsets.all(12.0),
+          padding: const EdgeInsets.all(12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _buildTitleRow(item),
-              const Divider(color: Colors.grey),
-              _buildSection('Origen de Carga', Icons.location_on, [
-                _infoRow('Origen:', item.origin ?? '-'),
-                _infoRow('Fecha:', item.loadDate ?? '-'),
-              ]),
-              const SizedBox(height: 8),
-              _buildSection('Destino de Carga', Icons.flag, [
-                _infoRow('Destino:', item.destination ?? '-'),
-                _infoRow('Fecha:', item.unloadDate ?? '-'),
-              ]),
-              const SizedBox(height: 8),
-              _buildSection('Escalas', Icons.map, [
-                _infoRow('Primera Escala:', item.scaleOne ?? '-'),
-                _infoRow('Segunda Escala:', item.scaleTwo ?? '-'),
-              ]),
-              const SizedBox(height: 8),
-              _infoRow('Documentador:', item.documenter ?? '-'),
+              _Title(item),
+              const Divider(),
+              _Section(
+                title: 'Origen de Carga',
+                icon: Icons.location_on,
+                rows: [
+                  _info('Origen', item.origin),
+                  _info('Fecha', item.loadDate),
+                ],
+              ),
+              _Section(
+                title: 'Destino de Carga',
+                icon: Icons.flag,
+                rows: [
+                  _info('Destino', item.destination),
+                  _info('Fecha', item.unloadDate),
+                ],
+              ),
+              _Section(
+                title: 'Escalas',
+                icon: Icons.map,
+                rows: [
+                  _info('Primera', item.scaleOne),
+                  _info('Segunda', item.scaleTwo),
+                ],
+              ),
               const SizedBox(height: 12),
-              _statusButton(item.status ?? 'Desconocido'),
+              _StatusButton(item.status),
             ],
           ),
         ),
@@ -118,66 +230,98 @@ class ServiceListView extends StatelessWidget {
     );
   }
 
-  Widget _buildTitleRow(Services item) {
+  Widget _info(String label, String? value) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 2),
+      child: Text(
+        '$label: ${value ?? '-'}',
+        style: const TextStyle(fontSize: 13),
+      ),
+    );
+  }
+}
+
+// ==================== SUBCOMPONENTS ====================
+
+class _Title extends StatelessWidget {
+  final Services item;
+
+  const _Title(this.item);
+
+  @override
+  Widget build(BuildContext context) {
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: const Icon(FontAwesomeIcons.truck, color: Colors.green),
       title: Text(
-        'Remisión número: ${item.service}',
-        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+        'Remisión: ${item.service ?? '-'}',
+        style: const TextStyle(fontWeight: FontWeight.bold),
       ),
-      subtitle: Text('Cliente: ${item.client}',
-          style: const TextStyle(color: Colors.black)),
+      subtitle: Text('Cliente: ${item.client ?? '-'}'),
     );
   }
+}
 
-  Widget _buildSection(String title, IconData icon, List<Widget> children) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(children: [
-          Icon(icon, size: 18, color: Colors.grey[700]),
-          const SizedBox(width: 6),
-          Text(title,
-              style:
-                  const TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
-        ]),
-        const SizedBox(height: 4),
-        ...children,
-      ],
-    );
-  }
+class _Section extends StatelessWidget {
+  final String title;
+  final IconData icon;
+  final List<Widget> rows;
 
-  Widget _infoRow(String label, String value) {
+  const _Section({
+    required this.title,
+    required this.icon,
+    required this.rows,
+  });
+
+  @override
+  Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Row(
+      padding: const EdgeInsets.only(bottom: 8),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('$label ', style: const TextStyle(fontSize: 13)),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(fontSize: 13),
-              overflow: TextOverflow.ellipsis,
-            ),
+          Row(
+            children: [
+              Icon(icon, size: 18, color: Colors.grey[700]),
+              const SizedBox(width: 6),
+              Text(
+                title,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 15,
+                ),
+              ),
+            ],
           ),
+          const SizedBox(height: 4),
+          ...rows,
         ],
       ),
     );
   }
+}
 
-  Widget _statusButton(String status) {
+class _StatusButton extends StatelessWidget {
+  final String? status;
+
+  const _StatusButton(this.status);
+
+  @override
+  Widget build(BuildContext context) {
     return ElevatedButton(
       onPressed: null,
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF2C522A),
         disabledBackgroundColor: Colors.green,
-        elevation: 0,
         minimumSize: const Size.fromHeight(40),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(100)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(100),
+        ),
       ),
-      child: Text(status,
-          style: const TextStyle(fontSize: 13, color: Colors.white)),
+      child: Text(
+        status ?? 'Desconocido',
+        style: const TextStyle(color: Colors.white),
+      ),
     );
   }
 }

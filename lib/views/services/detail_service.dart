@@ -13,10 +13,8 @@ import 'package:segadi/viewmodels/services_operator/travel_expenses.dart';
 
 import 'package:segadi/utils/user_session.dart';
 import 'package:segadi/viewmodels/services_operator/detail_service.dart';
-import 'package:segadi/views/services/MapGeocerca.dart';
 import 'package:segadi/views/services/modals/check_list_service.dart';
 import 'package:segadi/views/services/modals/status_support.dart';
-import 'package:segadi/views/services/sendEvidences.dart';
 import 'package:segadi/views/services/travel_expenses.dart';
 
 class DetailServiceScreen extends StatefulWidget {
@@ -33,29 +31,38 @@ class _DetailServiceScreenState extends State<DetailServiceScreen>
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
 
-    WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final vm = context.read<DetailViewModel>();
-      await vm.updateDetail();
-
-      // Validar redirección al iniciar
-
-      if (vm.item?.mandatoryStatusId == 10) {
-        print('estas en la funcion de init state:' + vm.item!.serviceType!);
-        if (vm.item?.mandatoryStatusId == 10) {
-          Navigator.popAndPushNamed(context, '/send_evidence', arguments: {
-            'id': vm.item!.id!,
-            'serviceId': vm.item!.service!.toString(),
-          });
-        }
-      }
+    // Se ejecuta después del primer frame
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkAndRedirect();
     });
 
-    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
-      final vm = context.read<DetailViewModel>();
-      await vm.updateDetail();
+    // Refrescar cada 5 minutos
+    _refreshTimer = Timer.periodic(const Duration(minutes: 5), (_) {
+      _checkAndRedirect();
     });
+  }
+
+  Future<void> _checkAndRedirect() async {
+    final vm = context.read<DetailViewModelOld>();
+    await vm.updateDetail();
+
+    // Mientras statusId sea 10 → redirigir
+    while (vm.item?.mandatoryStatusId == 10 && mounted) {
+      await Future.delayed(const Duration(milliseconds: 200));
+
+      final result = await Navigator.pushNamed(
+        context,
+        '/send_evidence',
+        arguments: {
+          'id': vm.item!.id!,
+          'serviceId': vm.item!.service!.toString(),
+        },
+      );
+
+      // Al volver, refrescar detalle
+      await vm.updateDetail();
+    }
   }
 
   @override
@@ -68,7 +75,7 @@ class _DetailServiceScreenState extends State<DetailServiceScreen>
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
-      final vm = context.read<DetailViewModel>();
+      final vm = context.read<DetailViewModelOld>();
       vm.updateDetail().then((_) {
         if (vm.item?.mandatoryStatusId == 10) {
           Navigator.popAndPushNamed(context, '/send_evidence', arguments: {
@@ -82,7 +89,7 @@ class _DetailServiceScreenState extends State<DetailServiceScreen>
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = context.watch<DetailViewModel>();
+    final viewModel = context.watch<DetailViewModelOld>();
     //print('ESTATUS ID ${viewModel.item?.mandatoryStatusId}');
     final user = UserSession();
 
@@ -320,10 +327,9 @@ class ActionsCard extends StatelessWidget {
                     enabled: serviceClosed,
                     onPressed: serviceClosed
                         ? () async {
-                            final detailVM = Provider.of<DetailViewModel>(
-                                context,
-                                listen: false);
-                            final result = await Navigator.popAndPushNamed(
+                            final detailVM = context.read<DetailViewModelOld>();
+
+                            final result = await Navigator.pushNamed(
                               context,
                               '/trip_closure',
                               arguments: {
@@ -333,17 +339,20 @@ class ActionsCard extends StatelessWidget {
                               },
                             );
 
+                            // Cuando regresas de trip_closure
                             if (result == true) {
                               final detailServiceModel =
                                   DetailService(id: serviceDetail.id!);
                               detailVM.setNewDetail(detailServiceModel);
 
-                              final x =
-                                  detailVM.item!.pendingMoneyChecks ?? false;
-                              if (x == false) {
+                              final pending =
+                                  detailVM.item?.pendingMoneyChecks ?? false;
+                              if (!pending) {
                                 final serviceVm =
                                     context.read<ServicesViewModel>();
                                 await serviceVm.onRefresh();
+
+                                // Ahora sí puedes volver a la lista de servicios
                                 Navigator.of(context).pop();
                               }
                             }
@@ -426,15 +435,26 @@ class StatusButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final viewModel = Provider.of<DetailViewModel>(context);
-    final isEnabled =
-        (viewModel.item?.isEnableButton ?? false) && !viewModel.isLoading;
+    final viewModel = Provider.of<DetailViewModelOld>(context);
+    final statusId = viewModel.item?.mandatoryStatusId;
+    print('estatus actual $statusId');
+
+    // Validación personalizada: si el statusId == 9 y no hay evidencia → botón deshabilitado
+    final shouldDisableButton = (viewModel.item?.mandatoryStatusId == 10 &&
+        viewModel.item?.isEvidence == false);
+
+    // Determinar si el botón está habilitado
+    final isEnabled = (viewModel.item?.isEnableButton ?? false) &&
+        !viewModel.isLoading &&
+        !shouldDisableButton;
 
     return SizedBox(
       width: 380,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2C522A),
+          backgroundColor: isEnabled
+              ? Colors.green
+              : const Color(0xFF9E9E9E), // gris cuando está desactivado
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(100),
           ),
@@ -443,6 +463,7 @@ class StatusButton extends StatelessWidget {
         onPressed: isEnabled
             ? () async {
                 final statusId = viewModel.item?.mandatoryStatusId;
+                print('estatus actual $statusId');
 
                 if (statusId == null) {
                   scaffoldMessengerError(
@@ -475,7 +496,6 @@ class StatusButton extends StatelessWidget {
                       context,
                       'El servicio se cerró correctamente.',
                     );
-                    // Navigator.pop(context, true);
                   } else {
                     scaffoldMessengerError(
                         context, result.message ?? 'Error desconocido');
@@ -493,7 +513,7 @@ class StatusButton extends StatelessWidget {
                 ),
               )
             : Text(
-                viewModel.item?.mandatoryStatus ?? '',
+                viewModel.item!.mandatoryStatus.toString(),
                 style: const TextStyle(color: Colors.white),
               ),
       ),

@@ -3,21 +3,21 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/viewmodels/services_operator/send_evidences.dart';
 
-class TripClosureScreen extends StatefulWidget {
+class TripClosureScreenOld extends StatefulWidget {
   final int id;
   final String? serviceId;
 
-  const TripClosureScreen({
+  const TripClosureScreenOld({
     Key? key,
     required this.id,
     this.serviceId,
   }) : super(key: key);
 
   @override
-  State<TripClosureScreen> createState() => _SendEvidenceScreenState();
+  State<TripClosureScreenOld> createState() => _SendEvidenceScreenState();
 }
 
-class _SendEvidenceScreenState extends State<TripClosureScreen> {
+class _SendEvidenceScreenState extends State<TripClosureScreenOld> {
   late String type;
   @override
   void initState() {
@@ -157,28 +157,7 @@ class _SendEvidenceScreenState extends State<TripClosureScreen> {
                 // Enviar
                 Expanded(
                   child: ElevatedButton.icon(
-                    onPressed: sendVM.images.isNotEmpty
-                        ? () async {
-                            List<File> files = sendVM.images
-                                .map((xfile) => File(xfile.path))
-                                .toList();
-
-                            final result = await Navigator.pushNamed(
-                              context,
-                              '/pdf_preview',
-                              arguments: {
-                                'id': widget.id,
-                                'serviceId': widget.serviceId,
-                                'images': files,
-                                'type': '1',
-                              },
-                            );
-                            if (!mounted) return;
-                            if (result == true) {
-                              Navigator.pop(context, true);
-                            }
-                          }
-                        : null,
+                    onPressed: null,
                     icon: const Icon(Icons.send),
                     label: const Text("Generar pdf"),
                     style: ElevatedButton.styleFrom(

@@ -2,8 +2,10 @@
 //
 //     final detailService = detailServiceFromJson(jsonString);
 
+import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/material.dart';
 import 'package:segadi/utils/global_variables.dart';
 import 'package:segadi/viewmodels/login/user_login.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -222,144 +224,304 @@ class DetailServices {
   final String baseUrlAirbag = GlobalVariablesAirbag.baseUrl;
   final Map<String, String> headersAirbag = GlobalVariablesAirbag.headers;
 
-  Future<DetailService> getDetail(id) async {
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('id') ?? 0;
-    final token = prefs.getString('token') ?? '';
+  Future<DetailService> getDetail(int id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('id') ?? 0;
+      final token = prefs.getString('token') ?? '';
 
-    final route = 'index.php';
-
-    final uri = Uri.parse(baseUrl + route).replace(
-      queryParameters: {
+      final uri = Uri.parse('$baseUrl/index.php').replace(queryParameters: {
         'r': 'esegadi/getdetalle',
         'id_remision': id.toString(),
         'token': token,
         'id': userId.toString(),
-      },
-    );
+      });
 
-    final response = await http.get(uri);
+      debugPrint('🚀 [getDetail] Consultando detalle id=$id');
 
-    if (response.statusCode == 200) {
+      final response = await http.get(uri).timeout(const Duration(seconds: 15));
+
+      if (response.statusCode != 200) {
+        debugPrint('❌ Error HTTP (${response.statusCode}) al obtener detalle');
+        throw Exception('Error al comunicarse con el servidor');
+      }
+
       final body = json.decode(response.body);
-      //  print('BODY DETALLE: ${response.body}');
       final result = DetailService.fromJson(body);
 
-      // result.isEnableButton = false;
-      // result.isEnableCheckList = false;
-      // result.isEnableStatusSupport = false;
-      // result.isEnableTripClosure = false;
-      // result.serviceClosed = false;
-      // result.pendingMoneyChecks = false;
+      // --- Inicialización ---
+      result.statusSupportModal =
+          result.type?.isEmpty ?? true ? 'begin' : result.statusSupportModal;
+      final sid = result.statusId ?? 0;
+      final mid = result.mandatoryStatusId ?? 0;
+      final nextMid = result.nextMandatoryStatusId ?? 0;
+      final serviceType = (result.serviceType ?? '').trim().toLowerCase();
 
-      if (result.type == '') {
-        result.statusSupportModal = 'begin';
+      debugPrint(
+          '📦 [DetalleServicio] id=$id | status=$sid | tipo=$serviceType');
+
+      // Helper para evitar repetir código
+      void setCommonFlags({
+        bool enableBtn = false,
+        bool enableSupport = false,
+        bool enableCheckList = false,
+        bool enableTripClosure = false,
+        bool pendingChecks = false,
+      }) {
+        result
+          ..isEnableButton = enableBtn
+          ..isEnableStatusSupport = enableSupport
+          ..isEnableCheckList = enableCheckList
+          ..isEnableTripClosure = enableTripClosure
+          ..pendingMoneyChecks = pendingChecks
+          ..mandatoryStatusId = nextMid
+          ..mandatoryStatus = result.nextMandatoryStatus;
       }
 
-      print('id remision:' + id.toString());
+      // --- Lógica de negocio principal ---
       if (result.list != null &&
-          result.statusId == 2 &&
+          result.nextMandatoryStatusId == 2 &&
+          result.mandatoryStatusId == 0 &&
+          result.statusId == 1) {
+        setCommonFlags(enableBtn: true, enableSupport: false);
+        print('✅ estas en estatus 1 y habilitando boton, desactivando soporte');
+      } else if (result.list != null &&
+          result.nextMandatoryStatusId == 2 &&
+          result.statusId == 0 &&
           result.mandatoryStatusId == 0) {
-        result.isEnableCheckList = false;
-        result.isEnableStatusSupport = true;
-        result.isEnableTripClosure = false;
-        result.pendingMoneyChecks = false;
-        result.isEnableButton = true;
-        result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
-        result.mandatoryStatus = result.nextMandatoryStatus ?? '';
-      } else if (result.statusId == 0 &&
-          result.mandatoryStatusId == 0 &&
-          result.list == null) {
-        result.isEnableStatusSupport = false;
-        result.isEnableTripClosure = false;
-        result.pendingMoneyChecks = false;
-        result.isEnableCheckList = true;
-        result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
-        result.mandatoryStatus = result.nextMandatoryStatus ?? '';
-      } else if ((result.statusId == 0 || result.statusId == 1) &&
-          result.mandatoryStatusId == 0 &&
-          (result.nextMandatoryStatusId ?? 0) == 2 &&
-          result.list != null) {
-        result.isEnableButton = true;
-        result.isEnableStatusSupport = false;
-        result.isEnableCheckList = false;
-        result.isEnableTripClosure = false;
-        result.pendingMoneyChecks = false;
-        result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
-        result.mandatoryStatus = result.nextMandatoryStatus ?? '';
-      } else if ((result.nextMandatoryStatusId ?? 0) > 2 &&
+        setCommonFlags(enableBtn: true, enableSupport: false);
+        print('✅ Habilitando boton estatus monitoreo y desactivando soporte');
+      } else if (result.list == null) {
+        setCommonFlags(enableCheckList: true);
+        print('📝 Habilitando checklist (lista vacía)');
+      } else if (sid >= 0 &&
+          mid >= 0 &&
           result.list != null &&
-          result.type != "begin") {
-        result.isEnableButton = true;
-        result.isEnableStatusSupport = true;
-        result.isEnableCheckList = false;
-        result.isEnableTripClosure = false;
-        result.pendingMoneyChecks = false;
-        result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
-        result.mandatoryStatus = result.nextMandatoryStatus ?? '';
-      }
-
-      if ([22, 24, 38, 39].contains(result.statusId) &&
-          result.type == "begin") {
-        result.isEnableButton = false;
-        result.isEnableContinueRute = true;
-        result.isEnableStatusSupport = true;
-        result.isEnableTripClosure = false;
-        result.pendingMoneyChecks = false;
-        result.isEnableCheckList = false;
-        result.statusSupportId = result.statusId;
-        result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
-        result.mandatoryStatus = result.nextMandatoryStatus ?? '';
-        result.statusSupportModal = 'end';
-
-        result.isButtonEnabledBano = result.statusId == 24;
-        result.isButtonEnabledComer = result.statusId == 22;
-        result.isButtonEnabledDormir = result.statusId == 38;
-        result.isButtonEnabledGas = result.statusId == 39;
-      }
-
-      print('--- Validación de estatus servicio ---');
-      print('statusId: ${result.statusId}');
-      print('mandatoryStatusId: ${result.mandatoryStatusId}');
-      print('serviceType: ${result.serviceType}');
-      print('eirSent: ${result.eirSent}');
-      print('pendingMoneyChecks: ${result.pendingMoneyChecks}');
-
-      final serviceType = result.serviceType!.trim().toLowerCase();
-
-      // --- Caso CONTENEDOR ---
-      if (result.statusId == 23 &&
+          result.nextMandatoryStatusId != 0 &&
+          result.nextMandatoryStatusId != 23) {
+        setCommonFlags(enableBtn: true, enableSupport: true);
+        print('✅ Habilitando botón (estatus y checklist válidos)');
+      } else if (nextMid > 2 && result.list != null) {
+        setCommonFlags(enableBtn: true, enableSupport: true);
+        print('✅ Habilitando botón y soporte (siguiente estatus mayor a 2)');
+      } else if (result.nextMandatoryStatusId == 0 &&
           result.mandatoryStatusId == 23 &&
-          serviceType == 'contenedor') {
+          result.statusId == 23) {
+        setCommonFlags(enableSupport: false);
+        print(
+            'ℹ️ estas en nextMandatoryStatusId 0, mandatoryStatusId 23 y statusId 23');
+      }
+
+      // --- Casos de descanso ---
+      if ([22, 24, 38, 39].contains(sid) && result.type == "begin") {
+        setCommonFlags(enableSupport: true);
+        result
+          ..isEnableContinueRute = true
+          ..statusSupportId = sid
+          ..statusSupportModal = 'end'
+          ..isButtonEnabledBano = sid == 24
+          ..isButtonEnabledComer = sid == 22
+          ..isButtonEnabledDormir = sid == 38
+          ..isButtonEnabledGas = sid == 39;
+      }
+
+      // --- Validaciones por tipo ---
+      if (serviceType == 'cajaseca' && sid == 23 && result.isEvidence == true) {
+        result.pendingMoneyChecks = true;
+      }
+
+      if (sid == 23 && mid == 23) {
+        result
+          ..isEnableButton = false
+          ..mandatoryStatusId = mid
+          ..mandatoryStatus = result.status;
+      }
+
+      // --- Contenedor ---
+      if (sid == 23 && mid == 23 && serviceType == 'contenedor') {
         if (result.eirSent == false) {
-          print('🚚 Cierre de viaje para contenedor (sin EIR enviado)');
+          debugPrint('🚚 Cierre de viaje: contenedor sin EIR');
           result.serviceClosed = true;
         } else if (result.eirSent == true &&
             result.pendingMoneyChecks == true) {
-          print('💸 Activando comprobación de viáticos para contenedor');
+          debugPrint('💸 Pendiente de viáticos: contenedor');
           result.pendingMoneyChecks = true;
         }
-        result.mandatoryStatusId = result.mandatoryStatusId;
-        result.mandatoryStatus = result.status ?? '';
       }
 
-      // --- Caso CAJA SECA ---
-      else if (result.statusId == 23 &&
-          result.mandatoryStatusId == 23 &&
-          serviceType == 'cajaseca') {
-        if (result.pendingMoneyChecks == true) {
-          print('💸 Activando comprobación de viáticos para caja seca');
-          result.pendingMoneyChecks = true;
-          result.mandatoryStatusId = result.mandatoryStatusId;
-          result.mandatoryStatus = result.status ?? '';
-        }
+      // --- Caja seca ---
+      if (sid == 23 &&
+          mid == 23 &&
+          serviceType == 'cajaseca' &&
+          result.pendingMoneyChecks == true) {
+        debugPrint('💸 Pendiente de viáticos: caja seca');
       }
+
+      result.mandatoryStatusId = result.nextMandatoryStatusId;
+      if (result.nextMandatoryStatus == null ||
+          result.nextMandatoryStatus == '') {
+        result.mandatoryStatus = result.status;
+      } else {
+        result.mandatoryStatus = result.nextMandatoryStatus;
+      }
+      //result.mandatoryStatus = result.nextMandatoryStatus ?? ;
+
+      debugPrint('''
+                🧩 --- VALIDACIÓN FINAL ---
+                Remisión: $id
+                Tipo servicio: ${result.type}
+                Estatus: ${result.status}
+                nexmandatoryStatus: ${result.nextMandatoryStatus}
+                nextMandatoryStatusId: $nextMid
+                mandatoryStatusId: $mid
+                statusId: $sid
+                Tipo: $serviceType
+                EIR enviado: ${result.eirSent}
+                Pendiente viáticos: ${result.pendingMoneyChecks}
+                ------------------------------
+                ''');
 
       return result;
-    } else {
-      throw Exception('Failed to load detail');
+    } on TimeoutException {
+      debugPrint('⏱ Tiempo de espera agotado (timeout)');
+      throw Exception('Tiempo de espera agotado. Intenta nuevamente.');
+    } catch (e, stack) {
+      debugPrint('💥 Error en getDetail: $e');
+      debugPrint('📜 StackTrace: $stack');
+      rethrow; // Deja que el caller maneje el error según la UI
     }
   }
+
+  // Future<DetailService> getDetail(id) async {
+  //   final prefs = await SharedPreferences.getInstance();
+  //   final userId = prefs.getInt('id') ?? 0;
+  //   final token = prefs.getString('token') ?? '';
+
+  //   final route = 'index.php';
+
+  //   final uri = Uri.parse(baseUrl + route).replace(
+  //     queryParameters: {
+  //       'r': 'esegadi/getdetalle',
+  //       'id_remision': id.toString(),
+  //       'token': token,
+  //       'id': userId.toString(),
+  //     },
+  //   );
+
+  //   final response = await http.get(uri);
+
+  //   if (response.statusCode == 200) {
+  //     final body = json.decode(response.body);
+  //     final result = DetailService.fromJson(body);
+
+  //     if (result.type == '') {
+  //       result.statusSupportModal = 'begin';
+  //     }
+
+  //     print('Estatus nexMandatory Status: ${result.nextMandatoryStatus}');
+  //     print('MandatoryStatusId: ${result.nextMandatoryStatusId}');
+  //     if (result.list != null &&
+  //         result.statusId == 2 &&
+  //         result.mandatoryStatusId == 0) {
+  //       result.isEnableCheckList = false;
+  //       result.isEnableStatusSupport = true;
+  //       result.isEnableTripClosure = false;
+  //       result.pendingMoneyChecks = false;
+  //       result.isEnableButton = true;
+  //     } else if (result.statusId == 0 &&
+  //         result.mandatoryStatusId == 0 &&
+  //         result.list == null) {
+  //       result.isEnableStatusSupport = false;
+  //       result.isEnableTripClosure = false;
+  //       result.pendingMoneyChecks = false;
+  //       result.isEnableCheckList = true;
+  //       result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
+  //       result.mandatoryStatus = result.nextMandatoryStatus ?? '';
+  //     } else if ((result.statusId == 0 || result.statusId == 1) &&
+  //         result.mandatoryStatusId == 0 &&
+  //         (result.nextMandatoryStatusId ?? 0) == 2 &&
+  //         result.list != null) {
+  //       result.isEnableButton = true;
+  //       result.isEnableStatusSupport = false;
+  //       result.isEnableCheckList = false;
+  //       result.isEnableTripClosure = false;
+  //       result.pendingMoneyChecks = false;
+  //       result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
+  //       result.mandatoryStatus = result.nextMandatoryStatus ?? '';
+  //     } else if ((result.nextMandatoryStatusId ?? 0) > 2 &&
+  //         result.list != null &&
+  //         result.type != "begin") {
+  //       result.isEnableButton = true;
+  //       result.isEnableStatusSupport = true;
+  //       result.isEnableCheckList = false;
+  //       result.isEnableTripClosure = false;
+  //       result.pendingMoneyChecks = false;
+  //       result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
+  //       result.mandatoryStatus = result.nextMandatoryStatus ?? '';
+  //     }
+
+  //     if ([22, 24, 38, 39].contains(result.statusId) &&
+  //         result.type == "begin") {
+  //       result.isEnableButton = false;
+  //       result.isEnableContinueRute = true;
+  //       result.isEnableStatusSupport = true;
+  //       result.isEnableTripClosure = false;
+  //       result.pendingMoneyChecks = false;
+  //       result.isEnableCheckList = false;
+  //       result.statusSupportId = result.statusId;
+  //       result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
+  //       result.mandatoryStatus = result.nextMandatoryStatus ?? '';
+  //       result.statusSupportModal = 'end';
+
+  //       result.isButtonEnabledBano = result.statusId == 24;
+  //       result.isButtonEnabledComer = result.statusId == 22;
+  //       result.isButtonEnabledDormir = result.statusId == 38;
+  //       result.isButtonEnabledGas = result.statusId == 39;
+  //     }
+
+  //     print('--- Validación de estatus servicio ---');
+  //     print('nextMandatoryStatus: ${result.nextMandatoryStatusId}');
+  //     print('nextMandatoryStatus: ${result.nextMandatoryStatus}');
+  //     print('mandatoryStatusId: ${result.mandatoryStatusId}');
+  //     print('serviceType: ${result.serviceType}');
+  //     print('eirSent: ${result.eirSent}');
+  //     print('pendingMoneyChecks: ${result.pendingMoneyChecks}');
+
+  //     final serviceType = result.serviceType!.trim().toLowerCase();
+
+  //     // --- Caso CONTENEDOR ---
+  //     if (result.statusId == 23 &&
+  //         result.mandatoryStatusId == 23 &&
+  //         serviceType == 'contenedor') {
+  //       if (result.eirSent == false) {
+  //         print('🚚 Cierre de viaje para contenedor (sin EIR enviado)');
+  //         result.serviceClosed = true;
+  //       } else if (result.eirSent == true &&
+  //           result.pendingMoneyChecks == true) {
+  //         print('💸 Activando comprobación de viáticos para contenedor');
+  //         result.pendingMoneyChecks = true;
+  //       }
+  //       result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
+  //       result.mandatoryStatus = result.nextMandatoryStatus ?? '';
+  //     }
+
+  //     // --- Caso CAJA SECA ---
+  //     else if (result.statusId == 23 &&
+  //         result.mandatoryStatusId == 23 &&
+  //         serviceType == 'cajaseca') {
+  //       if (result.pendingMoneyChecks == true) {
+  //         print('💸 Activando comprobación de viáticos para caja seca');
+  //         result.pendingMoneyChecks = true;
+  //         result.mandatoryStatusId = result.nextMandatoryStatusId ?? 0;
+  //         result.mandatoryStatus = result.nextMandatoryStatus ?? '';
+  //       }
+  //     }
+
+  //     return result;
+  //   } else {
+  //     throw Exception('Failed to load detail');
+  //   }
+  // }
 
   Future<http.Response> changeStatusService(int serviceId, int statusId) async {
     final token = await LoginViewModel.getSavedToken();
@@ -370,7 +532,9 @@ class DetailServices {
       "token": token,
     };
 
-    final body = json.encode(data);
+    print('Change Status Service Data: $data');
+
+    final body = json.decode(data.toString());
     final url = Uri.parse('${baseUrl}index.php?r=esegadi/estatuspost');
 
     final response = await http.post(
@@ -378,7 +542,8 @@ class DetailServices {
       headers: headers,
       body: body,
     );
-
+    print('Response status: ${response.statusCode}');
+    print('Response body: ${response.body}');
     return response;
   }
 

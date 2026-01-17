@@ -25,13 +25,14 @@ class AuthService {
 
     var body = json.encode(data);
     var url = Uri.parse('${baseUrl}index.php?r=esegadi/autenticapost');
-    // print('URL LOGIN:' + url.toString());
+    print('URL LOGIN:' + url.toString());
     http.Response response = await http.post(
       url,
       headers: headers,
       body: body,
     );
-    // print(response.body);
+    print('object login: ' + response.statusCode.toString());
+    print(response.body);
     return response;
   }
 }

@@ -17,7 +17,7 @@ class TripClosureViewModel extends ChangeNotifier {
   bool get isLoading => _isLoading;
   String get errorMessage => _errorMessage;
 
-  DetailViewModel? detailViewModel;
+  DetailViewModelOld? detailViewModel;
 
   late int _id;
   late String _serviceId;
