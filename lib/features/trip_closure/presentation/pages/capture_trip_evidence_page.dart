@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:segadi/features/trip_closure/presentation/pages/pdf_preview_page.dart';
 import '../viewmodels/trip_closure_viewmodel.dart';
-import 'trip_pdf_preview_page.dart';
 
 class CaptureTripEvidencePage extends StatelessWidget {
   const CaptureTripEvidencePage({super.key});
@@ -65,17 +65,18 @@ class CaptureTripEvidencePage extends StatelessWidget {
                       : () async {
                           final pdf = await vm.generatePdf();
                           if (!context.mounted) return;
+
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => TripPdfPreviewPage(
-                                id: vm.id,
-                                serviceId: vm.serviceId.toString(),
+                              builder: (_) => ChangeNotifierProvider.value(
+                                value: context.read<TripClosureViewModel>(),
+                                child: PdfPreviewPage(),
                               ),
                             ),
                           );
                         },
-                  child: const Text('Continuar'),
+                  child: const Text('Continuar '),
                 ),
               ),
             ),
