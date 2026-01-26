@@ -8,17 +8,6 @@ import 'package:http/http.dart' as http;
 class TripClosureRemoteDataSource {
   Future<void> send(int serviceId, Uint8List pdfBytes) async {
     final token = await LoginViewModel.getSavedToken();
-    print('entrando a la funcion send pdf');
-
-    // final body = {
-    //   "service_id": serviceId.toString(),
-    //   "token": token,
-    //   "file_type": "pdf",
-    //   "document_name": "EIR",
-    //   "document_type": "EIR",
-    //   "document_description": "EIR",
-    //   "document": base64Encode(pdfBytes),
-    // };
 
     final Map<String, dynamic> body = {
       "service_id": serviceId.toString(),
@@ -31,8 +20,6 @@ class TripClosureRemoteDataSource {
       "document_description": "EIR",
       "document": base64Encode(pdfBytes),
     };
-
-    print('body a enviar ${body}');
 
     final response = await http.post(
       Uri.parse('${GlobalVariables.baseUrl}index.php?r=esegadi/evidenciaspost'),

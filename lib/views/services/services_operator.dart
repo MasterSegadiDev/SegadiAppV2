@@ -10,14 +10,14 @@ import 'package:segadi/views/services/detail_service.dart';
 import 'package:segadi/viewmodels/services_operator/assigned_services.dart';
 import 'package:segadi/viewmodels/services_operator/detail_service.dart';
 
-class ServiceListView extends StatefulWidget {
-  const ServiceListView({super.key});
+class ServiceListViewOld extends StatefulWidget {
+  const ServiceListViewOld({super.key});
 
   @override
-  State<ServiceListView> createState() => _ServiceListViewState();
+  State<ServiceListViewOld> createState() => _ServiceListViewState();
 }
 
-class _ServiceListViewState extends State<ServiceListView> {
+class _ServiceListViewState extends State<ServiceListViewOld> {
   @override
   void initState() {
     super.initState();

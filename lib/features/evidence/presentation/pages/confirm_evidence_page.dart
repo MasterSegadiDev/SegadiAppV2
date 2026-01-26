@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:segadi/features/evidence/presentation/pages/capture_evidence_page.dart';
 import 'package:segadi/features/evidence/presentation/pages/pdf_preview_page.dart';
 import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
 import 'package:signature/signature.dart';
@@ -185,7 +186,8 @@ class _ConfirmEvidencePageState extends State<ConfirmEvidencePage> {
                         MaterialPageRoute(
                           builder: (_) => ChangeNotifierProvider.value(
                             value: vm,
-                            child: const PdfPreviewPage(),
+                            //child: const PdfPreviewPage(),
+                            child: const CaptureEvidencePage(),
                           ),
                         ),
                       );

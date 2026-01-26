@@ -1,5 +1,8 @@
 import 'dart:convert';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:segadi/auth/auth_service.dart';
+import 'package:segadi/services/notification_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:segadi/models/login/user_login.dart';
@@ -8,10 +11,13 @@ import 'package:segadi/services/getDataDevice.dart';
 import 'package:segadi/utils/user_session.dart';
 import 'package:segadi/viewmodels/devices/device_view_model.dart';
 
+import 'package:firebase_messaging/firebase_messaging.dart';
+
 class LoginViewModel extends ChangeNotifier {
-  final AuthService _authService = AuthService();
   final DeviceInfoViewModel _deviceInfoViewModel =
       DeviceInfoViewModel(DeviceInfoRespository(), InfoDeviceSystemERP());
+  final FirebaseAuthService _firebaseAuth = FirebaseAuthService();
+  final AuthService _authService = AuthService();
 
   final TextEditingController usernameController = TextEditingController();
   final TextEditingController passwordController = TextEditingController();
@@ -33,6 +39,9 @@ class LoginViewModel extends ChangeNotifier {
 
   String? _token;
   String? get token => _token;
+
+  String? _firebaseToken;
+  String? get firebaseToken => _firebaseToken;
 
   // Setters para campos que notifican a la UI
   set username(String value) {
@@ -56,6 +65,45 @@ class LoginViewModel extends ChangeNotifier {
     usernameController.text = savedUser;
   }
 
+  // Future<void> login() async {
+  //   _setLoading(true);
+  //   _clearErrors();
+
+  //   if (_username.isEmpty || _password.isEmpty) {
+  //     _setError('Usuario y contraseña son obligatorios.');
+  //     _setLoading(false);
+  //     return;
+  //   }
+
+  //   try {
+  //     final response = await _authService.login(_username, _password);
+
+  //     if (response.statusCode != 200 || response.body.isEmpty) {
+  //       throw Exception('Error al iniciar sesión. Inténtalo nuevamente.');
+  //     }
+
+  //     final data = json.decode(response.body);
+  //     print('data login: $data');
+  //     if (data['token'] == null) {
+  //       throw Exception('No tienes acceso a la aplicación móvil.');
+  //     }
+
+  //     _token = data['token'];
+
+  //     await _clearUserData();
+  //     await _saveUserData(data);
+
+  //     await _validateDevice();
+  //   } catch (e) {
+  //     _setError(e.toString().replaceFirst('Exception: ', ''));
+  //   } finally {
+  //     _setLoading(false);
+  //     _clearForm(); // Opcional: quitar si deseas mantener campos tras error
+  //   }
+  // }
+
+  //final ApiAuthService _apiAuth = ApiAuthService();
+
   Future<void> login() async {
     _setLoading(true);
     _clearErrors();
@@ -74,40 +122,78 @@ class LoginViewModel extends ChangeNotifier {
       }
 
       final data = json.decode(response.body);
-      print('data login: $data');
       if (data['token'] == null) {
         throw Exception('No tienes acceso a la aplicación móvil.');
       }
 
       _token = data['token'];
 
+      print('este es tu token del sistema ${_token}');
+
+      // 1️⃣ Firebase
+      final cred = await _firebaseAuth.loginWithUsername(
+        username: _username,
+        password: _password,
+      );
+
+      final firebaseToken = await cred.user!.getIdToken();
+
+      data['token_firebase'] = firebaseToken;
+
+      _firebaseToken = data['token_firebase'];
+
+      final int user_id = data['user']['id'];
+
+      if (_token != null && _firebaseToken != null) {
+        await _authService.getTokenWithFirebaseBeforeLogin(
+            user_id, _token!, _firebaseToken!);
+
+        /////////////////////////////////////
+        ///inicializacion de los permisos////
+        ////////////////////////////////////
+        await initFCM(user_id);
+      }
+
       await _clearUserData();
       await _saveUserData(data);
-
       await _validateDevice();
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'user-not-found') {
+        _setError('Usuario no registrado.');
+      } else if (e.code == 'wrong-password') {
+        _setError('Contraseña incorrecta.');
+      } else {
+        _setError('Error de autenticación.');
+      }
     } catch (e) {
       _setError(e.toString().replaceFirst('Exception: ', ''));
     } finally {
       _setLoading(false);
-      _clearForm(); // Opcional: quitar si deseas mantener campos tras error
+      _clearForm();
     }
   }
 
-  // Future<void> _saveUserData(Map data) async {
-  //   final prefs = await SharedPreferences.getInstance();
-  //   final user = data['user'];
+  Future<void> initFCM(int user_id) async {
+    FirebaseMessaging messaging = FirebaseMessaging.instance;
 
-  //   await prefs.setInt('id', user['id']);
-  //   await prefs.setString('name', user['name']);
-  //   await prefs.setString('username', _username);
-  //   await prefs.setString('password', _password);
-  //   await prefs.setString('token', data['token']);
-  //   await prefs.setString('user_roll', user['empleado_permisionario']);
-  //   await prefs.setString('user_rol_app', user['user_rol_app']);
-  //   await prefs.setString('number_employe', user['employee_number']);
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
 
-  //   await UserSession().loadFromPrefs();
-  // }
+    print('🔔 Permisos FCM: ${settings.authorizationStatus} se han iniciado');
+
+    // inicializamos el listener
+    await NotificationService.init();
+
+    //obtiene token del dispositivo
+    final deviceToken = await NotificationService.getDeviceToken();
+
+    if (deviceToken != null) {
+      print('Device Token FCM: $deviceToken');
+    }
+  }
 
   Future<void> _saveUserData(Map data) async {
     final prefs = await SharedPreferences.getInstance();
@@ -118,6 +204,7 @@ class LoginViewModel extends ChangeNotifier {
     await prefs.setString('username', _username);
     await prefs.setString('password', _password);
     await prefs.setString('token', data['token']);
+    await prefs.setString('token_firebase', data['token_firebase']);
     await prefs.setString(
         'empleado_permisionario', user['empleado_permisionario'] ?? '');
     await prefs.setString('user_rol_app', user['user_rol_app'] ?? '');

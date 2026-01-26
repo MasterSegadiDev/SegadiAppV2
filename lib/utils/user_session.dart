@@ -18,6 +18,7 @@ class UserSession {
   String? userRollApp;
   String? numberEmployee;
   String? siteId;
+  String? tokenFirebase;
 
   Future<void> loadFromPrefs() async {
     final prefs = await SharedPreferences.getInstance();
@@ -30,6 +31,7 @@ class UserSession {
     userRollApp = prefs.getString('user_rol_app');
     numberEmployee = prefs.getString('number_employe');
     siteId = prefs.getString('site_id');
+    tokenFirebase = prefs.getString('token_firebase');
   }
 
   void clear() {
@@ -42,5 +44,6 @@ class UserSession {
     userRollApp = null;
     numberEmployee = null;
     siteId = null;
+    tokenFirebase = null;
   }
 }

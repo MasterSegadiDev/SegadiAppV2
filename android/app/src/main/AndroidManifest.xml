@@ -1,10 +1,11 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
 <uses-permission android:name="android.permission.CAMERA"/>
 <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
- <uses-permission android:name="android.permission.USE_FINGERPRINT"/>
- <uses-permission android:name="android.permission.INTERNET"/>
+<uses-permission android:name="android.permission.USE_FINGERPRINT"/>
+<uses-permission android:name="android.permission.INTERNET"/>
 <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
     
     <application
@@ -15,7 +16,13 @@
         >
          <meta-data
             android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAp3-Rm6LLxDVypbnpI6SbeFbNf-b_0F6o"/>
+            android:value="AIzaSyAp3-Rm6LLxDVypbnpI6SbeFbNf-b_0F6o"
+             />
+        <meta-data 
+             android:name="com.google.firebase.messaging.default_notification_channel_id"
+             android:value="default_channel" 
+             />
+            
         
         <activity
             android:name=".MainActivity"

@@ -33,8 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
         'icon': FontAwesomeIcons.truck,
         'label': 'Servicio',
         'onTap': (BuildContext context) {
-          Navigator.push(
-              context, MaterialPageRoute(builder: (_) => ServiceListView()));
+          Navigator.pushNamed(context, '/services');
         },
         'tipo': 'Operador'
       },

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/evidence/presentation/pages/confirm_evidence_page.dart';
+import 'package:segadi/features/evidence/presentation/pages/pdf_preview_page.dart';
 import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
 
 class CaptureEvidencePage extends StatelessWidget {
@@ -136,7 +137,8 @@ class CaptureEvidencePage extends StatelessWidget {
                                     builder: (_) =>
                                         ChangeNotifierProvider.value(
                                       value: vm,
-                                      child: ConfirmEvidencePage(),
+                                      //child: ConfirmEvidencePage(),
+                                      child: const PdfPreviewPage(),
                                     ),
                                   ),
                                 );
