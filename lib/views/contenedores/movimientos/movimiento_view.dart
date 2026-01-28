@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:segadi/presentation/modules/movement_container/ui/movimiento_card.dart';
 import 'package:segadi/viewmodels/contenedores/movimientosContenedoresListadoViewModel.dart';
 import 'package:segadi/views/contenedores/mapas_contenedor/mapas_contenedor.dart';
-import 'package:segadi/views/contenedores/movimientos/widgets/movimiento_card.dart';
+//import 'package:segadi/views/contenedores/movimientos/widgets/movimiento_card.dart';
 
 class MovimientoView extends StatefulWidget {
   const MovimientoView({super.key});

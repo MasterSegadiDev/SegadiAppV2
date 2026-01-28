@@ -3,11 +3,20 @@ import 'package:flutter_phone_direct_caller/flutter_phone_direct_caller.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/services_assigned/presentation/viewmodels/service_state.dart';
 import 'package:segadi/features/services_assigned/presentation/viewmodels/services_viewmodel.dart';
-import 'package:segadi/features/services_assigned/presentation/widgets/service_card.dart';
+import 'package:segadi/presentation/modules/services/presentation/widgets/service_card.dart';
+//import 'package:segadi/features/services_assigned/presentation/widgets/service_card.dart';
 import 'package:segadi/views/home/sidebar.dart';
 
-class ServiceListView extends StatelessWidget {
+class ServiceListView extends StatefulWidget {
   const ServiceListView({super.key});
+
+  @override
+  State<ServiceListView> createState() => _ServiceListViewState();
+}
+
+class _ServiceListViewState extends State<ServiceListView> {
+  final TextEditingController _searchController = TextEditingController();
+  String _searchQuery = "";
 
   @override
   Widget build(BuildContext context) {
@@ -54,12 +63,64 @@ class ServiceListView extends StatelessWidget {
     }
 
     if (state is ServicesLoaded) {
-      return ListView.builder(
-        padding: const EdgeInsets.all(10),
-        itemCount: state.items.length,
-        itemBuilder: (_, index) {
-          return ServiceCard(item: state.items[index]);
-        },
+      final query = _searchQuery.toLowerCase().trim();
+
+      final filteredItems = state.items.where((item) {
+        if (query.isEmpty) return true;
+
+        final service = (item.service ?? '').toLowerCase();
+        final client = (item.client ?? '').toLowerCase();
+        final origin = (item.origin ?? '').toLowerCase();
+        final destination = (item.destination ?? '').toLowerCase();
+        final status = (item.status ?? '').toLowerCase();
+
+        return service.contains(query) ||
+            client.contains(query) ||
+            origin.contains(query) ||
+            destination.contains(query) ||
+            status.contains(query);
+      }).toList();
+
+      return Column(
+        children: [
+          // 🔍 BUSCADOR
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: 'Buscar por remisión, cliente, origen, destino ...',
+                prefixIcon: const Icon(Icons.search),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchQuery = value;
+                });
+              },
+            ),
+          ),
+
+          // 📋 LISTADO
+          Expanded(
+            child: filteredItems.isEmpty
+                ? const Center(
+                    child: Text(
+                      'No se encontraron resultados',
+                      style: TextStyle(color: Colors.grey),
+                    ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(10),
+                    itemCount: filteredItems.length,
+                    itemBuilder: (_, index) {
+                      return ServiceCard(item: filteredItems[index]);
+                    },
+                  ),
+          ),
+        ],
       );
     }
 

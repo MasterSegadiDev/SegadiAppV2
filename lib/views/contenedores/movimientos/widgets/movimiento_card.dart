@@ -70,7 +70,7 @@ class MovimientoCard extends StatelessWidget {
 
             // DETALLES
             _detallePremium(
-                "Operador", movimiento.craneOperator ?? "Sin operador"),
+                "Operador   Xd", movimiento.craneOperator ?? "Sin operador"),
             _detallePremium("Unidad", movimiento.unit ?? "No asignada"),
             _detallePremium(
                 "Unidad Local", movimiento.localUnit ?? "Sin unidad"),
