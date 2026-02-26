@@ -38,11 +38,13 @@ class DetailServiceEntity {
 
   // Backend flags
   final bool serviceClosed;
-  final bool pendingMoneyChecks;
+
   final bool isEvidence;
   final bool eirSent;
   final int remainingEvidences;
   final Map<String, bool> checklist;
+
+  final bool pendingMoneyChecks;
 
   // Buttons state
   final UiModel ui;
@@ -77,12 +79,12 @@ class DetailServiceEntity {
     required this.nextMandatoryStatusId,
     required this.nextMandatoryStatus,
     required this.serviceClosed,
-    required this.pendingMoneyChecks,
     required this.isEvidence,
     required this.eirSent,
     required this.remainingEvidences,
     required this.checklist,
     required this.ui,
+    required this.pendingMoneyChecks,
   });
 }
 
@@ -90,14 +92,40 @@ class UiModel {
   final bool enableBtn;
   final bool enableSupport;
   final bool enableCheckList;
-  final bool pendingMoneyChecks;
+  final bool hasMoneyChecks;
   final bool serviceClosed;
 
   UiModel({
     required this.enableBtn,
     required this.enableSupport,
     required this.enableCheckList,
-    required this.pendingMoneyChecks,
+    required this.hasMoneyChecks,
     required this.serviceClosed,
   });
+
+  factory UiModel.empty() {
+    return UiModel(
+      enableBtn: false,
+      enableSupport: false,
+      enableCheckList: false,
+      hasMoneyChecks: false,
+      serviceClosed: false,
+    );
+  }
+
+  UiModel copyWith({
+    bool? enableBtn,
+    bool? enableSupport,
+    bool? enableCheckList,
+    bool? hasMoneyChecks,
+    bool? serviceClosed,
+  }) {
+    return UiModel(
+      enableBtn: enableBtn ?? this.enableBtn,
+      enableSupport: enableSupport ?? this.enableSupport,
+      enableCheckList: enableCheckList ?? this.enableCheckList,
+      hasMoneyChecks: hasMoneyChecks ?? this.hasMoneyChecks,
+      serviceClosed: serviceClosed ?? this.serviceClosed,
+    );
+  }
 }

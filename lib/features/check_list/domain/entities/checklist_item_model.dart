@@ -1,29 +1,20 @@
 import 'package:segadi/features/check_list/domain/entities/checklist_item_entity.dart';
 
-class ChecklistItemModel {
-  final int id;
-  final String option;
-  final int sequence;
-
+class ChecklistItemModel extends ChecklistItemEntity {
   ChecklistItemModel({
-    required this.id,
-    required this.option,
-    required this.sequence,
+    required super.id,
+    required super.option,
+    required super.sequence,
+    super.checked = false, // Pasamos el valor por defecto
   });
 
   factory ChecklistItemModel.fromJson(Map<String, dynamic> json) {
     return ChecklistItemModel(
-      id: json['id'],
-      option: json['option'],
-      sequence: json['sequence'],
-    );
-  }
-
-  ChecklistItemEntity toEntity() {
-    return ChecklistItemEntity(
-      id: id,
-      option: option,
-      sequence: sequence,
+      id: json['id'] ?? 0,
+      option: json['option'] ?? '',
+      sequence: json['sequence'] ?? 0,
+      // Si el JSON trae el estado, lo mapeamos, si no, usa el default
+      checked: json['checked'] ?? false,
     );
   }
 }

@@ -11,10 +11,13 @@ class FirebaseAuthService {
 
     print('este es email que vas a enviar a firebase: ${email}');
 
-    return await _auth.signInWithEmailAndPassword(
+    final responseAuth = await _auth.signInWithEmailAndPassword(
       email: email,
       password: password,
     );
+    print('respuesta de firebase auth: ${responseAuth.user?.uid}');
+
+    return responseAuth;
   }
 
   Future<void> logout() async {

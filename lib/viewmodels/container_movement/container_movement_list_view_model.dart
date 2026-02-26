@@ -4,7 +4,8 @@ import 'package:segadi/services/containers/container_movement_list_service.dart'
 import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
 
 class ContainerMovementListViewModel extends ChangeNotifier {
-  final MovimientoService _service = MovimientoService();
+  final MovimientoService _service;
+  ContainerMovementListViewModel(this._service);
   List<ContainerMovement> movimientos = [];
   bool isLoading = false;
   String? error;

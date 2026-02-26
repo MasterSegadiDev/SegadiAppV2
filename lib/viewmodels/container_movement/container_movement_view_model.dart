@@ -14,7 +14,8 @@ import 'package:segadi/models/containers/container_movement.dart';
 import 'package:segadi/models/containers/container_movements.dart';
 
 class UbicacionesViewModel extends ChangeNotifier {
-  final UbicationMovement _ubicationMovement = UbicationMovement();
+  final UbicationMovement _ubicationMovement;
+  UbicacionesViewModel(this._ubicationMovement);
 
   List<Ubicacion> _ubicaciones = [];
   List<Ubicacion> get ubicaciones => _ubicaciones;
@@ -347,7 +348,7 @@ class UbicacionesViewModel extends ChangeNotifier {
         area: area,
         espacio: espacio,
         nivel: nivel,
-        numeroSerie: ubic!.numberSerie,
+        numeroSerie: ubic.numberSerie,
       );
 
       return null;
@@ -363,7 +364,7 @@ class UbicacionesViewModel extends ChangeNotifier {
         area: area,
         espacio: espacio,
         nivel: nivel,
-        numeroSerie: ubic!.numberSerie,
+        numeroSerie: ubic.numberSerie,
       );
       return null;
     }
@@ -825,21 +826,24 @@ class UbicacionesViewModel extends ChangeNotifier {
   }
 
   // -------------------- MÉTODOS DE MOVIMIENTO --------------------
-  Future<void> saveMovement(Movimiento movimiento) async {
+  Future<bool> saveMovement(Movimiento movimiento) async {
     _errorMessage = null;
-    try {
-      final response = await _ubicationMovement.saveMovement(movimiento);
-      print('RESPUESTA ${response.statusCode}');
-      if (response.statusCode == 200) {
-        print('Movimiento registrado con éxito.');
-      } else {
-        throw Exception('Error al guardar movimiento: ${response.statusCode}');
-      }
-    } catch (e) {
-      _errorMessage = 'No se pudo guardar el movimiento.';
-      debugPrint('Excepción: $e');
-    }
     notifyListeners();
+
+    try {
+      // 1. Llamamos al servicio.
+      // Si falla (400, 500, etc), Dio lanzará una excepción automáticamente.
+      await _ubicationMovement.saveMovement(movimiento);
+
+      notifyListeners();
+      return true; // Retornamos éxito para que la vista sepa que puede cerrar el mapa
+    } catch (e) {
+      // 2. Aquí capturamos el mensaje de error que definimos en ApiException
+      _errorMessage = e.toString();
+      debugPrint('❌ Error en saveMovement: $e');
+      notifyListeners();
+      return false;
+    }
   }
 
   Future<void> saveTruckFloor({

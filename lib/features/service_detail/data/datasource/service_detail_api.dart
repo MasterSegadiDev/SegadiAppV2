@@ -1,20 +1,20 @@
-import 'dart:async';
-import 'dart:convert';
-
-import 'package:segadi/utils/global_variables.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+import 'package:segadi/core/network/api_exceptions.dart';
 
 class DetailServiceApi {
-  final String baseUrl;
+  final Dio _dio;
 
-  DetailServiceApi(this.baseUrl);
+  // Ahora recibe la instancia de Dio inyectada
+  DetailServiceApi(this._dio);
 
   Future<Map<String, dynamic>> getDetailRaw(int id) async {
     try {
       final prefs = await SharedPreferences.getInstance();
 
-      final uri = Uri.parse('${GlobalVariables.baseUrl}/index.php').replace(
+      // Con Dio, los parámetros van en queryParameters
+      final response = await _dio.get(
+        'index.php',
         queryParameters: {
           'r': 'esegadi/getdetalle',
           'id_remision': id.toString(),
@@ -23,21 +23,14 @@ class DetailServiceApi {
         },
       );
 
-      final response = await http.get(uri).timeout(const Duration(seconds: 15));
-
-      if (response.statusCode != 200) {
-        throw Exception('Error HTTP ${response.statusCode}');
-      }
-
-      final decoded = json.decode(response.body);
-
-      if (decoded is! Map<String, dynamic>) {
-        throw Exception('Respuesta inválida del servidor');
-      }
-
-      return decoded;
-    } on TimeoutException {
-      throw Exception('Tiempo de espera agotado');
+      // Dio ya entrega los datos decodificados en response.data
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      // Usamos tu nuevo unificador de errores
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException(
+          'Ha ocurrido un error inesperado al obtener los detalles del servicio');
     }
   }
 }

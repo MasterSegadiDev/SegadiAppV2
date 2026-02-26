@@ -1,8 +1,5 @@
-import 'dart:convert';
-
-import 'package:http/http.dart' as http;
-import 'package:segadi/utils/global_variables.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
+import 'package:segadi/core/network/api_exceptions.dart';
 
 class UserLogin {
   String? username;
@@ -14,49 +11,60 @@ class UserLogin {
 }
 
 class AuthService {
-  final String baseUrl = GlobalVariables.baseUrl;
-  final Map<String, String> headers = GlobalVariables.headers;
+  final Dio _dio;
 
-  Future<http.Response> login(String username, String password) async {
-    Map data = {
-      "usuario": username,
-      "password": password,
-      "apptoken": "prueba"
-    };
+  // Inyectamos la instancia de Dio configurada
+  AuthService(this._dio);
 
-    var body = json.encode(data);
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/autenticapost');
-    print('URL LOGIN:' + url.toString());
-    http.Response response = await http.post(
-      url,
-      headers: headers,
-      body: body,
-    );
-    print('object login: ' + response.statusCode.toString());
-    print(response.body);
-    return response;
+  Future<Map<String, dynamic>> login(String username, String password) async {
+    try {
+      final Map<String, dynamic> data = {
+        "usuario": username,
+        "password": password,
+        "apptoken": "prueba" // Considera mover esto a ApiConfig si es constante
+      };
+
+      final response = await _dio.post(
+        'index.php',
+        queryParameters: {'r': 'esegadi/autenticapost'},
+        data: data,
+      );
+
+      // Dio ya nos da el Map decodificado en .data
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      // Si no hay internet o el servidor falla, ApiException dará un mensaje claro
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException("Error inesperado al intentar iniciar sesión");
+    }
   }
 
-  Future<http.Response> getTokenWithFirebaseBeforeLogin(
+  Future<Map<String, dynamic>> getTokenWithFirebaseBeforeLogin(
       int id, String token, String firebaseToken) async {
-    Map data = {"user_id": id, "token": token, "token_firebase": firebaseToken};
+    try {
+      final Map<String, dynamic> data = {
+        "user_id": id,
+        "token": token,
+        "token_firebase": firebaseToken
+      };
 
-    var body = json.encode(data);
-    print('payload a enviar: ${body}');
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/tokenfirebasepost');
+      final response = await _dio.post(
+        'index.php',
+        queryParameters: {'r': 'esegadi/tokenfirebasepost'},
+        data: data,
+      );
 
-    http.Response response = await http.post(
-      url,
-      headers: headers,
-      body: body,
-    );
+      // Verificamos que la respuesta no sea nula (Dio maneja los status != 200 como excepciones)
+      if (response.data == null) {
+        throw ApiException('El servidor respondió sin datos.');
+      }
 
-    print('respuesta de token con firebase : ${response.statusCode}');
-    if (response.statusCode != 200 || response.body.isEmpty) {
-      throw Exception('Error al iniciar sesión. Inténtalo nuevamente.');
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException('Error al vincular el token de notificaciones.');
     }
-
-    print('body del endpoint tokenfirebasepost: ${response.body}');
-    return response;
   }
 }

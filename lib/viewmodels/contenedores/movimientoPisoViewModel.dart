@@ -21,7 +21,8 @@ class MovimientoFlowResult {
 }
 
 class MovimientoPisoViewModel extends ChangeNotifier {
-  final MovimientosService _service = MovimientosService();
+  final MovimientosService _service;
+  MovimientoPisoViewModel(this._service);
 
   MovimientoFlowResult handleNivelSeleccionado({
     required String tipoMovimiento,

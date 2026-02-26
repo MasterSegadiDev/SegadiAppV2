@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/features/evidence/presentation/pages/confirm_evidence_page.dart';
 import 'package:segadi/features/evidence/presentation/pages/pdf_preview_page.dart';
 import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
 
 class CaptureEvidencePage extends StatelessWidget {
   const CaptureEvidencePage({super.key});
+  final Color primaryGreen = const Color(0xFF2C522A);
 
   @override
   Widget build(BuildContext context) {
@@ -24,11 +24,13 @@ class CaptureEvidencePage extends StatelessWidget {
     });
 
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text("Enviar Evidencias"),
-        centerTitle: true,
-        backgroundColor: const Color(0xFF2C522A),
-        foregroundColor: Colors.white,
+        title: const Text('Enviar Evidencias',
+            style: TextStyle(color: Colors.white, fontSize: 18)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: primaryGreen,
+        elevation: 0,
       ),
       body: SafeArea(
         child: Padding(
@@ -154,7 +156,7 @@ class CaptureEvidencePage extends StatelessWidget {
                         ),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: vm.hasEvidences
-                              ? Colors.green
+                              ? primaryGreen
                               : Colors.grey.shade400,
                           foregroundColor: Colors.white,
                           shape: RoundedRectangleBorder(

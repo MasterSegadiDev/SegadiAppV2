@@ -42,9 +42,9 @@ class Body extends StatelessWidget {
             child: Text(
               value,
               style: const TextStyle(
-                fontSize: 13,
-                color: Colors.black54,
-              ),
+                  fontSize: 13,
+                  color: Colors.black,
+                  fontWeight: FontWeight.w400),
             ),
           ),
         ],

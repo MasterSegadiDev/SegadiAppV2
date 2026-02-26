@@ -1,33 +1,41 @@
-import 'dart:convert';
-
-import 'package:segadi/utils/global_variables.dart';
+import 'package:dio/dio.dart';
+import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:http/http.dart' as http;
-
 class PdfService {
-  final String baseUrl = GlobalVariables.baseUrl;
-  final Map<String, String> headers = GlobalVariables.headers;
+  final Dio _dio;
 
-  String? url;
+  // Inyectamos la instancia de Dio configurada
+  PdfService(this._dio);
 
-  Future getPdf(serviceId) async {
-    final prefs = await SharedPreferences.getInstance();
-    var userId = prefs.getInt('id') ?? 0;
-    var token = prefs.getString('token') ?? '';
-    var route = 'index.php';
+  Future<Map<String, dynamic>> getPdf(dynamic serviceId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final int userId = prefs.getInt('id') ?? 0;
+      final String token = prefs.getString('token') ?? '';
 
-    var response =
-        await http.get(Uri.parse(baseUrl + route).replace(queryParameters: {
-      'r': 'esegadi/getcfdi',
-      'token': token,
-      'id': userId.toString(),
-      'service_id': serviceId.toString(),
-    }));
+      // Con Dio usamos queryParameters para que la URL sea limpia y segura
+      final response = await _dio.get(
+        'index.php',
+        queryParameters: {
+          'r': 'esegadi/getcfdi',
+          'token': token,
+          'id': userId.toString(),
+          'service_id': serviceId.toString(),
+        },
+      );
 
-    var data = jsonDecode(response.body.toString());
-    if (response.statusCode == 200) {
-      return data;
+      // Dio ya nos entrega el body decodificado en .data como un Map
+      if (response.data == null) {
+        throw ApiException("El servidor no devolvió información del PDF.");
+      }
+
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      // Usamos nuestro unificador de errores para detectar falta de internet
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException("Error inesperado al intentar obtener el PDF.");
     }
   }
 }

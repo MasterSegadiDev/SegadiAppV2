@@ -2,21 +2,16 @@ import 'package:segadi/features/service_detail/domain/entities/detail_service_en
 
 class UiMapper {
   static UiModel fromJson(Map<String, dynamic>? json) {
-    if (json == null) {
-      return UiModel(
-        enableBtn: false,
-        enableSupport: false,
-        enableCheckList: false,
-        pendingMoneyChecks: false,
-        serviceClosed: false,
-      );
-    }
+    if (json == null) return UiModel.empty();
 
     return UiModel(
       enableBtn: _asBool(json['enableBtn']),
       enableSupport: _asBool(json['enableSupport']),
       enableCheckList: _asBool(json['enableCheckList']),
-      pendingMoneyChecks: _asBool(json['pendingMoneyChecks']),
+
+      // CAMBIO CLAVE: La llave en tu JSON es 'pendingMoneyChecks'
+      hasMoneyChecks: _asBool(json['pendingMoneyChecks']),
+
       serviceClosed: _asBool(json['serviceClosed']),
     );
   }

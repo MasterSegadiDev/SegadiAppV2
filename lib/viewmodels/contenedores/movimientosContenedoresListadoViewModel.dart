@@ -4,7 +4,8 @@ import 'package:segadi/models/user/UserSession.dart';
 import 'package:segadi/services/contenedores/movimientos_service.dart';
 
 class movimientosContenedoresListadoViewModel extends ChangeNotifier {
-  final MovimientosService _service = MovimientosService();
+  final MovimientosService _service;
+  movimientosContenedoresListadoViewModel(this._service);
 
   bool _initialized = false;
   final user = UserSession();

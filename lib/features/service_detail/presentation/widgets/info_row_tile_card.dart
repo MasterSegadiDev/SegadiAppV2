@@ -27,17 +27,14 @@ class InfoRowTile extends StatelessWidget {
                 Text(
                   row.label,
                   style: const TextStyle(
-                    fontSize: 13,
-                    color: Colors.black,
-                  ),
+                      fontSize: 13,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   row.value,
-                  style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.black),
+                  style: const TextStyle(fontSize: 15, color: Colors.black),
                 ),
               ],
             ),

@@ -19,62 +19,54 @@ class _MovimientoViewState extends State<MovimientoView> {
   String _searchQuery = "";
   String? _currentSiteId;
   String? _error;
-  bool _isLoading = true;
-  late TextEditingController _numeroSerieController;
-  bool _expanded = false;
-  final Set<int> expandedIndex = {};
+  bool _isLoading = true; // Control local para la carga de la sesión inicial
 
   @override
   void initState() {
     super.initState();
 
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      // ✅ Cargar sesión antes de todo
+      // 1. Cargar sesión (UserSession sigue siendo un Singleton, está bien así)
       final session = UserSession();
       await session.loadFromPrefs();
 
       if (session.siteId == null || session.siteId!.isEmpty) {
-        setState(() {
-          _error =
-              "No se encontró un site_id válido. Inicie sesión nuevamente.";
-          _isLoading = false;
-        });
+        if (mounted) {
+          setState(() {
+            _error =
+                "No se encontró un site_id válido. Inicie sesión nuevamente.";
+            _isLoading = false;
+          });
+        }
         return;
       }
 
-      setState(() {
-        _currentSiteId = session.siteId;
-      });
+      if (mounted) {
+        setState(() {
+          _currentSiteId = session.siteId;
+        });
+      }
 
-      // ✅ Cargar movimientos del site actual
-      final viewModel =
-          Provider.of<ContainerMovementListViewModel>(context, listen: false);
+      // 2. Disparar la carga inicial a través del ViewModel ya inyectado
+      // Usamos read porque es una acción puntual dentro de initState
+      final viewModel = context.read<ContainerMovementListViewModel>();
       await viewModel.loadMovimientos(siteId: _currentSiteId!);
 
       if (mounted) {
         setState(() => _isLoading = false);
       }
     });
-
-    _numeroSerieController = TextEditingController(text: '');
   }
 
   /// 🔹 Función para refrescar datos manualmente
   Future<void> _handleRefresh() async {
-    if (_currentSiteId == null || _currentSiteId!.isEmpty) return;
+    if (_currentSiteId == null) return;
 
-    final viewModel =
-        Provider.of<ContainerMovementListViewModel>(context, listen: false);
-
-    await viewModel.loadMovimientos(
-      siteId: _currentSiteId!,
-      forceReload: true,
-    );
-
-    // 🔹 Aseguramos que la UI se reconstruya después del refresh
-    if (mounted) {
-      setState(() {});
-    }
+    // Usamos read para disparar el método del ViewModel
+    await context.read<ContainerMovementListViewModel>().loadMovimientos(
+          siteId: _currentSiteId!,
+          forceReload: true,
+        );
   }
 
   @override
@@ -91,10 +83,7 @@ class _MovimientoViewState extends State<MovimientoView> {
     if (_error != null) {
       return Scaffold(
         body: Center(
-          child: Text(
-            _error!,
-            style: const TextStyle(color: Colors.red),
-          ),
+          child: Text(_error!, style: const TextStyle(color: Colors.red)),
         ),
       );
     }

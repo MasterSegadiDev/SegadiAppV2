@@ -21,6 +21,11 @@ class TripClosureViewModel extends ChangeNotifier {
   final List<Uint8List> images = [];
   bool isSending = false;
 
+  void removeImage(int index) {
+    images.removeAt(index);
+    notifyListeners();
+  }
+
   Future<void> captureImage() async {
     final image = await scanner.scan();
     if (image != null) {

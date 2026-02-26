@@ -18,7 +18,7 @@ class DrawerScreen extends StatefulWidget {
 class _DrawerScreen extends State<DrawerScreen> {
   var name = "";
   var username = "";
-  late Future<Photo>? detail;
+  Future<Photo>? detail;
 
   void _loadPreferences() async {
     final prefs = await SharedPreferences.getInstance();
@@ -32,7 +32,8 @@ class _DrawerScreen extends State<DrawerScreen> {
   void initState() {
     super.initState();
     _loadPreferences();
-    detail = User().getUserPhot();
+
+    detail = context.read<User>().getUserPhot();
   }
 
   @override
@@ -135,7 +136,7 @@ class _DrawerScreen extends State<DrawerScreen> {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (context) => const ServiceListView(),
+                          builder: (context) => const ServicesAssignedPage(),
                         ),
                       );
                     },

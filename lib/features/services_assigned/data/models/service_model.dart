@@ -28,4 +28,18 @@ class ServiceModel extends ServiceEntity {
       status: json['status'],
     );
   }
+  ServiceEntity toEntity() {
+    return ServiceEntity(
+      id: id,
+      service: service,
+      client: client,
+      origin: origin,
+      destination: destination,
+      scaleOne: scaleOne,
+      scaleTwo: scaleTwo,
+      loadDate: loadDate,
+      unloadDate: unloadDate,
+      status: status,
+    );
+  }
 }

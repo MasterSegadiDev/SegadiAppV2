@@ -116,6 +116,7 @@ class _LoginScreenState extends State<LoginView> {
     return TextFormField(
       controller: controller,
       onChanged: onChanged,
+      textCapitalization: TextCapitalization.none,
       validator: (value) =>
           value == null || value.isEmpty ? 'Este campo es obligatorio' : null,
       decoration: InputDecoration(
@@ -132,6 +133,7 @@ class _LoginScreenState extends State<LoginView> {
     return TextFormField(
       controller: loginViewModel.passwordController,
       onChanged: (value) => loginViewModel.password = value,
+      textCapitalization: TextCapitalization.none,
       validator: (value) => value == null || value.isEmpty
           ? 'La contraseña es obligatoria'
           : null,

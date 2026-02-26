@@ -1,5 +1,6 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:segadi/features/firebase_cloud_messaging.dart/domain/usecases/listen_service_update.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
@@ -20,10 +21,10 @@ class DetailServiceViewModel extends ChangeNotifier {
 
   StreamSubscription? _fcmSub;
 
-  DetailServiceViewModel(
-    this.repository,
-    this.listenServicioUpdates,
-  );
+  DetailServiceViewModel({
+    required this.repository,
+    required this.listenServicioUpdates,
+  });
 
   DetailServiceStatus status = DetailServiceStatus.initial;
   DetailServiceEntity? entity;
@@ -76,7 +77,6 @@ class DetailServiceViewModel extends ChangeNotifier {
   ///////////////////////////////////////
   //////////// 📦 LOAD DETAIL ////////////
   ///////////////////////////////////////
-
   Future<void> loadDetail(int id) async {
     debugPrint('📦 Loading detail for serviceId=$id');
 
@@ -84,26 +84,36 @@ class DetailServiceViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
 
-    try {
-      entity = await repository.getDetail(id);
+    // El repositorio ahora devuelve el Either (Left: Failure, Right: Data)
+    final result = await repository.getDetail(id);
 
-      _evidenceNavigationConsumed = false;
+    result.fold(
+      (failure) {
+        // ❌ Caso de Error
+        status = DetailServiceStatus.error;
+        errorMessage = failure.message;
+        debugPrint('❌ Error loading detail: $errorMessage');
+      },
+      (data) {
+        // ✅ Caso de Éxito
+        _evidenceNavigationConsumed = false;
 
-      if (mustSendEvidence) {
-        _navigateToSendEvidence = true;
-      }
+        // 1. Asignamos la data a la entidad primero
+        entity = data;
 
-      state = buildDetailServiceState(entity!);
+        // 2. Validamos la lógica de evidencia
+        if (mustSendEvidence) {
+          _navigateToSendEvidence = true;
+        }
 
-      status = DetailServiceStatus.loaded;
+        // 3. Construimos el estado visual usando la entidad ya cargada
+        // Usamos data directamente para evitar el force unwrap (!) si prefieres
+        state = buildDetailServiceState(data);
 
-      debugPrint('✅ Detail loaded successfully');
-    } catch (e) {
-      status = DetailServiceStatus.error;
-      errorMessage = e.toString();
-
-      debugPrint('❌ Error loading detail: $errorMessage');
-    }
+        status = DetailServiceStatus.loaded;
+        debugPrint('✅ Detail loaded successfully');
+      },
+    );
 
     notifyListeners();
   }
@@ -114,9 +124,9 @@ class DetailServiceViewModel extends ChangeNotifier {
 
   Future<void> changeMandatoryStatus(BuildContext context) async {
     if (entity == null) return;
-
     final statusId = entity!.nextMandatoryStatusId;
 
+    debugPrint('estatus a enviar: $statusId');
     _setLoading();
 
     final result = await repository.changeStatus(
@@ -124,14 +134,53 @@ class DetailServiceViewModel extends ChangeNotifier {
       statusId: statusId,
     );
 
-    if (!result.success) {
-      _setError(result.message ?? 'No se pudo cambiar el estatus');
-      return;
-    }
+    print('🔄 Change status result: $result');
 
-    await loadDetail(entity!.id);
+    // ✅ Usamos fold como único flujo de decisión
+    await result.fold(
+      (failure) async {
+        final msg = failure.message;
+        _setError(msg);
+        if (context.mounted) _showSnackBar(context, msg, isError: true);
+      },
+      (apiResult) async {
+        // 1. Verificamos si el API respondió success: true
+        if (!apiResult.success) {
+          final msg = apiResult.message ?? 'No se pudo cambiar el estatus';
+          _setError(msg);
+          if (context.mounted) _showSnackBar(context, msg, isError: true);
+          return; // Salimos si falló el backend
+        }
+
+        // 2. SI EL ESTATUS ES 14, EVALUAMOS EL CIERRE AUTOMÁTICO
+        if (statusId == 23) {
+          final bool checksPendientes = entity!.pendingMoneyChecks;
+          debugPrint(
+              'Evaluando cierre: checksPendientes es ${checksPendientes} en la remision ${entity!.id}');
+
+          if (checksPendientes == false) {
+            debugPrint('🚀 Ejecutando closeService automático...');
+            final closeResult = await repository.closeService(id: entity!.id);
+
+            closeResult.fold(
+              (f) => debugPrint('❌ Error al cerrar el servicio: ${f.message}'),
+              (s) => debugPrint('✅ Servicio cerrado automáticamente'),
+            );
+          } else {
+            debugPrint('⚠️ Pendientes detectados, no se ejecuta closeService');
+          }
+        }
+
+        // 3. ÉXITO: Recargamos la información para actualizar la UI
+        await loadDetail(entity!.id);
+
+        if (context.mounted) {
+          _showSnackBar(context, "Estatus actualizado correctamente",
+              isError: false);
+        }
+      },
+    );
   }
-
   ///////////////////////////////////////
   //////////// 🛠 HELPERS ///////////////
   ///////////////////////////////////////
@@ -149,4 +198,15 @@ class DetailServiceViewModel extends ChangeNotifier {
   }
 
   void retry(int id) => loadDetail(id);
+
+  void _showSnackBar(BuildContext context, String message,
+      {bool isError = false}) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        backgroundColor: isError ? Colors.redAccent : Colors.green,
+        behavior: SnackBarBehavior.floating,
+      ),
+    );
+  }
 }

@@ -10,14 +10,16 @@ enum EvidenceFlowStatus { idle, scanning, error, sending, success }
 
 class EvidenceFlowViewModel extends ChangeNotifier {
   final int id;
+
   // final SendEvidenceUseCase sendEvidenceUseCase;
   final EvidenceRepository repository;
   final DetailServiceRepositoryImpl detailServiceApi;
 
-  EvidenceFlowViewModel(
-      {required this.id,
-      required this.repository,
-      required this.detailServiceApi});
+  EvidenceFlowViewModel({
+    required this.id,
+    required this.repository,
+    required this.detailServiceApi,
+  });
 
   /// 🔹 Evidencias
   final List<EvidenceEntity> _evidences = [];
@@ -114,13 +116,16 @@ class EvidenceFlowViewModel extends ChangeNotifier {
 
   void updateReceiverName(String value) {
     _receiverName = value;
-    notifyListeners();
+    notifyListeners(); // Esto activa el botón cuando escriben
   }
 
   void updateSignature(Uint8List? bytes) {
-    _signatureBytes = bytes;
-
-    notifyListeners();
+    if (bytes == null || bytes.isEmpty) {
+      _signatureBytes = null;
+    } else {
+      _signatureBytes = bytes;
+    }
+    notifyListeners(); // Esto activa el botón cuando firman
   }
 
   bool get hasSignature => signatureBytes != null && signatureBytes!.isNotEmpty;
@@ -130,11 +135,11 @@ class EvidenceFlowViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get isConfirmationValid =>
-      receiverName.trim().isNotEmpty &&
-      signatureBytes != null &&
-      signatureBytes!.isNotEmpty;
-
+  bool get isConfirmationValid {
+    final hasName = _receiverName.trim().length > 3; // Al menos 4 caracteres
+    final hasSign = _signatureBytes != null && _signatureBytes!.isNotEmpty;
+    return hasName && hasSign;
+  }
   ///////////////////////////////////
   ////  GENERAR PDF
   //////////////////////////////////
@@ -168,6 +173,7 @@ class EvidenceFlowViewModel extends ChangeNotifier {
     notifyListeners();
 
     try {
+      // 1. Envíos de archivos
       await repository.sendPdf(
         serviceId: id,
         pdfBytes: pdfBytes,
@@ -182,18 +188,33 @@ class EvidenceFlowViewModel extends ChangeNotifier {
         receiverDate: confirmationDate,
       );
 
-      final response = await detailServiceApi.changeStatus(
+      // 2. Cambio de estatus (Manejo de Either)
+      final result = await detailServiceApi.changeStatus(
         serviceId: id,
         statusId: 10,
       );
 
-      if (response.success) {
-        print('el estatus se ha insertado con exito ${response.message}');
-      }
+      // Usamos fold para "abrir" la caja del Either
+      bool isStatusOk = result.fold(
+        (failure) {
+          debugPrint('❌ Error de red/servidor: ${failure.message}');
+          return false;
+        },
+        (apiResponse) {
+          if (apiResponse.success) {
+            debugPrint('✅ Estatus insertado con éxito: ${apiResponse.message}');
+            return true;
+          } else {
+            debugPrint(
+                '⚠️ El servidor respondió error: ${apiResponse.message}');
+            return false;
+          }
+        },
+      );
 
-      return true;
+      return isStatusOk; // Retorna true solo si el estatus se cambió bien
     } catch (e) {
-      debugPrint('Error sending evidences: $e');
+      debugPrint('❌ Error fatal enviando evidencias: $e');
       return false;
     } finally {
       isSending = false;

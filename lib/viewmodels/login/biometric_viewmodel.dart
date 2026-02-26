@@ -1,7 +1,5 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
+
 import 'package:segadi/models/login/biometric_model.dart';
 
 import 'package:segadi/models/login/user_login.dart';
@@ -9,8 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 class BiometricViewModel extends ChangeNotifier {
   final BiometricModel _biometricModel = BiometricModel();
-
-  final AuthService _authService = AuthService();
+  final AuthService _authService;
 
   bool _isBiometricAvailable = false;
   bool _isAuthenticated = false;
@@ -24,7 +21,7 @@ class BiometricViewModel extends ChangeNotifier {
   String? username;
   String? password;
 
-  BiometricViewModel() {
+  BiometricViewModel(this._authService) {
     checkBiometricAvailability();
     _loadFromPrefs();
   }
@@ -37,29 +34,29 @@ class BiometricViewModel extends ChangeNotifier {
   Future<void> authenticate() async {
     final prefs = await SharedPreferences.getInstance();
     token = prefs.getString('token');
-    
-
     username = prefs.getString('username');
-    password = await prefs.getString('password');
+    password = prefs.getString('password');
 
     if (token != null) {
       prefs.remove('token');
     }
 
-   
-
     _isAuthenticated = await _biometricModel.authenticateWithBiometrics();
 
     if (_isAuthenticated == true && username != null && password != null) {
-      http.Response response = await _authService.login(username!, password!);
-     
+      try {
+        // 1. Aquí 'response' ya es el Map<String, dynamic> que envió el AuthService
+        final responseMap = await _authService.login(username!, password!);
 
-      if (response.statusCode == 200) {
-        Map responseMap = json.decode(response.body);
-        prefs.setString('token', responseMap['token']);
-        _isAuthenticatedWithToken = true;
-
-        
+        // 2. Ya no pidas 'response.data', usa 'responseMap' directamente
+        if (responseMap.isEmpty && responseMap['token'] != null) {
+          prefs.setString('token', responseMap['token']);
+          _isAuthenticatedWithToken = true;
+          print('✅ Autenticación exitosa');
+        }
+      } catch (e) {
+        _isAuthenticatedWithToken = false;
+        debugPrint('❌ Error: $e');
       }
     }
     notifyListeners();

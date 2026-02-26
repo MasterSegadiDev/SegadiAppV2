@@ -1,8 +1,11 @@
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/features/check_list/data/datasources/checklist_api.dart';
+import 'package:segadi/core/network/dio_client.dart';
+import 'package:segadi/core/network/network_info.dart';
+import 'package:segadi/features/check_list/data/datasources/checklist_remote_dataosurce.dart';
 import 'package:segadi/features/check_list/data/repositories/checklist_repository_impl.dart';
 import 'package:segadi/features/check_list/presentation/pages/checklist_page.dart';
 import 'package:segadi/features/check_list/presentation/viewmodels/checklist_viewmodel.dart';
@@ -12,8 +15,6 @@ import 'package:segadi/features/support_status/data/api/support_status_api.dart'
 import 'package:segadi/features/support_status/data/repositories/support_status_repository_impl.dart';
 import 'package:segadi/features/support_status/presentation/ui/status_support_view.dart';
 import 'package:segadi/features/support_status/presentation/viewmodel/support_status_viewmodel.dart';
-import 'package:segadi/features/trip_closure/presentation/pages/capture_trip_evidence_page.dart';
-import 'package:segadi/views/services/detail_service.dart';
 
 class ActionsCard extends StatelessWidget {
   final DetailServiceEntity ui;
@@ -27,151 +28,213 @@ class ActionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final e = ui;
     final state = ui;
 
+    // Definimos la lista de acciones dinámicamente para el Grid
+    final List<Widget> actions = [
+      ActionButton(
+        icon: FontAwesomeIcons.clipboardList,
+        label: 'Chequeo',
+        color: Colors.blue,
+        enabled: state.ui.enableCheckList,
+        onPressed: () async {
+          // 1. Instanciamos dependencias
+          final dioClient = DioClient();
+          final remoteDS = ChecklistRemoteDataSource(dioClient);
+
+          // Agregamos Connectivity() aquí para que NetworkInfo pueda trabajar
+          final networkInfo = NetworkInfoImpl(Connectivity());
+
+          final ok = await showModalBottomSheet<bool>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            builder: (context) => ChangeNotifierProvider(
+              create: (_) => ChecklistViewModel(
+                repo: ChecklistRepositoryImpl(
+                  remoteDataSource: remoteDS,
+                  networkInfo: networkInfo,
+                ),
+                serviceId: state.id,
+              ),
+              child: const _ChecklistModal(),
+            ),
+          );
+
+          if (ok == true) {
+            if (context.mounted) {
+              context.read<DetailServiceViewModel>().loadDetail(state.id);
+            }
+          }
+        },
+      ),
+      ActionButton(
+        icon: FontAwesomeIcons.locationDot,
+        label: 'Soporte',
+        color: Colors.red,
+        enabled: state.ui.enableSupport,
+        onPressed: () async {
+          // Supongamos que tu instancia de Dio se llama 'myDioClient' o similar
+          final dio = DioClient();
+
+          final updated = await showModalBottomSheet<bool>(
+            context: context,
+            isScrollControlled: true,
+            backgroundColor: Colors.transparent,
+            barrierColor: Colors.black54,
+            builder: (_) => ChangeNotifierProvider(
+              create: (_) => SupportStatusViewModel(
+                repo: SupportStatusRepositoryImpl(
+                  SupportStatusApi(dio), // <--- AQUÍ PASAS EL DIO
+                ),
+                serviceId: state.id,
+                statusId: state.statusId,
+                type: state.type,
+              ),
+              child: const StatusSupportView(),
+            ),
+          );
+
+          if (updated == true && context.mounted) {
+            context.read<DetailServiceViewModel>().loadDetail(state.id);
+          }
+        },
+      ),
+      const ActionButton(
+        icon: FontAwesomeIcons.mapLocationDot,
+        label: 'Geocerca',
+        color: Colors.grey,
+        enabled: false,
+        onPressed: null,
+      ),
+      if (ui.serviceType == 'contenedor')
+        ActionButton(
+          icon: FontAwesomeIcons.circleCheck,
+          label: 'Subir EIR',
+          color: Colors.green,
+          enabled: state.ui.serviceClosed,
+          onPressed: () async {
+            final result = await Navigator.pushNamed(
+              context,
+              '/trip-closure',
+              arguments: {'id': ui.id, 'serviceId': ui.service},
+            );
+            if (result == true) onRefresh();
+          },
+        ),
+      ActionButton(
+        icon: FontAwesomeIcons.moneyBillTransfer,
+        label: 'Viáticos',
+        color: Colors.teal,
+        enabled: state.ui.hasMoneyChecks,
+        onPressed: null,
+      ),
+      const ActionButton(
+        icon: FontAwesomeIcons.solidFilePdf,
+        label: 'Carta Porte',
+        color: Colors.red,
+        enabled: true,
+        onPressed: null,
+      ),
+    ];
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: CupertinoColors.systemGrey6,
-        borderRadius: BorderRadius.circular(18),
+        borderRadius: BorderRadius.circular(22),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          // ─────────────── Primera fila ───────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              ActionButton(
-                icon: FontAwesomeIcons.clipboardList,
-                label: 'Lista de chequeo',
-                color: Colors.blue,
-                enabled: state.ui.enableCheckList,
-                onPressed: () async {
-                  final ok = await showModalBottomSheet<bool>(
-                    context: context,
-                    isScrollControlled: true,
-                    backgroundColor: Colors.transparent,
-                    builder: (context) {
-                      return ChangeNotifierProvider(
-                        create: (_) => ChecklistViewModel(
-                          repo: ChecklistRepositoryImpl(ChecklistApi()),
-                          serviceId: state.id,
-                        ),
-                        child: const _ChecklistModal(),
-                      );
-                    },
-                  );
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Si la pantalla es muy pequeña, usamos 3 columnas pero con escala menor
+          // Si es mediana/grande, 3 columnas cómodas.
+          return GridView.count(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            crossAxisCount: 3,
+            mainAxisSpacing: 12,
+            crossAxisSpacing: 8,
+            childAspectRatio:
+                0.9, // Ajusta esto para dar más/menos aire vertical
+            children: actions,
+          );
+        },
+      ),
+    );
+  }
+}
 
-                  if (ok == true) {
-                    context.read<DetailServiceViewModel>().loadDetail(state.id);
-                  }
-                },
-              ),
-              ActionButton(
-                icon: FontAwesomeIcons.locationDot,
-                label: 'Estatus soporte',
-                color: Colors.red,
-                enabled: state.ui.enableSupport,
-                onPressed: state.ui.enableSupport
-                    ? () async {
-                        final updated = await showDialog<bool>(
-                          context: context,
-                          barrierDismissible: false,
-                          builder: (_) => ChangeNotifierProvider(
-                            create: (_) => SupportStatusViewModel(
-                              repo: SupportStatusRepositoryImpl(
-                                SupportStatusApi(),
-                              ),
-                              serviceId: state.id,
-                              statusId: state.statusId,
-                              type: state.type,
-                            ),
-                            child: const Dialog(
-                              shape: RoundedRectangleBorder(
-                                borderRadius:
-                                    BorderRadius.all(Radius.circular(20)),
-                              ),
-                              child: StatusSupportView(),
-                            ),
-                          ),
-                        );
+class ActionButton extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool enabled;
+  final VoidCallback? onPressed;
 
-                        if (updated == true) {
-                          context
-                              .read<DetailServiceViewModel>()
-                              .loadDetail(state.id);
-                        }
-                      }
-                    : null,
-              ),
-              const ActionButton(
-                icon: FontAwesomeIcons.mapLocationDot,
-                label: 'Geocerca',
-                color: Colors.grey,
-                enabled: false,
-                onPressed: null,
-              ),
-            ],
-          ),
+  const ActionButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.enabled,
+    this.onPressed,
+  });
 
-          const SizedBox(height: 20),
-          Divider(color: Colors.grey.shade300, height: 1),
-          const SizedBox(height: 16),
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Adaptamos el tamaño del icono al ancho disponible del slot del grid
+        final double availableWidth = constraints.maxWidth;
+        final double iconSize = (availableWidth * 0.35).clamp(24.0, 32.0);
+        final double fontSize = (availableWidth * 0.18).clamp(10.0, 12.0);
 
-          // ─────────────── Segunda fila ───────────────
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              if (e.serviceType == 'contenedor')
-                ActionButton(
-                  icon: FontAwesomeIcons.circleCheck,
-                  label: 'Cierre de viaje',
-                  color: Colors.green,
-                  enabled: state.ui.serviceClosed,
-                  onPressed: state.ui.serviceClosed
-                      ? () async {
-                          final result = await Navigator.pushNamed(
-                            context,
-                            '/trip-closure',
-                            arguments: {
-                              'id': e.id,
-                              'serviceId': e.service,
-                            },
-                          );
-
-                          if (result == true) {
-                            onRefresh();
-                          }
-                        }
-                      : null,
+        return Opacity(
+          opacity: enabled ? 1.0 : 0.4,
+          child: InkWell(
+            onTap: enabled ? onPressed : null,
+            borderRadius: BorderRadius.circular(15),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    color: enabled
+                        ? color.withOpacity(0.12)
+                        : Colors.grey.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: FaIcon(
+                    icon,
+                    size: iconSize,
+                    color: enabled ? color : Colors.grey,
+                  ),
                 ),
-              ActionButton(
-                icon: FontAwesomeIcons.moneyBillTransfer,
-                label: 'Viáticos',
-                color: Colors.teal,
-                enabled: state.pendingMoneyChecks,
-                onPressed: null,
-              ),
-              ActionButton(
-                icon: FontAwesomeIcons.solidFilePdf,
-                label: 'Descargar CCP',
-                color: Colors.red,
-                enabled: true,
-                onPressed: null,
-              ),
-            ],
+                const SizedBox(height: 6),
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(
+                    label,
+                    style: TextStyle(
+                      fontSize: fontSize,
+                      fontWeight: FontWeight.w600,
+                      color: Colors.black87,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }

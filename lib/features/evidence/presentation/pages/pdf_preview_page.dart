@@ -13,6 +13,8 @@ class PdfPreviewPage extends StatefulWidget {
 }
 
 class _PdfPreviewPageState extends State<PdfPreviewPage> {
+  final Color primaryGreen = const Color(0xFF2C522A);
+
   Uint8List? _pdfBytes;
   bool _isLoading = true;
   String? _error;
@@ -50,8 +52,13 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
     final vm = context.watch<EvidenceFlowViewModel>();
 
     return Scaffold(
+      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Vista previa del PDF'),
+        title: const Text('Vista previa del PDF a enviar',
+            style: TextStyle(color: Colors.white, fontSize: 18)),
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: primaryGreen,
+        elevation: 0,
       ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator())
@@ -96,6 +103,7 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
                                     }
                                   },
                             style: ElevatedButton.styleFrom(
+                              backgroundColor: primaryGreen,
                               padding: const EdgeInsets.symmetric(vertical: 14),
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(100),
@@ -105,7 +113,8 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
                                 ? const CircularProgressIndicator(
                                     color: Colors.white,
                                   )
-                                : const Text('Enviar evidencias'),
+                                : const Text('Enviar evidencias',
+                                    style: TextStyle(color: Colors.white)),
                           ),
                         ),
                       ),

@@ -1,11 +1,12 @@
-import 'dart:convert';
 import 'dart:io';
-
-import 'package:http/http.dart' as http;
-import 'package:segadi/utils/global_variables.dart';
-import 'package:segadi/viewmodels/login/user_login.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:segadi/core/network/api_exceptions.dart';
+import 'package:segadi/viewmodels/login/user_login.dart';
 
+// ==========================================
+// 1. MODELO DE DATOS
+// ==========================================
 class TripClosure {
   int? id;
   String? serviceId;
@@ -23,9 +24,8 @@ class TripClosure {
 
   factory TripClosure.fromJson(Map<String, dynamic> json) => TripClosure(
         id: json["id"],
-        serviceId: json["service_id"],
+        serviceId: json["service_id"]?.toString(),
         extension: json["extension"],
-        // OJO: imagen no se puede construir directamente desde json en este modelo
         closeTravel: json["service_closed"],
       );
 
@@ -33,103 +33,97 @@ class TripClosure {
         "id": id,
         "service_id": serviceId,
         "extension": extension,
-        // No serializamos la imagen directamente
         "service_closed": closeTravel,
       };
+}
 
-  final String baseUrl = GlobalVariables.baseUrl;
-  final Map<String, String> headers = GlobalVariables.headers;
+// ==========================================
+// 2. SERVICIO DE RED (TRIP CLOSURE SERVICE)
+// ==========================================
+class TripClosureService {
+  final Dio _dio;
 
-  // Inserta una imagen como evidencia para cierre de viaje
-  Future<http.Response> insertImageTripClosure(
-      int id, String serviceId, String imageBase64, String extension) async {
-    final token = await LoginViewModel.getSavedToken();
+  TripClosureService(this._dio);
 
-    if (token == null) {
-      throw Exception("Token no disponible");
+  /// Inserta una imagen como evidencia para cierre de viaje
+  Future<void> insertImageTripClosure({
+    required int id,
+    required String serviceId,
+    required String imageBase64,
+    required String extension,
+  }) async {
+    try {
+      final token = await LoginViewModel.getSavedToken();
+
+      final Map<String, dynamic> data = {
+        "service_id": id,
+        "token": token,
+        "document_name": "$serviceId$extension",
+        "document_description": "Evidencia Operador",
+        "document_type": "POD Operador",
+        "document": imageBase64,
+      };
+
+      await _dio.post(
+        'index.php',
+        queryParameters: {'r': 'esegadi/evidenciaspost'},
+        data: data,
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException('Error inesperado al guardar la evidencia');
     }
-
-    final Map<String, dynamic> data = {
-      "service_id": id,
-      "token": token,
-      "document_name": "$serviceId$extension",
-      "document_description": "Evidencia Operador",
-      "document_type": "POD Operador",
-      "document": imageBase64,
-    };
-
-    final url = Uri.parse('${baseUrl}index.php?r=esegadi/evidenciaspost');
-
-    final response = await http.post(
-      url,
-      headers: headers,
-      body: jsonEncode(data),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception(
-          'Error al guardar la evidencia (status: ${response.statusCode})');
-    }
-
-    return response;
   }
 
-  // Obtiene el total de evidencias pendientes para un servicio
-  Future<int> getTotalEvidentias(int serviceId) async {
-    final token = await LoginViewModel.getSavedToken();
-    final prefs = await SharedPreferences.getInstance();
-    final userId = prefs.getInt('id') ?? 0;
+  /// Obtiene el total de evidencias pendientes para un servicio
+  Future<int> getTotalEvidencias(int serviceId) async {
+    try {
+      final token = await LoginViewModel.getSavedToken();
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('id') ?? 0;
 
-    if (token == null) {
-      throw Exception('Token no disponible');
-    }
+      final response = await _dio.get(
+        'index.php',
+        queryParameters: {
+          'r': 'esegadi/getevidenciasfaltantes',
+          'token': token,
+          'id': userId.toString(),
+          'service_id': serviceId.toString(),
+        },
+      );
 
-    final uri = Uri.parse('${baseUrl}index.php').replace(queryParameters: {
-      'r': 'esegadi/getevidenciasfaltantes',
-      'token': token,
-      'id': userId.toString(),
-      'service_id': serviceId.toString(),
-    });
-
-    final response = await http.get(uri);
-
-    if (response.statusCode == 200) {
-      final data = jsonDecode(response.body);
+      final data = response.data;
       final remaining = data['remaining_evidences'];
+
       return remaining is int ? remaining : int.parse(remaining.toString());
-    } else {
-      throw Exception(
-          'Error al consultar las evidencias (status: ${response.statusCode})');
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException('Error al consultar evidencias pendientes');
     }
   }
 
-  // Cierra el viaje enviando la solicitud correspondiente
-  Future<http.Response> closeTravels(int serviceId) async {
-    final token = await LoginViewModel.getSavedToken();
+  /// Cierra el viaje enviando la solicitud correspondiente
+  Future<void> closeTravels(int serviceId) async {
+    try {
+      final token = await LoginViewModel.getSavedToken();
 
-    if (token == null) {
-      throw Exception("Token no disponible");
+      final Map<String, dynamic> data = {
+        "service_id": serviceId,
+        "token": token,
+        "close": 1,
+      };
+
+      await _dio.post(
+        'index.php',
+        queryParameters: {'r': 'esegadi/cierreevidenciaspost'},
+        data: data,
+      );
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException('Error inesperado al cerrar el viaje');
     }
-
-    final Map<String, dynamic> data = {
-      "service_id": serviceId,
-      "token": token,
-      "close": 1,
-    };
-
-    final url = Uri.parse('${baseUrl}index.php?r=esegadi/cierreevidenciaspost');
-
-    final response = await http.post(
-      url,
-      headers: headers,
-      body: jsonEncode(data),
-    );
-
-    if (response.statusCode != 200) {
-      throw Exception(
-          'Error al cerrar el viaje (status: ${response.statusCode})');
-    }
-
-    return response;
   }
 }

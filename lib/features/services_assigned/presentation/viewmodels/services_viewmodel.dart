@@ -3,33 +3,36 @@ import 'package:segadi/features/services_assigned/presentation/viewmodels/servic
 import '../../domain/usecases/get_assigned_services.dart';
 
 class ServicesViewModel extends ChangeNotifier {
-  final GetAssignedServices getAssignedServices;
+  final GetAssignedServices getAssignedServicesUseCase;
 
   ServicesState _state = ServicesLoading();
   ServicesState get state => _state;
 
-  ServicesViewModel(this.getAssignedServices);
+  ServicesViewModel({required this.getAssignedServicesUseCase});
 
   Future<void> loadServices() async {
     _state = ServicesLoading();
     notifyListeners();
 
-    try {
-      final items = await getAssignedServices();
+    final result = await getAssignedServicesUseCase();
 
-      if (items.isEmpty) {
-        _state = ServicesEmpty();
-      } else {
-        _state = ServicesLoaded(items);
-      }
-    } catch (e) {
-      _state = ServicesError('Error al cargar servicios');
-    }
+    result.fold(
+      (failure) {
+        _state = ServicesError(failure.message);
+      },
+      (servicesResult) {
+        // servicesResult contiene .items y .message
+        if (servicesResult.items.isEmpty) {
+          // Le pasamos el mensaje que viene del Backend
+          _state = ServicesEmpty(servicesResult.message);
+        } else {
+          _state = ServicesLoaded(servicesResult.items);
+        }
+      },
+    );
 
     notifyListeners();
   }
 
-  Future<void> refresh() async {
-    await loadServices();
-  }
+  Future<void> refresh() async => await loadServices();
 }

@@ -5,7 +5,8 @@ import 'package:segadi/models/contenedores/punto_movimiento.dart';
 import 'package:segadi/services/contenedores/ubicaciones_service.dart';
 
 class UbicacionesViewModel extends ChangeNotifier {
-  final UbicacionesService _service = UbicacionesService();
+  final UbicacionesService _service;
+  UbicacionesViewModel(this._service);
 
   List<Ubicacion> _ubicaciones = [];
   List<Ubicacion> get ubicaciones => _ubicaciones;

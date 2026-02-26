@@ -1,15 +1,10 @@
-import 'dart:convert';
-
-import 'package:segadi/utils/global_variables.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
+import 'package:segadi/core/network/api_exceptions.dart';
 
-List<Services> servicesFromJson(String str) =>
-    List<Services>.from(json.decode(str).map((x) => Services.fromJson(x)));
-
-String servicesToJson(List<Services> data) =>
-    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
-
+// ==========================================
+// MODELO DE DATOS (Services)
+// ==========================================
 class Services {
   int? id;
   String? service;
@@ -35,22 +30,21 @@ class Services {
     this.status,
     this.scaleOne,
     this.scaleTwo,
-    required String name,
   });
 
   factory Services.fromJson(Map<String, dynamic> json) => Services(
-      id: json["id"],
-      service: json["service"],
-      client: json["client"],
-      origin: json["origin"],
-      destination: json["destination"],
-      loadDate: json["load_date"],
-      unloadDate: json["unload_date"],
-      documenter: json["documenter"],
-      status: json["status"] ?? 'Sin Estatus',
-      scaleOne: json["stopover_1"],
-      scaleTwo: json["stopover_2"],
-      name: '');
+        id: json["id"],
+        service: json["service"],
+        client: json["client"],
+        origin: json["origin"],
+        destination: json["destination"],
+        loadDate: json["load_date"],
+        unloadDate: json["unload_date"],
+        documenter: json["documenter"],
+        status: json["status"] ?? 'Sin Estatus',
+        scaleOne: json["stopover_1"],
+        scaleTwo: json["stopover_2"],
+      );
 
   Map<String, dynamic> toJson() => {
         "id": id,
@@ -65,35 +59,43 @@ class Services {
         "stopover_1": scaleOne,
         "stopover_2": scaleTwo,
       };
+}
 
-  final String baseUrl = GlobalVariables.baseUrl;
-  final Map<String, String> headers = GlobalVariables.headers;
+// ==========================================
+// SERVICIO DE RED (ServicesApi)
+// ==========================================
+class ServicesApi {
+  final Dio _dio;
+
+  ServicesApi(this._dio);
 
   Future<List<Services>> fetchItems() async {
-    late int id;
-    late String? token;
-    List<Services> services = [];
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final int userId = prefs.getInt('id') ?? 0;
+      final String? token = prefs.getString('token');
 
-    final prefs = await SharedPreferences.getInstance();
-    id = prefs.getInt('id') ?? 0;
-    token = prefs.getString('token');
-    var route = 'index.php';
-
-    var response = await http.get(
-      Uri.parse(baseUrl + route).replace(
+      final response = await _dio.get(
+        'index.php',
         queryParameters: {
           'r': 'esegadi/getactivas',
-          'id': id.toString(),
+          'id': userId.toString(),
           'token': token,
         },
-      ),
-    );
-    print('ESTATUS DEL LISTADO SERVICIOS:' + response.body);
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
-      return data.map((json) => Services.fromJson(json)).toList();
-    } else {
-      return services;
+      );
+
+      // Dio ya convierte la respuesta a List<dynamic> automáticamente
+      if (response.data is List) {
+        final List<dynamic> data = response.data;
+        return data.map((json) => Services.fromJson(json)).toList();
+      }
+
+      return [];
+    } on DioException catch (e) {
+      // Usamos tu capturador de errores profesional
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException("Error al cargar la lista de servicios.");
     }
   }
 }

@@ -1,20 +1,27 @@
-import 'dart:convert';
-
-import 'package:segadi/utils/global_variables.dart';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:segadi/core/network/api_exceptions.dart';
 
 class EvidenceRemoteDataSource {
+  final Dio _dio;
+
+  EvidenceRemoteDataSource(this._dio);
+
   Future<void> postEvidence(Map<String, dynamic> body) async {
-    final response = await http.post(
-      Uri.parse("${GlobalVariables.baseUrl}index.php?r=esegadi/evidenciaspost"),
-      headers: {"Content-Type": "application/json"},
-      body: jsonEncode(body),
-    );
+    try {
+      final response = await _dio.post(
+        'index.php',
+        queryParameters: {'r': 'esegadi/evidenciaspost'},
+        data: body,
+      );
 
-    print('respuesta del envio de evidencias ${response.statusCode}');
-
-    if (response.statusCode != 200) {
-      throw Exception(response.body);
+      if (response.data is Map && response.data['success'] == false) {
+        throw ApiException(response.data['message'] ??
+            'Ha ocurrido un error al enviar evidencias');
+      }
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException("Error inesperado al enviar evidencias");
     }
   }
 }

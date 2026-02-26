@@ -7,7 +7,7 @@ import 'package:segadi/features/services_assigned/presentation/viewmodels/servic
 class ServiceCard extends StatelessWidget {
   final ServiceEntity item;
 
-  const ServiceCard({required this.item});
+  const ServiceCard({required this.item, super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -18,147 +18,176 @@ class ServiceCard extends StatelessWidget {
           '/detail_service',
           arguments: item.id,
         );
-
         if (result == true) {
-          context.watch()<ServicesViewModel>().refresh();
+          context.read<ServicesViewModel>().refresh();
         }
       },
-      child: Card(
-        elevation: 6,
-        margin: const EdgeInsets.symmetric(vertical: 8),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-          side: const BorderSide(color: Color(0xFF84A756)),
+      child: Container(
+        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        child: Padding(
-          padding: const EdgeInsets.all(12),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _Title(item),
-              const Divider(),
-              _Section(
-                title: 'Origen de Carga',
-                icon: Icons.location_on,
-                rows: [
-                  _info('Origen', item.origin),
-                  _info('Fecha', item.loadDate),
-                ],
-              ),
-              _Section(
-                title: 'Destino de Carga',
-                icon: Icons.flag,
-                rows: [
-                  _info('Destino', item.destination),
-                  _info('Fecha', item.unloadDate),
-                ],
-              ),
-              _Section(
-                title: 'Escalas',
-                icon: Icons.map,
-                rows: [
-                  _info('Primera', item.scaleOne),
-                  _info('Segunda', item.scaleTwo),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _StatusButton(item.status),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _info(String label, String? value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
-      child: Text(
-        '$label: ${value ?? '-'}',
-        style: const TextStyle(fontSize: 13),
-      ),
-    );
-  }
-}
-
-class _Title extends StatelessWidget {
-  final ServiceEntity item;
-
-  const _Title(this.item);
-
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      contentPadding: EdgeInsets.zero,
-      leading: const Icon(FontAwesomeIcons.truck, color: Colors.green),
-      title: Text(
-        'Remisión: ${item.service ?? '-'}',
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
-      subtitle: Text('Cliente: ${item.client ?? '-'}'),
-    );
-  }
-}
-
-class _Section extends StatelessWidget {
-  final String title;
-  final IconData icon;
-  final List<Widget> rows;
-
-  const _Section({
-    required this.title,
-    required this.icon,
-    required this.rows,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 8),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: 18, color: Colors.grey[700]),
-              const SizedBox(width: 6),
-              Text(
-                title,
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 15,
+              // Encabezado con color de marca sutil
+              _buildHeader(),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildRouteSection(),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Divider(height: 1, thickness: 0.5),
+                    ),
+                    _buildFooter(),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 4),
-          ...rows,
+        ),
+      ),
+    );
+  }
+
+  // --- WIDGETS INTERNOS ---
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: const Color(0xFF2C522A).withOpacity(0.08),
+      child: Row(
+        children: [
+          const Icon(FontAwesomeIcons.truckFast,
+              size: 18, color: Color(0xFF2C522A)),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              'REMISIÓN: ${item.service ?? '-'}',
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                letterSpacing: 0.5,
+                color: Color(0xFF2C522A),
+              ),
+            ),
+          ),
+          _StatusBadge(status: item.status),
         ],
       ),
     );
   }
+
+  Widget _buildRouteSection() {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Línea de tiempo visual (Punto A a Punto B)
+        Column(
+          children: [
+            const Icon(Icons.radio_button_checked,
+                size: 18, color: Colors.green),
+            Container(width: 2, height: 40, color: Colors.grey[300]),
+            const Icon(Icons.location_on, size: 18, color: Colors.redAccent),
+          ],
+        ),
+        const SizedBox(width: 12),
+        // Información de Origen y Destino
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _locationInfo('ORIGEN', item.origin, item.loadDate),
+              const SizedBox(height: 22),
+              _locationInfo('DESTINO', item.destination, item.unloadDate),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _locationInfo(String label, String? city, String? date) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+              fontSize: 10,
+              color: Colors.grey[600],
+              fontWeight: FontWeight.bold),
+        ),
+        Text(
+          city ?? 'No asignado',
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+        ),
+        Text(
+          date ?? '-',
+          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooter() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('CLIENTE',
+                  style: TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.bold,
+                      color: Colors.grey)),
+              Text(
+                item.client ?? '-',
+                style:
+                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ],
+          ),
+        ),
+        const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+      ],
+    );
+  }
 }
 
-class _StatusButton extends StatelessWidget {
+class _StatusBadge extends StatelessWidget {
   final String? status;
-
-  const _StatusButton(this.status);
+  const _StatusBadge({this.status});
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-      onPressed: null,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF2C522A),
-        disabledBackgroundColor: Colors.green,
-        minimumSize: const Size.fromHeight(40),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100),
-        ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.green[600],
+        borderRadius: BorderRadius.circular(20),
       ),
       child: Text(
-        status ?? 'Desconocido',
-        style: const TextStyle(color: Colors.white),
+        status?.toUpperCase() ?? 'PENDIENTE',
+        style: const TextStyle(
+            color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
       ),
     );
   }

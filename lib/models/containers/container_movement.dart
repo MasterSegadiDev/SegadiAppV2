@@ -1,8 +1,7 @@
-import 'dart:convert';
+import 'package:dio/dio.dart';
 
-import 'package:http/http.dart' as http;
+import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:segadi/models/containers/container_movements.dart';
-import 'package:segadi/utils/global_variables.dart';
 
 class Ubicacion {
   final String id;
@@ -40,26 +39,33 @@ class Ubicacion {
 }
 
 class UbicationMovement {
-  final Map<String, String> headers = GlobalVariables.headers;
-  Future<http.Response> saveMovement(Movimiento movimiento) async {
-    final String baseUrl = GlobalVariables.baseUrl;
+  final Dio _dio;
 
-    // Preparar cuerpo del request
-    var body = json.encode(movimiento.toJson()); // Asegúrate de tener toJson()
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/movimientosgruapost');
+  // Recibimos Dio por constructor para mantener la unificación
+  UbicationMovement(this._dio);
 
-    print('Enviando movimiento:');
-    //print(body);
+  Future<Map<String, dynamic>> saveMovement(Movimiento movimiento) async {
+    try {
+      // 1. Preparar el cuerpo del request (Dio lo convierte a JSON automáticamente)
+      final Map<String, dynamic> data = movimiento.toJson();
 
-    http.Response response = await http.post(
-      url,
-      headers: headers,
-      body: body,
-    );
+      print('Enviando movimiento al servidor...');
 
-    //print('Status code: ${response.statusCode}');
-    // print('Response body: ${response.body}');
+      // 2. Realizar la petición POST
+      final response = await _dio.post(
+        'index.php',
+        queryParameters: {'r': 'esegadi/movimientosgruapost'},
+        data: data,
+      );
 
-    return response;
+      // 3. Dio devuelve por defecto el body ya decodificado en response.data
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      // 4. Usamos nuestro traductor de errores profesional
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      // Error genérico si algo falla en la lógica local
+      throw ApiException("Error inesperado al guardar el movimiento");
+    }
   }
 }

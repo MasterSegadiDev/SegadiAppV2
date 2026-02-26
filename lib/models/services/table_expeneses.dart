@@ -1,15 +1,6 @@
-import 'dart:convert';
-
-import 'package:segadi/utils/global_variables.dart';
+import 'package:dio/dio.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:http/http.dart' as http;
-
-List<TableExpenses> tableExpensesFromJson(String str) =>
-    List<TableExpenses>.from(
-        json.decode(str).map((x) => TableExpenses.fromJson(x)));
-
-String tableExpensesToJson(List<TableExpenses> data) =>
-    json.encode(List<dynamic>.from(data.map((x) => x.toJson())));
+import 'package:segadi/core/network/api_exceptions.dart';
 
 class TableExpenses {
   int? id;
@@ -40,36 +31,48 @@ class TableExpenses {
         "id": id,
         "payment_concept": paymentConcept,
         "total_used": totalUsed,
-        "payment_document": paymentConcept,
-        "payment_extension": paymentConcept,
+        "payment_document": paymentDocument,
+        "payment_extension": paymentExtention,
         "image": image
       };
+}
 
-  final String baseUrl = GlobalVariables.baseUrl;
-  final Map<String, String> headers = GlobalVariables.headers;
+// --- SERVICIO (Lógica de red) ---
+class ExpensesService {
+  final Dio _dio;
 
-  Future<List<TableExpenses>> getTravelExpenses(int remition_id) async {
-    final prefs = await SharedPreferences.getInstance();
-    var userId = prefs.getInt('id') ?? 0;
-    String? token;
-    token = prefs.getString('token');
+  ExpensesService(this._dio);
 
-    var response = await http
-        .get(Uri.parse('${GlobalVariables.baseUrl}index.php')
-            .replace(queryParameters: {
+  Future<List<TableExpenses>> getTravelExpenses(int remitionId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getInt('id') ?? 0;
+      final token = prefs.getString('token') ?? '';
+
+      final response = await _dio.get(
+        'index.php',
+        queryParameters: {
           'r': 'esegadi/getcomprobacionestabla',
           'id': userId.toString(),
-          'id_remision': GlobalVariables.serviceDetailId.toString(),
+          'id_remision':
+              remitionId.toString(), // Usamos el ID que viene por parámetro
           'token': token,
-        }))
-        .timeout(const Duration(seconds: 120));
+        },
+      );
 
-    if (response.statusCode == 200) {
-      List<dynamic> data = json.decode(response.body);
+      // Dio ya entrega la respuesta decodificada como List o Map
+      if (response.data is List) {
+        return (response.data as List)
+            .map((item) => TableExpenses.fromJson(item))
+            .toList();
+      }
 
-      return data.map((json) => TableExpenses.fromJson(json)).toList();
-    } else {
-      throw Exception('Ha ocurrido un error al consultar los viaticos');
+      return []; // Si no hay datos, devolvemos lista vacía
+    } on DioException catch (e) {
+      // Usamos tu capturador de errores profesional
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException('Error inesperado al cargar viáticos');
     }
   }
 }

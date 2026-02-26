@@ -1,39 +1,19 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
-import 'package:segadi/utils/global_variables.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:dio/dio.dart';
 
 class AuthServices {
-  final String baseUrl = GlobalVariables.baseUrl;
-  final Map<String, String> headers = GlobalVariables.headers;
+  final Dio _dio;
 
-  Future<http.Response> login(String user, String password) async {
+  // Constructor que recibe Dio para que los ViewModels dejen de dar error
+  AuthServices(this._dio);
+
+  Future<Response> login(String user, String password) async {
+    // Tu lógica de datos exacta
     Map data = {"usuario": user, "password": password, "apptoken": "prueba"};
 
-    var body = json.encode(data);
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/autenticapost');
-    http.Response response = await http.post(
-      url,
-      headers: headers,
-      body: body,
-    );
-
-    return response;
-  }
-
-  Future<http.Response> alert() async {
-    final prefs = await SharedPreferences.getInstance();
-    var userId = prefs.getInt('id') ?? 0;
-    var token = prefs.getString('token') ?? '';
-
-    Map data = {"id": userId, "token": token, "latitude": 0, "longitude": 0};
-
-    var body = json.encode(data);
-    var url = Uri.parse('${baseUrl}index.php?r=esegadi/panicopost');
-    http.Response response = await http.post(
-      url,
-      headers: headers,
-      body: body,
+    // Petición directa con Dio
+    final response = await _dio.post(
+      'index.php?r=esegadi/autenticapost', // La BaseURL ya debe venir configurada en el Dio del main
+      data: data,
     );
 
     return response;

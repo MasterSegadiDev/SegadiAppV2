@@ -1,21 +1,33 @@
-import 'dart:convert';
-import 'package:http/http.dart' as http;
+import 'package:dio/dio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:segadi/models/contenedores/movimiento.dart';
 import 'package:segadi/models/contenedores/movimientos_contenedor.dart';
-import 'package:segadi/utils/global_variables.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 class MovimientosService {
-  Future<http.Response> saveMovimiento(Movimiento movimiento) async {
-    final url = Uri.parse(
-        '${GlobalVariables.baseUrl}index.php?r=esegadi/movimientosgruapost');
-    return await http.post(
-      url,
-      headers: GlobalVariables.headers,
-      body: json.encode(movimiento.toJson()),
-    );
+  final Dio _dio;
+
+  // Inyectamos Dio para mantener la configuración global (URL, Logs, Timeouts)
+  MovimientosService(this._dio);
+
+  /// GUARDAR UN MOVIMIENTO (POST)
+  Future<Map<String, dynamic>> saveMovimiento(Movimiento movimiento) async {
+    try {
+      final response = await _dio.post(
+        'index.php',
+        queryParameters: {'r': 'esegadi/movimientosgruapost'},
+        data: movimiento.toJson(), // Dio serializa automáticamente
+      );
+
+      return response.data as Map<String, dynamic>;
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException('Error inesperado al guardar el movimiento');
+    }
   }
 
+  /// OBTENER LISTADO DE MOVIMIENTOS (GET)
   Future<List<ContainerMovement>> fetchMovimientos({
     required bool forceReload,
     required String siteId,
@@ -25,42 +37,30 @@ class MovimientosService {
       final int userId = prefs.getInt('id') ?? 0;
       final String? token = prefs.getString('token');
 
-      print('🔹 DEBUG fetchMovimientos');
-      print('🔸 userId: $userId');
-      print('🔸 token: $token');
-      print('🔸 siteId: $siteId');
-
       if (userId == 0 || token == null || siteId.isEmpty) {
-        throw Exception('Usuario, token o site_id inválido');
-      }
-      print('SITE ID NUMERO: ${siteId}');
-
-      final route = 'index.php';
-      final baseUrl = '${GlobalVariables.baseUrl}';
-      final uri = Uri.parse(baseUrl + route).replace(queryParameters: {
-        'r': 'esegadi/getmovimientosgrua',
-        'id': userId.toString(),
-        'token': token,
-        'site_id': siteId,
-      });
-      print('URL DE MOVIMIENTOS: ${uri}');
-
-      final response = await http.get(uri);
-
-      print('ESTATUS LISTADO DE MOVIMIENTOS: ${response.statusCode}');
-
-      if (response.statusCode != 200) {
-        throw Exception('Error HTTP al cargar los movimientos');
+        throw ApiException('Sesión inválida o sitio no especificado.');
       }
 
-      final List<dynamic> data = json.decode(response.body);
-      print('📦 CANTIDAD DE MOVIMIENTOS RECIBIDOS: ${data.length}');
+      final response = await _dio.get(
+        'index.php',
+        queryParameters: {
+          'r': 'esegadi/getmovimientosgrua',
+          'id': userId.toString(),
+          'token': token,
+          'site_id': siteId,
+        },
+      );
 
-      return data.map((item) => ContainerMovement.fromJson(item)).toList();
-    } catch (e, stackTrace) {
-      print('ERROR fetchMovimientos: $e');
-      print(stackTrace);
-      throw Exception(
+      if (response.data is List) {
+        final List<dynamic> data = response.data;
+        return data.map((item) => ContainerMovement.fromJson(item)).toList();
+      }
+
+      return [];
+    } on DioException catch (e) {
+      throw ApiException.fromDioError(e);
+    } catch (e) {
+      throw ApiException(
           'No se pudieron cargar los movimientos. Intente de nuevo.');
     }
   }
