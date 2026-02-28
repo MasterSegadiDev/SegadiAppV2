@@ -1,5 +1,6 @@
 import 'dart:typed_data';
 
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
@@ -95,9 +96,25 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
                                         pdfBytes: _pdfBytes!, id: vm.id);
 
                                     if (ok && context.mounted) {
-                                      Navigator.popUntil(
-                                        context,
-                                        (route) => route.isFirst,
+                                      Navigator.of(context).popUntil(
+                                          ModalRoute.withName(
+                                              '/detail_service'));
+                                    } else if (!ok && context.mounted) {
+                                      showCupertinoDialog(
+                                        context: context,
+                                        builder: (ctx) => CupertinoAlertDialog(
+                                          title: const Text(
+                                              'Ha ocurrido un error'),
+                                          content: Text(vm.errorMessage ??
+                                              'Error desconocido al enviar la captura del documento.'),
+                                          actions: [
+                                            CupertinoDialogAction(
+                                              child: const Text('Aceptar'),
+                                              onPressed: () =>
+                                                  Navigator.pop(ctx),
+                                            ),
+                                          ],
+                                        ),
                                       );
                                     }
                                   },

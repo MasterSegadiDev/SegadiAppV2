@@ -134,12 +134,12 @@ class CaptureEvidencePage extends StatelessWidget {
                       child: ElevatedButton.icon(
                         onPressed: vm.hasEvidences
                             ? () {
-                                Navigator.of(context).push(
+                                Navigator.push(
+                                  context,
                                   MaterialPageRoute(
                                     builder: (_) =>
                                         ChangeNotifierProvider.value(
                                       value: vm,
-                                      //child: ConfirmEvidencePage(),
                                       child: const PdfPreviewPage(),
                                     ),
                                   ),

@@ -36,15 +36,24 @@ class _DetailServicePageState extends State<DetailServicePage> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (vm.navigateToSendEvidence) {
-        Navigator.pushReplacement(
+        Navigator.push(
           context,
           MaterialPageRoute(
+            // 1. Le ponemos nombre a esta "puerta de salida"
+            settings: const RouteSettings(name: '/detail_service'),
             builder: (context) => EvidenceFlowPage(
               serviceId: vm.entity!.id,
             ),
           ),
-        );
-        vm.consumeNavigation();
+        ).then((_) {
+          // 2. Cuando el usuario regrese (de cualquier forma), recargamos
+          vm.loadDetail(vm.entity!.id);
+        });
+
+        Future.microtask(() {
+          if (!mounted) return;
+          vm.consumeNavigation();
+        });
       }
     });
 

@@ -18,11 +18,12 @@ class CaptureTripEvidencePage extends StatelessWidget {
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: Text('Cierre de viaje',
-            style: const TextStyle(color: Colors.white, fontSize: 18)),
+        title: const Text(
+          'Enviar EIR ',
+          style: TextStyle(color: Colors.white),
+        ),
         iconTheme: const IconThemeData(color: Colors.white),
-        backgroundColor: primaryGreen,
-        elevation: 0,
+        backgroundColor: const Color(0xFF2C522A),
       ),
       body: SafeArea(
         child: Padding(
@@ -176,7 +177,7 @@ class CaptureTripEvidencePage extends StatelessWidget {
         ),
         const SizedBox(height: 10),
         const Text(
-          "Sin evidencias de cierre",
+          "Captura tu EIR para enviarlo al sistema",
           style: TextStyle(
               fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
         ),

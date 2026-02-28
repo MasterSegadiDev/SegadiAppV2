@@ -36,29 +36,36 @@ class SupportStatusRepositoryImpl {
   }
 
   String _mapDioErrorToString(DioException e) {
-    // Verificamos si es timeout
+    // 1. Timeouts
     if (e.type == DioExceptionType.connectionTimeout ||
         e.type == DioExceptionType.sendTimeout ||
         e.type == DioExceptionType.receiveTimeout) {
       return 'El servidor tardó demasiado en responder. Reintenta.';
     }
 
-    // Verificamos conexión (Aquí está el truco para el SocketException)
+    // 2. Errores de Conexión Física
     if (e.type == DioExceptionType.connectionError ||
         e.error is SocketException ||
-        e.message?.contains('SocketException') == true ||
-        e.message?.contains('Network is unreachable') == true) {
-      // <--- Agregado por tu log
-      return 'Sin conexión a internet. Verifica tu red o datos móviles.';
+        e.message?.contains('SocketException') == true) {
+      return 'Sin conexión a internet. Verifica tu red.';
     }
 
-    // Error de Respuesta (400, 500, etc)
+    // 3. Error de Respuesta (Bad Response - 401, 400, 500)
     if (e.type == DioExceptionType.badResponse) {
       final data = e.response?.data;
-      if (data is Map && data.containsKey('message')) {
-        return data['message'];
+
+      if (data is Map) {
+        // 🚀 EL CAMBIO ESTÁ AQUÍ:
+        // Buscamos 'error_message' (que es el que mandó tu log) o 'message'
+        final serverMessage = data['error_message'] ?? data['message'];
+
+        if (serverMessage != null) {
+          return serverMessage.toString();
+        }
       }
-      return 'Error en el servicio (${e.response?.statusCode})';
+
+      // Si no hay mensaje en el body, al menos damos contexto del código
+      return 'Error ${e.response?.statusCode}: No se puede procesar la solicitud.';
     }
 
     return 'Ocurrió un error inesperado de red.';

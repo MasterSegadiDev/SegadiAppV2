@@ -96,10 +96,18 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
                                         await vm.sendEvidences(_pdfBytes!);
 
                                     if (ok && context.mounted) {
-                                      Navigator.popUntil(
-                                        context,
-                                        (route) => route.isFirst,
-                                      );
+                                      // 1. Limpiamos el stack hasta llegar al 'nombre' que pusimos
+                                      // Esto te va a dejar en la pantalla de Confirmación (Firma)
+                                      Navigator.of(context).popUntil(
+                                          ModalRoute.withName(
+                                              '/detail_service'));
+
+                                      // 2. HACEMOS UN POP EXTRA
+                                      // Como ya estamos en la "base" del flujo de evidencia,
+                                      // este último pop nos saca de ahí y nos mete al Detalle.
+                                      if (context.mounted) {
+                                        Navigator.of(context).pop();
+                                      }
                                     }
                                   },
                             style: ElevatedButton.styleFrom(

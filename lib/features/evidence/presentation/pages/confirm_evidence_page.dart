@@ -300,7 +300,7 @@ class _ConfirmEvidencePageState extends State<ConfirmEvidencePage> {
         context,
         MaterialPageRoute(
           builder: (_) => ChangeNotifierProvider.value(
-            value: vm, // Pasamos el VM actual
+            value: vm,
             child: const CaptureEvidencePage(),
           ),
         ),
