@@ -24,6 +24,12 @@ import 'package:segadi/features/service_detail/presentation/pages/detail_service
 import 'package:segadi/features/service_detail/presentation/viewmodel/detail_service_viewmodel.dart';
 import 'package:segadi/features/services_assigned/presentation/pages/service_list_page.dart';
 import 'package:segadi/features/services_assigned/presentation/viewmodels/services_viewmodel.dart';
+import 'package:segadi/features/travel_expenses/data/datasources/travel_expenses_remote_datasource.dart';
+import 'package:segadi/features/travel_expenses/data/repositories/travel_expenses_repository_impl.dart';
+import 'package:segadi/features/travel_expenses/domain/repositories/travel_expenses_repository.dart';
+import 'package:segadi/features/travel_expenses/domain/usecases/travel_expenses_usecases.dart';
+import 'package:segadi/features/travel_expenses/presentation/viewmodels/travel_expenses_view_model.dart';
+import 'package:segadi/features/travel_expenses/presentation/views/travel_expenses_screen.dart';
 import 'package:segadi/features/trip_closure/presentation/widget/trip_closure_flow_page.dart';
 
 // ========================
@@ -192,6 +198,25 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
+        // =======================
+        // TRAVEL EXPENSES (SIN CAMBIOS)
+        // =======================
+        Provider(
+            create: (context) =>
+                TravelExpensesRemoteDataSource(context.read<DioClient>().dio)),
+        ProxyProvider<TravelExpensesRemoteDataSource, TravelExpensesRepository>(
+          update: (_, ds, __) => TravelExpensesRepositoryImpl(ds),
+        ),
+        ChangeNotifierProvider(
+          create: (context) {
+            final repo = context.read<TravelExpensesRepository>();
+            return TravelExpensesViewModel(
+              getConceptsUseCase: GetAvailableConceptsUseCase(repo),
+              getRegisteredUseCase: GetRegisteredExpensesUseCase(repo),
+              insertUseCase: InsertExpenseUseCase(repo),
+            );
+          },
+        ),
         // ========================
         // SERVICES (CLEAN + MVVM)
         // ========================
@@ -280,7 +305,12 @@ class MyApp extends StatelessWidget {
           // ========================
           // VIATICOS
           // ========================
-          //'/travel_expenses': (_) => TravelExpensesScreen(),
+          '/travel_expenses': (context) {
+            // Extraemos los argumentos enviados a través de Navigator
+            final int serviceId =
+                ModalRoute.of(context)!.settings.arguments as int;
+            return TravelExpensesScreen(serviceId: serviceId);
+          },
 
           // ========================
           // CONTAINER MAP

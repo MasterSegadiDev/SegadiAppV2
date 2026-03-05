@@ -96,9 +96,8 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
                                         pdfBytes: _pdfBytes!, id: vm.id);
 
                                     if (ok && context.mounted) {
-                                      Navigator.of(context).popUntil(
-                                          ModalRoute.withName(
-                                              '/detail_service'));
+                                      // 1. Cerramos la vista previa y devolvemos TRUE
+                                      Navigator.of(context).pop(true);
                                     } else if (!ok && context.mounted) {
                                       showCupertinoDialog(
                                         context: context,

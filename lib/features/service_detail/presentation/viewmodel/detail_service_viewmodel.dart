@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:segadi/features/firebase_cloud_messaging.dart/domain/usecases/listen_service_update.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_entity.dart';
+import 'package:segadi/features/service_detail/domain/entities/detail_service_permissions.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_state.dart';
 import 'package:segadi/features/service_detail/domain/usecases/use_case_detail_service_state.dart';
 
@@ -74,6 +75,7 @@ class DetailServiceViewModel extends ChangeNotifier {
     super.dispose();
   }
 
+  bool _isClosingAutomatically = false;
   ///////////////////////////////////////
   //////////// 📦 LOAD DETAIL ////////////
   ///////////////////////////////////////
@@ -101,6 +103,10 @@ class DetailServiceViewModel extends ChangeNotifier {
         // 1. Asignamos la data a la entidad primero
         entity = data;
 
+        if (data.ui.serviceClosed) {
+          _isClosingAutomatically = false;
+        }
+
         // 2. Validamos la lógica de evidencia
         if (mustSendEvidence) {
           _navigateToSendEvidence = true;
@@ -109,8 +115,13 @@ class DetailServiceViewModel extends ChangeNotifier {
         // 3. Construimos el estado visual usando la entidad ya cargada
         // Usamos data directamente para evitar el force unwrap (!) si prefieres
         state = buildDetailServiceState(data);
-
         status = DetailServiceStatus.loaded;
+
+        final permissions = DetailServicePermissions(data);
+        if (permissions.shouldAutoClose && !_isClosingAutomatically) {
+          _executeSilentClose(id);
+        }
+
         debugPrint('✅ Detail loaded successfully');
       },
     );
@@ -152,32 +163,36 @@ class DetailServiceViewModel extends ChangeNotifier {
           return; // Salimos si falló el backend
         }
 
-        // 2. SI EL ESTATUS ES 14, EVALUAMOS EL CIERRE AUTOMÁTICO
-        if (statusId == 23) {
-          final bool checksPendientes = entity!.pendingMoneyChecks;
-          debugPrint(
-              'Evaluando cierre: checksPendientes es ${checksPendientes} en la remision ${entity!.id}');
-
-          if (checksPendientes == false) {
-            debugPrint('🚀 Ejecutando closeService automático...');
-            final closeResult = await repository.closeService(id: entity!.id);
-
-            closeResult.fold(
-              (f) => debugPrint('❌ Error al cerrar el servicio: ${f.message}'),
-              (s) => debugPrint('✅ Servicio cerrado automáticamente'),
-            );
-          } else {
-            debugPrint('⚠️ Pendientes detectados, no se ejecuta closeService');
-          }
-        }
-
-        // 3. ÉXITO: Recargamos la información para actualizar la UI
+        // 2. Si todo fue bien, recargamos el detalle para reflejar cambios
         await loadDetail(entity!.id);
 
         if (context.mounted) {
           _showSnackBar(context, "Estatus actualizado correctamente",
               isError: false);
         }
+      },
+    );
+  }
+
+  Future<void> _executeSilentClose(int id) async {
+    if (_isClosingAutomatically) return;
+
+    _isClosingAutomatically = true; // Bloqueamos la entrada
+    debugPrint('🔒 Bloqueando auto-cierre para evitar bucles...');
+
+    final result = await repository.closeService(id: id);
+
+    result.fold(
+      (failure) {
+        _isClosingAutomatically =
+            false; // Liberamos si falló para permitir reintento
+        debugPrint('❌ Falló cierre: ${failure.message}');
+      },
+      (success) {
+        debugPrint(
+            '✅ Servicio cerrado. Manteniendo candado para evitar recargas infinitas.');
+        // IMPORTANTE: Al cargar de nuevo, el flag serviceClosed ya debería venir en true
+        loadDetail(id);
       },
     );
   }

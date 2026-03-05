@@ -10,6 +10,8 @@ import 'package:segadi/features/check_list/data/repositories/checklist_repositor
 import 'package:segadi/features/check_list/presentation/pages/checklist_page.dart';
 import 'package:segadi/features/check_list/presentation/viewmodels/checklist_viewmodel.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_entity.dart';
+import 'package:segadi/features/service_detail/domain/entities/detail_service_permissions.dart';
+import 'package:segadi/features/service_detail/domain/helpers/detail_service_rules.dart';
 import 'package:segadi/features/service_detail/presentation/viewmodel/detail_service_viewmodel.dart';
 import 'package:segadi/features/support_status/data/api/support_status_api.dart';
 import 'package:segadi/features/support_status/data/repositories/support_status_repository_impl.dart';
@@ -29,6 +31,9 @@ class ActionsCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final state = ui;
+    final rules = DetailServicePermissions(ui);
+
+    debugPrint('activar boton de subir EIR? ${rules.canShowEIR}');
 
     // Definimos la lista de acciones dinámicamente para el Grid
     final List<Widget> actions = [
@@ -112,24 +117,63 @@ class ActionsCard extends StatelessWidget {
           icon: FontAwesomeIcons.circleCheck,
           label: 'Subir EIR',
           color: Colors.green,
-          enabled: state.ui.serviceClosed,
-          onPressed: () async {
-            final result = await Navigator.pushNamed(
-              context,
-              '/trip-closure',
-              arguments: {'id': ui.id, 'serviceId': ui.service},
-            );
-            if (result == true) onRefresh();
-          },
+          enabled: rules.canShowEIR,
+          onPressed: rules.canShowEIR
+              ? () async {
+                  // 4. Esperamos a que todo el flujo termine
+                  final result = await await Navigator.pushNamed(
+                    context,
+                    '/trip-closure',
+                    arguments: {'id': ui.id, 'serviceId': ui.service},
+                  );
+                  print(
+                      'context mounted después de trip closure? ${context.mounted}');
+                  if (result == true && context.mounted) {
+                    print(
+                        'Usuario regresó de evidencias. Forzando recarga de seguridad...');
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Row(
+                          // Quitamos el const de aquí porque Expanded no lo es
+                          children: [
+                            const Icon(Icons.check_circle, color: Colors.white),
+                            const SizedBox(width: 12),
+                            // 🔥 Usamos Expanded para evitar la franja amarilla/negra
+                            const Expanded(
+                              child: Text(
+                                'EIR enviado correctamente. Tu Remisión sera finalizada ...',
+                                style: TextStyle(color: Colors.white),
+                              ),
+                            ),
+                          ],
+                        ),
+                        backgroundColor: Colors.green[700],
+                        behavior: SnackBarBehavior.floating,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        duration: const Duration(seconds: 3),
+                      ),
+                    );
+                    context.read<DetailServiceViewModel>().loadDetail(state.id);
+                  }
+                }
+              : null,
         ),
       ActionButton(
         icon: FontAwesomeIcons.moneyBillTransfer,
         label: 'Viáticos',
         color: Colors.teal,
         enabled: state.ui.hasMoneyChecks,
-        onPressed: null,
+        onPressed: rules.canShowViaticos
+            ? () {
+                Navigator.pushNamed(context, '/travel_expenses',
+                    arguments: state.id);
+              }
+            : null,
       ),
-      const ActionButton(
+      ActionButton(
         icon: FontAwesomeIcons.solidFilePdf,
         label: 'Carta Porte',
         color: Colors.red,

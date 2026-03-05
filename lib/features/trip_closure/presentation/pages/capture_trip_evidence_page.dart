@@ -123,7 +123,7 @@ class CaptureTripEvidencePage extends StatelessWidget {
                                 await vm.generatePdf();
                                 if (!context.mounted) return;
 
-                                Navigator.push(
+                                final result = await Navigator.push(
                                   context,
                                   MaterialPageRoute(
                                     builder: (_) =>
@@ -133,6 +133,14 @@ class CaptureTripEvidencePage extends StatelessWidget {
                                     ),
                                   ),
                                 );
+
+                                // ESTA PARTE ES CRÍTICA:
+                                if (result == true && context.mounted) {
+                                  print(
+                                      "PDF enviado con éxito, cerrando flujo de evidencias...");
+                                  Navigator.of(context).pop(
+                                      true); // <--- DEBE REGRESAR TRUE AL DETALLE
+                                }
                               }
                             : null,
                         icon: Icon(

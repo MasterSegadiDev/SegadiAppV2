@@ -22,7 +22,7 @@ class TripClosureRemoteDataSource {
         "receiver_name": '',
         "receiver_date": '',
         "file_type": "pdf",
-        "document_name": "EIR",
+        "document_name": "EIR Operador",
         "document_type": "EIR",
         "document_description": "EIR",
         "document": base64Encode(pdfBytes), // El PDF en base64
