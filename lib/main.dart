@@ -27,6 +27,7 @@ import 'package:segadi/features/services_assigned/presentation/viewmodels/servic
 import 'package:segadi/features/travel_expenses/data/datasources/travel_expenses_remote_datasource.dart';
 import 'package:segadi/features/travel_expenses/data/repositories/travel_expenses_repository_impl.dart';
 import 'package:segadi/features/travel_expenses/domain/repositories/travel_expenses_repository.dart';
+import 'package:segadi/features/travel_expenses/domain/usecases/get_evidence_image_use_case.dart';
 import 'package:segadi/features/travel_expenses/domain/usecases/travel_expenses_usecases.dart';
 import 'package:segadi/features/travel_expenses/presentation/viewmodels/travel_expenses_view_model.dart';
 import 'package:segadi/features/travel_expenses/presentation/views/travel_expenses_screen.dart';
@@ -210,10 +211,13 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
           create: (context) {
             final repo = context.read<TravelExpensesRepository>();
+
             return TravelExpensesViewModel(
               getConceptsUseCase: GetAvailableConceptsUseCase(repo),
               getRegisteredUseCase: GetRegisteredExpensesUseCase(repo),
               insertUseCase: InsertExpenseUseCase(repo),
+              getEvidenceUseCase:
+                  GetEvidenceImageUseCase(repo), // <--- REVISA QUE ESTÉ AQUÍ
             );
           },
         ),

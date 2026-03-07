@@ -1,8 +1,9 @@
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/features/travel_expenses/presentation/viewmodels/travel_expenses_view_model.dart';
 import 'package:segadi/features/travel_expenses/presentation/widgets/add_expense_bottom_sheet.dart';
 import 'package:segadi/features/travel_expenses/presentation/widgets/expense_card.dart';
+import '../viewmodels/travel_expenses_view_model.dart';
 
 class TravelExpensesScreen extends StatefulWidget {
   final int serviceId;
@@ -25,14 +26,27 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
   Widget build(BuildContext context) {
     final vm = context.watch<TravelExpensesViewModel>();
 
+    // Listener de errores (Ej. No hay viáticos)
+    if (vm.status == TravelExpensesStatus.error && vm.errorMessage != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(vm
+                .errorMessage!), // Mostrará: "El servicio no tiene viaticos depositados"
+            backgroundColor: Colors.red.shade700,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+        vm.clearError();
+      });
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Gestión de Viáticos',
-          style: TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Gestión de Viáticos',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF2C522A),
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: vm.status == TravelExpensesStatus.loading
           ? const Center(child: CircularProgressIndicator())
@@ -46,10 +60,14 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
               ),
             ),
       floatingActionButton: FloatingActionButton.extended(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
         onPressed: () => _showAddExpenseSheet(context, vm),
-        label: const Text('Nuevo Gasto'),
-        icon: const Icon(Icons.add),
-        backgroundColor: const Color(0xFF84A756),
+        label: const Text(
+          'Registrar Viatico',
+          style: TextStyle(color: Colors.white),
+        ),
+        icon: const Icon(Icons.add, color: Colors.white),
+        backgroundColor: const Color(0xFF2C522A),
       ),
     );
   }
@@ -60,14 +78,13 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
           color: const Color(0xFF2C522A).withOpacity(0.1),
-          borderRadius: const BorderRadius.only(
-              bottomLeft: Radius.circular(30),
-              bottomRight: Radius.circular(30)),
+          borderRadius:
+              const BorderRadius.vertical(bottom: Radius.circular(30)),
         ),
         child: Column(
           children: [
             const Text('Total Comprobado',
-                style: TextStyle(fontSize: 16, color: Colors.grey)),
+                style: TextStyle(color: Colors.grey)),
             Text(
               '\$${vm.totalImport.toStringAsFixed(2)}',
               style: const TextStyle(
@@ -82,20 +99,72 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
   }
 
   Widget _buildExpensesList(TravelExpensesViewModel vm) {
-    if (vm.registeredExpenses.isEmpty) {
-      return const SliverFillRemaining(
-        child: Center(child: Text('No hay gastos registrados aún.')),
-      );
-    }
-    return SliverPadding(
-      padding: const EdgeInsets.all(16),
-      sliver: SliverList(
-        delegate: SliverChildBuilderDelegate(
-          (context, index) =>
-              ExpenseCard(expense: vm.registeredExpenses[index]),
-          childCount: vm.registeredExpenses.length,
-        ),
+    return SliverList(
+      delegate: SliverChildBuilderDelegate(
+        (context, index) {
+          final expense = vm.registeredExpenses[index];
+
+          return Card(
+            margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: ListTile(
+              // Al tocar cualquier parte de la fila, se dispara el diálogo
+              onTap: () {
+                print("Pantalla: Clic detectado en gasto ID ${expense.id}");
+                _showImageDialog(context, expense.id, vm);
+              },
+              title: Text(expense.concept),
+              subtitle: Text("\$${expense.amount.toStringAsFixed(2)}"),
+              trailing:
+                  const Icon(Icons.image_search, color: Color(0xFF2C522A)),
+            ),
+          );
+        },
+        childCount: vm.registeredExpenses.length,
       ),
+    );
+  }
+
+  void _showImageDialog(
+      BuildContext context, int id, TravelExpensesViewModel vm) {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return FutureBuilder<Uint8List?>(
+          future: vm.viewEvidence(id),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return const Center(child: CircularProgressIndicator());
+            }
+
+            if (snapshot.hasData && snapshot.data != null) {
+              return AlertDialog(
+                contentPadding: EdgeInsets.all(8),
+                content: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Image.memory(snapshot.data!, fit: BoxFit.contain),
+                    TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text("CERRAR"),
+                    ),
+                  ],
+                ),
+              );
+            }
+
+            return AlertDialog(
+              title: const Text("Sin Evidencia"),
+              content: const Text(
+                  "Por el momento no tienes una imagen de evidencia para este gasto, necesitas subir una imagen para poder visualizarla aquí."),
+              actions: [
+                TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: const Text("Cerrar")),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -103,8 +172,7 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor:
-          Colors.transparent, // Permite ver el redondeado del widget hijo
+      backgroundColor: Colors.transparent,
       builder: (context) => AddExpenseBottomSheet(serviceId: widget.serviceId),
     );
   }

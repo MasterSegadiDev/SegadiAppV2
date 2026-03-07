@@ -129,6 +129,10 @@
 //   }
 // }
 
+import 'dart:typed_data';
+
+import 'package:dartz/dartz.dart';
+import 'package:segadi/features/service_detail/core/errors/failures.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -137,6 +141,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart'; // Requiere
 import 'package:path_provider/path_provider.dart';
 import 'package:segadi/features/travel_expenses/domain/entities/table_expense_entity.dart';
 import 'package:segadi/features/travel_expenses/domain/entities/travel_expense_entity.dart';
+import 'package:segadi/features/travel_expenses/domain/usecases/get_evidence_image_use_case.dart';
 import 'package:segadi/features/travel_expenses/domain/usecases/travel_expenses_usecases.dart';
 
 enum TravelExpensesStatus { initial, loading, loaded, error }
@@ -145,11 +150,13 @@ class TravelExpensesViewModel extends ChangeNotifier {
   final GetAvailableConceptsUseCase getConceptsUseCase;
   final GetRegisteredExpensesUseCase getRegisteredUseCase;
   final InsertExpenseUseCase insertUseCase;
+  final GetEvidenceImageUseCase getEvidenceUseCase;
 
   TravelExpensesViewModel({
     required this.getConceptsUseCase,
     required this.getRegisteredUseCase,
     required this.insertUseCase,
+    required this.getEvidenceUseCase,
   });
 
   TravelExpensesStatus status = TravelExpensesStatus.initial;
@@ -159,11 +166,9 @@ class TravelExpensesViewModel extends ChangeNotifier {
   File? _selectedImage;
   File? get selectedImage => _selectedImage;
 
+  double get totalImport =>
+      registeredExpenses.fold(0.0, (sum, item) => sum + item.amount);
   final ImagePicker _picker = ImagePicker();
-
-  double get totalImport {
-    return registeredExpenses.fold(0.0, (sum, item) => sum + item.amount);
-  }
 
   Future<void> pickImage() async {
     final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
@@ -231,17 +236,63 @@ class TravelExpensesViewModel extends ChangeNotifier {
     }
   }
 
+  // Future<void> loadAllData(int serviceId) async {
+  //   status = TravelExpensesStatus.loading;
+  //   notifyListeners();
+  //   final concepts = await getConceptsUseCase(serviceId);
+  //   final expenses = await getRegisteredUseCase(serviceId);
+  //   concepts.fold(
+  //       (l) => errorMessage = l.message, (r) => availableConcepts = r);
+  //   expenses.fold(
+  //       (l) => errorMessage = l.message, (r) => registeredExpenses = r);
+  //   status = TravelExpensesStatus.loaded;
+  //   notifyListeners();
+  // }
+
   Future<void> loadAllData(int serviceId) async {
     status = TravelExpensesStatus.loading;
+    errorMessage = null;
     notifyListeners();
-    final concepts = await getConceptsUseCase(serviceId);
-    final expenses = await getRegisteredUseCase(serviceId);
-    concepts.fold(
-        (l) => errorMessage = l.message, (r) => availableConcepts = r);
-    expenses.fold(
-        (l) => errorMessage = l.message, (r) => registeredExpenses = r);
-    status = TravelExpensesStatus.loaded;
-    notifyListeners();
+
+    try {
+      final results = await Future.wait([
+        getConceptsUseCase(serviceId),
+        getRegisteredUseCase(serviceId),
+      ]);
+
+      final conceptsResult = results[0];
+      final expensesResult = results[1];
+
+      bool hasError = false;
+
+      conceptsResult.fold(
+        (failure) {
+          errorMessage = failure
+              .message; // Aquí llegará "El servicio no tiene viaticos..."
+          hasError = true;
+        },
+        (data) => availableConcepts = List<TravelExpenseEntity>.from(data),
+      );
+
+      expensesResult.fold(
+        (failure) {
+          errorMessage ??= failure.message;
+          hasError = true;
+        },
+        (data) => registeredExpenses = List<TableExpenseEntity>.from(data),
+      );
+
+      status =
+          hasError ? TravelExpensesStatus.error : TravelExpensesStatus.loaded;
+    } catch (e) {
+      // Si entramos aquí, es un error de código, no del servidor
+      errorMessage = e.toString().contains("ApiException")
+          ? e.toString().replaceAll("ApiException: ", "")
+          : "Error de conexión o de datos";
+      status = TravelExpensesStatus.error;
+    } finally {
+      notifyListeners();
+    }
   }
 
   void clearError() {
@@ -249,5 +300,39 @@ class TravelExpensesViewModel extends ChangeNotifier {
       errorMessage = null;
       notifyListeners(); // Esto quita el banner rojo de la vista automáticamente
     }
+  }
+
+  Future<Uint8List?> viewEvidence(int? id) async {
+    if (id == null) {
+      print("ViewModel: ID es nulo");
+      return null;
+    }
+
+    print("ViewModel: Llamando UseCase con ID $id");
+    final result = await getEvidenceUseCase(id.toString());
+
+    return result.fold(
+      (failure) {
+        print("ViewModel Error: ${failure.message}");
+        return null;
+      },
+      (bytes) {
+        print("ViewModel: Imagen recibida con éxito (${bytes.length} bytes)");
+        return bytes;
+      },
+    );
+  }
+
+  Future<Uint8List?> downloadEvidence(int? imageId) async {
+    if (imageId == null) return null;
+
+    final result = await getEvidenceUseCase(imageId.toString());
+    return result.fold(
+      (failure) {
+        // No notificamos error aquí para no interrumpir la vista principal
+        return null;
+      },
+      (data) => data,
+    );
   }
 }

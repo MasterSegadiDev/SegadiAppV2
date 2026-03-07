@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:dartz/dartz.dart';
+import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:segadi/features/travel_expenses/core/errors/travel_expenses_failure.dart';
 import 'package:segadi/features/travel_expenses/data/datasources/travel_expenses_remote_datasource.dart';
 import 'package:segadi/features/travel_expenses/domain/entities/table_expense_entity.dart';
@@ -73,13 +74,14 @@ class TravelExpensesRepositoryImpl implements TravelExpensesRepository {
   @override
   Future<Either<Failure, Uint8List>> getEvidenceImage(String conceptId) async {
     try {
-      final bytes = await remoteDataSource.fetchImage(conceptId);
-      return Right(bytes);
-    } on DioException catch (e) {
-      final failure = TravelExpensesFailure.fromDioError(e);
-      return Left(ServerFailure(failure.message));
+      // Agrega este print para ver si el ID llega al repo
+      print("Repo: Solicitando imagen para ID $conceptId");
+      final result = await remoteDataSource.fetchImage(conceptId);
+      return Right(result);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(e.message));
     } catch (e) {
-      return Left(ServerFailure('Error al cargar imagen: $e'));
+      return Left(ServerFailure("Error en el repositorio al obtener imagen"));
     }
   }
 }
