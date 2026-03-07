@@ -1,29 +1,33 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
 
 void showErrorModal(
   BuildContext context,
   String message,
   VoidCallback onRetry,
 ) {
-  showCupertinoDialog(
+  showDialog<String>(
     context: context,
-    builder: (_) => CupertinoAlertDialog(
-      title: const Text('Ha ocurrido un error'),
-      content: Padding(
-        padding: const EdgeInsets.only(top: 8),
-        child: Text(
-          message,
-          textAlign: TextAlign.center,
-          style: const TextStyle(fontSize: 16),
-        ),
+    builder: (BuildContext context) => AlertDialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      titlePadding: const EdgeInsets.only(top: 24, left: 24, right: 24),
+      title: Row(
+        children: [
+          Icon(Icons.error_outline, color: Theme.of(context).colorScheme.error),
+          const SizedBox(width: 12),
+          const Text('Ha ocurrido un error',
+              style: TextStyle(
+                fontSize: 18,
+              )),
+        ],
       ),
+      content: Text(
+        message,
+        style: const TextStyle(fontSize: 16),
+      ),
+      actionsPadding: const EdgeInsets.all(16),
       actions: [
-        CupertinoDialogAction(
-          isDefaultAction: true,
-          onPressed: () {
-            Navigator.pop(context);
-            onRetry();
-          },
+        FilledButton.tonal(
+          onPressed: () => Navigator.pop(context),
           child: const Text('Cerrar'),
         ),
       ],

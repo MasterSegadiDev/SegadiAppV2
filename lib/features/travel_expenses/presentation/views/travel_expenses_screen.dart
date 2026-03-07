@@ -28,7 +28,7 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Gestión de Viáticos  ',
+          'Gestión de Viáticos',
           style: TextStyle(color: Colors.white),
         ),
         iconTheme: const IconThemeData(color: Colors.white),

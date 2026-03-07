@@ -38,6 +38,9 @@ class DetailServiceViewModel extends ChangeNotifier {
   bool get navigateToSendEvidence =>
       _navigateToSendEvidence && !_evidenceNavigationConsumed;
 
+  bool get isProcessing =>
+      _isChangingStatus || status == DetailServiceStatus.loading;
+
   /// 🔹 Regla de negocio
   bool get mustSendEvidence {
     if (entity == null) return false;
@@ -133,12 +136,60 @@ class DetailServiceViewModel extends ChangeNotifier {
   ///////// 🔄 CHANGE STATUS ////////////
   ///////////////////////////////////////
 
+  // Future<void> changeMandatoryStatus(BuildContext context) async {
+  //   if (entity == null) return;
+  //   final statusId = entity!.nextMandatoryStatusId;
+
+  //   debugPrint('estatus a enviar: $statusId');
+  //   _setLoading();
+
+  //   final result = await repository.changeStatus(
+  //     serviceId: entity!.id,
+  //     statusId: statusId,
+  //   );
+
+  //   print('🔄 Change status result: $result');
+
+  //   // ✅ Usamos fold como único flujo de decisión
+  //   await result.fold(
+  //     (failure) async {
+  //       final msg = failure.message;
+  //       _setError(msg);
+  //       if (context.mounted) _showSnackBar(context, msg, isError: true);
+  //     },
+  //     (apiResult) async {
+  //       // 1. Verificamos si el API respondió success: true
+  //       if (!apiResult.success) {
+  //         final msg = apiResult.message ?? 'No se pudo cambiar el estatus';
+  //         _setError(msg);
+  //         if (context.mounted) _showSnackBar(context, msg, isError: true);
+  //         return; // Salimos si falló el backend
+  //       }
+
+  //       // 2. Si todo fue bien, recargamos el detalle para reflejar cambios
+  //       await loadDetail(entity!.id);
+
+  //       if (context.mounted) {
+  //         _showSnackBar(context, "Estatus actualizado correctamente",
+  //             isError: false);
+  //       }
+  //     },
+  //   );
+  // }
+
+  bool _isChangingStatus = false;
+
   Future<void> changeMandatoryStatus(BuildContext context) async {
     if (entity == null) return;
+
+    // 1. BLOQUEO DE SEGURIDAD: Si ya se está ejecutando, ignoramos el nuevo click
+    if (_isChangingStatus) return;
+
+    _isChangingStatus = true; // Iniciamos el bloqueo
     final statusId = entity!.nextMandatoryStatusId;
 
     debugPrint('estatus a enviar: $statusId');
-    _setLoading();
+    _setLoading(); // Tu función existente que debería poner un spinner en el botón
 
     final result = await repository.changeStatus(
       serviceId: entity!.id,
@@ -147,7 +198,6 @@ class DetailServiceViewModel extends ChangeNotifier {
 
     print('🔄 Change status result: $result');
 
-    // ✅ Usamos fold como único flujo de decisión
     await result.fold(
       (failure) async {
         final msg = failure.message;
@@ -155,23 +205,27 @@ class DetailServiceViewModel extends ChangeNotifier {
         if (context.mounted) _showSnackBar(context, msg, isError: true);
       },
       (apiResult) async {
-        // 1. Verificamos si el API respondió success: true
         if (!apiResult.success) {
           final msg = apiResult.message ?? 'No se pudo cambiar el estatus';
           _setError(msg);
           if (context.mounted) _showSnackBar(context, msg, isError: true);
-          return; // Salimos si falló el backend
-        }
-
-        // 2. Si todo fue bien, recargamos el detalle para reflejar cambios
-        await loadDetail(entity!.id);
-
-        if (context.mounted) {
-          _showSnackBar(context, "Estatus actualizado correctamente",
-              isError: false);
+        } else {
+          // Si todo fue bien, recargamos el detalle
+          await loadDetail(entity!.id);
+          if (context.mounted) {
+            _showSnackBar(context, "Estatus actualizado correctamente",
+                isError: false);
+          }
         }
       },
     );
+
+    // 2. TIEMPO DE ESPERA FORZADO (5 segundos)
+    // Esto evita que el usuario pueda volver a darle click inmediatamente después de que termine la petición
+    await Future.delayed(const Duration(seconds: 5));
+
+    _isChangingStatus = false; // Liberamos el bloqueo
+    notifyListeners(); // Aseguramos que la UI sepa que ya puede habilitar el botón
   }
 
   Future<void> _executeSilentClose(int id) async {

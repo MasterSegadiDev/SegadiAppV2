@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:cunning_document_scanner/cunning_document_scanner.dart';
+import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:segadi/features/evidence/domain/repositories/evidence_repository.dart';
 import 'package:segadi/features/evidence/presentation/pages/widgets/evidence_pdf_generator.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
@@ -166,14 +167,71 @@ class EvidenceFlowViewModel extends ChangeNotifier {
 
   bool isSending = false;
 
+  // Future<bool> sendEvidences(Uint8List pdfBytes) async {
+  //   if (signatureBytes == null) return false;
+
+  //   isSending = true;
+  //   notifyListeners();
+
+  //   try {
+  //     // 1. Envíos de archivos
+  //     await repository.sendPdf(
+  //       serviceId: id,
+  //       pdfBytes: pdfBytes,
+  //       receiverName: receiverName,
+  //       receiverDate: confirmationDate,
+  //     );
+
+  //     await repository.sendSignature(
+  //       serviceId: id,
+  //       signatureBytes: signatureBytes!,
+  //       receiverName: receiverName,
+  //       receiverDate: confirmationDate,
+  //     );
+
+  //     // 2. Cambio de estatus (Manejo de Either)
+  //     final result = await detailServiceApi.changeStatus(
+  //       serviceId: id,
+  //       statusId: 10,
+  //     );
+
+  //     // Usamos fold para "abrir" la caja del Either
+  //     bool isStatusOk = result.fold(
+  //       (failure) {
+  //         debugPrint('❌ Error de red/servidor: ${failure.message}');
+  //         return false;
+  //       },
+  //       (apiResponse) {
+  //         if (apiResponse.success) {
+  //           debugPrint('✅ Estatus insertado con éxito: ${apiResponse.message}');
+  //           return true;
+  //         } else {
+  //           debugPrint(
+  //               '⚠️ El servidor respondió error: ${apiResponse.message}');
+  //           return false;
+  //         }
+  //       },
+  //     );
+
+  //     return isStatusOk; // Retorna true solo si el estatus se cambió bien
+  //   } catch (e) {
+  //     debugPrint('❌ Error fatal enviando evidencias: $e');
+  //     return false;
+  //   } finally {
+  //     isSending = false;
+  //     notifyListeners();
+  //   }
+  // }
+
   Future<bool> sendEvidences(Uint8List pdfBytes) async {
     if (signatureBytes == null) return false;
 
     isSending = true;
+    _errorMessage = null; // Limpiamos errores previos
     notifyListeners();
 
     try {
-      // 1. Envíos de archivos
+      // 1. Envíos de archivos (Capturamos el mensaje de ApiException)
       await repository.sendPdf(
         serviceId: id,
         pdfBytes: pdfBytes,
@@ -188,33 +246,31 @@ class EvidenceFlowViewModel extends ChangeNotifier {
         receiverDate: confirmationDate,
       );
 
-      // 2. Cambio de estatus (Manejo de Either)
+      // 2. Cambio de estatus
       final result = await detailServiceApi.changeStatus(
         serviceId: id,
         statusId: 10,
       );
 
-      // Usamos fold para "abrir" la caja del Either
-      bool isStatusOk = result.fold(
+      return result.fold(
         (failure) {
-          debugPrint('❌ Error de red/servidor: ${failure.message}');
+          _errorMessage = failure.message; // Aquí cae el error de red
+          notifyListeners();
           return false;
         },
         (apiResponse) {
-          if (apiResponse.success) {
-            debugPrint('✅ Estatus insertado con éxito: ${apiResponse.message}');
-            return true;
-          } else {
-            debugPrint(
-                '⚠️ El servidor respondió error: ${apiResponse.message}');
-            return false;
-          }
+          if (apiResponse.success) return true;
+          _errorMessage =
+              apiResponse.message; // Aquí cae el error de negocio del API
+          notifyListeners();
+          return false;
         },
       );
-
-      return isStatusOk; // Retorna true solo si el estatus se cambió bien
+    } on ApiException catch (e) {
+      _errorMessage = e.message; // "Existe un estatus de soporte iniciado..."
+      return false;
     } catch (e) {
-      debugPrint('❌ Error fatal enviando evidencias: $e');
+      _errorMessage = 'Error fatal: ${e.toString()}';
       return false;
     } finally {
       isSending = false;

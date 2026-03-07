@@ -45,8 +45,11 @@ class StatusPrimaryButton extends StatelessWidget {
         color: const Color(0xFF2C522A),
         disabledColor: Colors.grey[400]!,
         borderRadius: BorderRadius.circular(50),
-        onPressed: isEnabled ? () => vm.changeMandatoryStatus(context) : null,
-        child: vm.status == DetailServiceStatus.loading
+        // El botón se deshabilita si está cargando O si está en el tiempo de espera de 5s
+        onPressed: (isEnabled && !vm.isProcessing)
+            ? () => vm.changeMandatoryStatus(context)
+            : null,
+        child: vm.isProcessing // Mostramos el spinner durante todo el proceso
             ? const CupertinoActivityIndicator(color: Colors.white)
             : Row(
                 mainAxisAlignment: MainAxisAlignment.center,
