@@ -126,6 +126,18 @@ class MyApp extends StatelessWidget {
           create: (_) => NetworkInfoImpl(Connectivity()),
         ),
         Provider<ServicesApi>(create: (_) => ServicesApi()),
+        ChangeNotifierProvider(
+          create: (context) => ServicesViewModel(
+              getAssignedServicesUseCase: GetAssignedServices(
+            ServicesRepositoryImpl(
+              remoteDataSource: ServicesRemoteDataSourceImpl(
+                context.read<DioClient>().dio,
+              ),
+              networkInfo: context.read<NetworkInfo>(),
+            ),
+          ))
+            ..loadServices(),
+        ),
         Provider(
             create: (context) => AuthService(context.read<DioClient>().dio)),
         Provider(

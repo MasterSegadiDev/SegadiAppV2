@@ -27,10 +27,12 @@ class TravelExpensesRemoteDataSource {
   // 2. Obtener gastos YA registrados (la tabla)
   Future<List<TableExpenseModel>> getRegisteredExpenses(int serviceId) async {
     try {
+      final prefs = await SharedPreferences.getInstance();
       final response = await _dio.get('index.php', queryParameters: {
         'r': 'esegadi/getcomprobacionestabla',
-        'id': serviceId,
-        // ... otros parámetros (id_remision, token, etc)
+        'id': prefs.getInt('id'),
+        'id_remision': serviceId, // Usamos el ID que viene por parámetro
+        'token': prefs.getString('token'),
       });
 
       final data = response.data;
