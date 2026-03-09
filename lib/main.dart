@@ -24,6 +24,11 @@ import 'package:segadi/features/service_detail/presentation/pages/detail_service
 import 'package:segadi/features/service_detail/presentation/viewmodel/detail_service_viewmodel.dart';
 import 'package:segadi/features/services_assigned/presentation/pages/service_list_page.dart';
 import 'package:segadi/features/services_assigned/presentation/viewmodels/services_viewmodel.dart';
+import 'package:segadi/features/services_finished/data/repositories/service_repository_impl.dart';
+import 'package:segadi/features/services_finished/domain/repositories/service_finished_repository.dart';
+import 'package:segadi/features/services_finished/presentation/viewmodels/detail_finished_view_model.dart';
+import 'package:segadi/features/services_finished/presentation/viewmodels/finished_service_view_model.dart';
+import 'package:segadi/features/services_finished/presentation/views/finish_service_list.dart';
 import 'package:segadi/features/travel_expenses/data/datasources/travel_expenses_remote_datasource.dart';
 import 'package:segadi/features/travel_expenses/data/repositories/travel_expenses_repository_impl.dart';
 import 'package:segadi/features/travel_expenses/domain/repositories/travel_expenses_repository.dart';
@@ -138,6 +143,10 @@ class MyApp extends StatelessWidget {
           ))
             ..loadServices(),
         ),
+        ProxyProvider<DioClient, ServiceRepository>(
+          update: (context, dioClient, previous) =>
+              ServiceRepositoryImpl(dioClient.dio),
+        ),
         Provider(
             create: (context) => AuthService(context.read<DioClient>().dio)),
         Provider(
@@ -208,6 +217,17 @@ class MyApp extends StatelessWidget {
           create: (context) => UbicacionesViewModel(
             context.read<UbicationMovement>(),
             // Si pide UbicacionesService, cambia la línea de arriba por este.
+          ),
+        ),
+
+        ChangeNotifierProvider(
+          create: (context) => FinishedServicesViewModel(
+            repository: context.read<ServiceRepository>(),
+          ),
+        ),
+        ChangeNotifierProvider(
+          create: (context) => DetailFinishedViewModel(
+            repository: context.read<ServiceRepository>(),
           ),
         ),
 
@@ -327,6 +347,8 @@ class MyApp extends StatelessWidget {
                 ModalRoute.of(context)!.settings.arguments as int;
             return TravelExpensesScreen(serviceId: serviceId);
           },
+
+          '/services_finished': (context) => FinishServiceList(),
 
           // ========================
           // CONTAINER MAP

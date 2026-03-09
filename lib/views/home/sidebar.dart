@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/services_assigned/presentation/pages/service_list_page.dart';
+import 'package:segadi/features/services_finished/presentation/views/finish_service_list.dart';
 import 'package:segadi/models/user/UserInformation.dart';
 import 'package:segadi/viewmodels/login/user_login.dart';
 import 'package:segadi/views/home/routes.dart';
@@ -226,7 +227,10 @@ class _DrawerScreen extends State<DrawerScreen> {
             title: "Servicios Realizados",
             onTap: () {
               Navigator.pop(context);
-              Navigator.pushNamed(context, '/services_finished');
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => FinishServiceList()),
+              );
             },
           ),
         ],
