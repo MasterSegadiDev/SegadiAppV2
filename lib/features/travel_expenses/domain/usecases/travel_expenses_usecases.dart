@@ -32,7 +32,7 @@ class InsertExpenseUseCase {
     required int conceptId,
     required double amount,
     required String comments,
-    required String base64Image,
+    String? base64Image,
   }) {
     return repository.insertExpense(
       serviceId: serviceId,

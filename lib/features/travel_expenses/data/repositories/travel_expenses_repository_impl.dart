@@ -37,11 +37,8 @@ class TravelExpensesRepositoryImpl implements TravelExpensesRepository {
     try {
       final models = await remoteDataSource.getRegisteredExpenses(serviceId);
       return Right(models);
-    } on DioException catch (e) {
-      final failure = TravelExpensesFailure.fromDioError(e);
-      return Left(ServerFailure(failure.message));
     } catch (e) {
-      return Left(ServerFailure('Error al obtener gastos registrados: $e'));
+      return Left(ServerFailure(e.toString()));
     }
   }
 
@@ -51,7 +48,7 @@ class TravelExpensesRepositoryImpl implements TravelExpensesRepository {
     required int conceptId,
     required double amount,
     required String comments,
-    required String base64Image,
+    String? base64Image,
   }) async {
     try {
       final success = await remoteDataSource.insertExpense(

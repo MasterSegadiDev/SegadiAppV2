@@ -28,33 +28,32 @@ class TravelExpensesRemoteDataSource {
   Future<List<TableExpenseModel>> getRegisteredExpenses(int serviceId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
+
       final response = await _dio.get('index.php', queryParameters: {
         'r': 'esegadi/getcomprobacionestabla',
         'id': prefs.getInt('id'),
-        'id_remision': serviceId, // Usamos el ID que viene por parámetro
+        'id_remision': serviceId,
         'token': prefs.getString('token'),
       });
 
       final data = response.data;
 
-      // 1. Validamos si es un error (Viene como Map con error_message)
-      if (data is Map && data.containsKey('error_message')) {
-        throw ApiException(data[
-            'error_message']); // Esto detiene el flujo y lanza el error correcto
-      }
-
-      // 2. Si no es error, validamos que sea una lista
+      // Si el servidor responde con la lista del JSON que pasaste
       if (data is List) {
         return data.map((e) => TableExpenseModel.fromJson(e)).toList();
       }
 
-      // 3. Si llega algo vacío o inesperado
+      // Si el servidor responde un error en formato Map
+      if (data is Map && data.containsKey('error_message')) {
+        throw Exception(data['error_message']);
+      }
+
       return [];
     } on DioException catch (e) {
-      throw ApiException.fromDioError(e);
+      throw Exception("Error de red: ${e.message}");
     } catch (e) {
-      // Aquí es donde caía antes con el error de "String is not subtype of List"
-      throw ApiException("Error al procesar la respuesta del servidor");
+      // Este catch atrapará errores de mapeo si el JSON cambia
+      throw Exception("Error al procesar datos: $e");
     }
   }
 
@@ -64,7 +63,7 @@ class TravelExpensesRemoteDataSource {
     required int conceptId,
     required double amount,
     required String comments,
-    required String image,
+    String? image,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     final data = {

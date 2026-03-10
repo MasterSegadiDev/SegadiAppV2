@@ -199,21 +199,31 @@ class TravelExpensesViewModel extends ChangeNotifier {
     required double amount,
     required String comments,
   }) async {
-    if (_selectedImage == null) return false;
+    // 1. Eliminamos el "if (_selectedImage == null) return false;"
+    // porque ahora la imagen puede ser opcional según el concepto.
+
     status = TravelExpensesStatus.loading;
     notifyListeners();
 
     try {
-      final bytes = await _selectedImage!.readAsBytes();
-      final String base64Image = base64Encode(bytes);
+      // 2. Procesar la imagen solo si existe, de lo contrario enviar null
+      String? base64Image;
+      if (_selectedImage != null) {
+        final bytes = await _selectedImage!.readAsBytes();
+        base64Image = base64Encode(bytes);
+      }
 
       final result = await insertUseCase(
         serviceId: serviceId,
         conceptId: conceptId,
         amount: amount,
         comments: comments.isEmpty ? "Registro desde App" : comments,
-        base64Image: base64Image,
+        base64Image: base64Image, // Enviará el String o null
       );
+
+      // 3. Imprimir el array result (usando inspección de dartz)
+      // Esto imprimirá Right([datos...]) o Left(Failure)
+      debugPrint('Resultado de la inserción: $result');
 
       return result.fold(
         (failure) {
@@ -223,7 +233,11 @@ class TravelExpensesViewModel extends ChangeNotifier {
           return false;
         },
         (success) async {
+          // success aquí representa el contenido del "Right" (tu array/objeto de éxito)
+          debugPrint('Datos recibidos del servidor: $success');
+
           _selectedImage = null;
+          errorMessage = null; // Limpiamos errores previos
           await loadAllData(serviceId);
           return true;
         },
@@ -267,6 +281,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
 
       conceptsResult.fold(
         (failure) {
+          debugPrint("Error al cargar conceptos: ${failure.message}");
           errorMessage = failure
               .message; // Aquí llegará "El servicio no tiene viaticos..."
           hasError = true;

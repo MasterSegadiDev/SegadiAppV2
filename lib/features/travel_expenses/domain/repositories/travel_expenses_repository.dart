@@ -16,7 +16,7 @@ abstract class TravelExpensesRepository {
     required int conceptId,
     required double amount,
     required String comments,
-    required String base64Image,
+    String? base64Image,
   });
   Future<Either<Failure, Uint8List>> getEvidenceImage(String conceptId);
 }

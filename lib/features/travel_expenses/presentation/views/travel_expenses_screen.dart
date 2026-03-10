@@ -2,7 +2,6 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/travel_expenses/presentation/widgets/add_expense_bottom_sheet.dart';
-import 'package:segadi/features/travel_expenses/presentation/widgets/expense_card.dart';
 import '../viewmodels/travel_expenses_view_model.dart';
 
 class TravelExpensesScreen extends StatefulWidget {
