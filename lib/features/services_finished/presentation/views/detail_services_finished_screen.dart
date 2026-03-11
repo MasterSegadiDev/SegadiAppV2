@@ -28,14 +28,13 @@ class _DetailServicesFinishedScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Detalle de Remisión',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF2C522A),
-        elevation: 0,
-        centerTitle: true,
+        title: const Text(
+          'Detalle Remisión',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: const Color(0xFF2C522A),
       ),
       body: Consumer<DetailFinishedViewModel>(
         builder: (context, vm, child) {

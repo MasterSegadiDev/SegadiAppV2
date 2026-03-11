@@ -22,12 +22,15 @@ class TravelExpensesRepositoryImpl implements TravelExpensesRepository {
     try {
       final models = await remoteDataSource.getConcepts(serviceId);
       return Right(models);
+    } on TravelExpensesFailure catch (e) {
+      // Si el DataSource lanzó tu clase personalizada, tomamos el mensaje directo
+      return Left(ServerFailure(e.message));
     } on DioException catch (e) {
-      // Usamos el manejador propio de la feature
       final failure = TravelExpensesFailure.fromDioError(e);
       return Left(ServerFailure(failure.message));
     } catch (e) {
-      return Left(ServerFailure('Error inesperado al obtener conceptos: $e'));
+      // Aquí es donde caía el error de casteo
+      return Left(ServerFailure('Error al procesar conceptos: $e'));
     }
   }
 

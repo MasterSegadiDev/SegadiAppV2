@@ -62,7 +62,7 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
         onPressed: () => _showAddExpenseSheet(context, vm),
         label: const Text(
-          'Registrar Viatico',
+          'Comprobar Viaticos',
           style: TextStyle(color: Colors.white),
         ),
         icon: const Icon(Icons.add, color: Colors.white),
@@ -144,7 +144,7 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
                     Image.memory(snapshot.data!, fit: BoxFit.contain),
                     TextButton(
                       onPressed: () => Navigator.pop(context),
-                      child: const Text("CERRAR"),
+                      child: const Text("Cerrar"),
                     ),
                   ],
                 ),
@@ -171,8 +171,12 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: Colors.transparent,
+      backgroundColor: Colors.transparent, // Para bordes redondeados limpios
       builder: (context) => AddExpenseBottomSheet(serviceId: widget.serviceId),
-    );
+    ).whenComplete(() {
+      // ESTO ES LO PROFESIONAL:
+      // Se ejecuta SIEMPRE que la modal desaparece, sin importar el motivo.
+      context.read<TravelExpensesViewModel>().clearSelectedImage();
+    });
   }
 }

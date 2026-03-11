@@ -130,9 +130,6 @@
 // }
 
 import 'dart:typed_data';
-
-import 'package:dartz/dartz.dart';
-import 'package:segadi/features/service_detail/core/errors/failures.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/material.dart';
@@ -236,7 +233,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
           // success aquí representa el contenido del "Right" (tu array/objeto de éxito)
           debugPrint('Datos recibidos del servidor: $success');
 
-          _selectedImage = null;
+          clearSelectedImage();
           errorMessage = null; // Limpiamos errores previos
           await loadAllData(serviceId);
           return true;
@@ -249,19 +246,6 @@ class TravelExpensesViewModel extends ChangeNotifier {
       return false;
     }
   }
-
-  // Future<void> loadAllData(int serviceId) async {
-  //   status = TravelExpensesStatus.loading;
-  //   notifyListeners();
-  //   final concepts = await getConceptsUseCase(serviceId);
-  //   final expenses = await getRegisteredUseCase(serviceId);
-  //   concepts.fold(
-  //       (l) => errorMessage = l.message, (r) => availableConcepts = r);
-  //   expenses.fold(
-  //       (l) => errorMessage = l.message, (r) => registeredExpenses = r);
-  //   status = TravelExpensesStatus.loaded;
-  //   notifyListeners();
-  // }
 
   Future<void> loadAllData(int serviceId) async {
     status = TravelExpensesStatus.loading;
@@ -291,6 +275,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
 
       expensesResult.fold(
         (failure) {
+          debugPrint("Expenses Error: ${failure.message}");
           errorMessage ??= failure.message;
           hasError = true;
         },
@@ -300,6 +285,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
       status =
           hasError ? TravelExpensesStatus.error : TravelExpensesStatus.loaded;
     } catch (e) {
+      debugPrint("Error en catch: ${e.toString()}");
       // Si entramos aquí, es un error de código, no del servidor
       errorMessage = e.toString().contains("ApiException")
           ? e.toString().replaceAll("ApiException: ", "")
@@ -314,6 +300,21 @@ class TravelExpensesViewModel extends ChangeNotifier {
     if (errorMessage != null) {
       errorMessage = null;
       notifyListeners(); // Esto quita el banner rojo de la vista automáticamente
+    }
+  }
+
+  void clearSelectedImage() {
+    if (_selectedImage != null) {
+      try {
+        if (_selectedImage!.existsSync()) {
+          _selectedImage!.deleteSync(); // Primero borras el archivo físico
+        }
+      } catch (e) {
+        debugPrint("Error al eliminar archivo físico: $e");
+      } finally {
+        _selectedImage = null; // LUEGO pones la variable en null
+        notifyListeners();
+      }
     }
   }
 

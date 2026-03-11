@@ -3,9 +3,30 @@ import 'package:provider/provider.dart';
 import 'package:segadi/features/evidence/presentation/pages/pdf_preview_page.dart';
 import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
 
-class CaptureEvidencePage extends StatelessWidget {
+// class CaptureEvidencePage extends StatelessWidget {
+//   const CaptureEvidencePage({super.key});
+//   final Color primaryGreen = const Color(0xFF2C522A);
+
+class CaptureEvidencePage extends StatefulWidget {
   const CaptureEvidencePage({super.key});
+
+  @override
+  State<CaptureEvidencePage> createState() => _CaptureEvidencePageState();
+}
+
+class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
   final Color primaryGreen = const Color(0xFF2C522A);
+
+  @override
+  void dispose() {
+    _cleanupResources();
+    super.dispose();
+  }
+
+  void _cleanupResources() {
+    final vm = context.read<EvidenceFlowViewModel>();
+    Future.microtask(() => vm.initCaptureFlow());
+  }
 
   @override
   Widget build(BuildContext context) {

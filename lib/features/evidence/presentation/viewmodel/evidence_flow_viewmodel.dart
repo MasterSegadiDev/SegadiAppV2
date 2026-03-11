@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:cunning_document_scanner/cunning_document_scanner.dart';
+import 'package:flutter/material.dart';
 import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:segadi/features/evidence/domain/repositories/evidence_repository.dart';
 import 'package:segadi/features/evidence/presentation/pages/widgets/evidence_pdf_generator.dart';
@@ -40,6 +41,44 @@ class EvidenceFlowViewModel extends ChangeNotifier {
   Uint8List? get pdfBytes => _pdfBytes;
 
   /// 🔹 Escanear documentos
+  // Future<void> scanFromCamera() async {
+  //   if (_status == EvidenceFlowStatus.scanning) return;
+  //   if (_evidences.length >= _maxEvidences) return;
+
+  //   _setStatus(EvidenceFlowStatus.scanning);
+
+  //   try {
+  //     final List<String>? paths = await CunningDocumentScanner.getPictures(
+  //       noOfPages: _maxEvidences - _evidences.length,
+  //       isGalleryImportAllowed: false,
+  //     );
+
+  //     if (paths == null || paths.isEmpty) {
+  //       _setStatus(EvidenceFlowStatus.idle);
+  //       return;
+  //     }
+
+  //     for (final path in paths) {
+  //       if (_evidences.length >= _maxEvidences) break;
+
+  //       final file = File(path);
+  //       final bytes = await file.readAsBytes();
+
+  //       _evidences.add(
+  //         EvidenceEntity(
+  //           bytes: bytes,
+  //           filename: file.uri.pathSegments.last,
+  //         ),
+  //       );
+  //     }
+
+  //     _setStatus(EvidenceFlowStatus.idle);
+  //   } catch (e) {
+  //     _errorMessage = 'Error al escanear documentos';
+  //     _setStatus(EvidenceFlowStatus.error);
+  //   }
+  // }
+
   Future<void> scanFromCamera() async {
     if (_status == EvidenceFlowStatus.scanning) return;
     if (_evidences.length >= _maxEvidences) return;
@@ -58,9 +97,9 @@ class EvidenceFlowViewModel extends ChangeNotifier {
       }
 
       for (final path in paths) {
-        if (_evidences.length >= _maxEvidences) break;
-
         final file = File(path);
+
+        // 1. Extraemos bytes para el PDF (RAM)
         final bytes = await file.readAsBytes();
 
         _evidences.add(
@@ -69,13 +108,43 @@ class EvidenceFlowViewModel extends ChangeNotifier {
             filename: file.uri.pathSegments.last,
           ),
         );
-      }
 
+        // 2. BORRADO FÍSICO INMEDIATO (Caché)
+        // Borramos el archivo que creó el plugin scanner apenas terminamos de leerlo
+        if (await file.exists()) {
+          await file.delete();
+        }
+      }
       _setStatus(EvidenceFlowStatus.idle);
     } catch (e) {
       _errorMessage = 'Error al escanear documentos';
       _setStatus(EvidenceFlowStatus.error);
     }
+  }
+
+  void reset() {
+    _evidences.clear(); // Limpia las fotos escaneadas
+    _signatureBytes = null; // Limpia la firma
+    _receiverName = ''; // Limpia el nombre
+    _pdfBytes = null; // Limpia el PDF generado
+    _errorMessage = null;
+    _status = EvidenceFlowStatus.idle;
+    notifyListeners();
+    debugPrint("Flujo de evidencias reseteado y memoria liberada.");
+  }
+
+  void initCaptureFlow() {
+    // Limpiamos todo rastro de flujos anteriores
+    _evidences.clear();
+    _pdfBytes = null;
+    _errorMessage = null;
+    _status = EvidenceFlowStatus.idle;
+
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+
+    notifyListeners();
+    debugPrint("🚀 Flujo de captura inicializado desde cero.");
   }
 
   /// 🔹 Eliminar evidencia
@@ -89,13 +158,6 @@ class EvidenceFlowViewModel extends ChangeNotifier {
   /// 🔹 Validaciones
   bool get hasEvidences => _evidences.isNotEmpty;
   bool get canScanMore => _evidences.length < _maxEvidences;
-
-  /// 🔹 Reset (por si el flujo se cancela)
-  void reset() {
-    _evidences.clear();
-    _errorMessage = null;
-    _setStatus(EvidenceFlowStatus.idle);
-  }
 
   void _setStatus(EvidenceFlowStatus status) {
     _status = status;
@@ -258,10 +320,19 @@ class EvidenceFlowViewModel extends ChangeNotifier {
           notifyListeners();
           return false;
         },
+        // (apiResponse) {
+        //   if (apiResponse.success) return true;
+        //   _errorMessage = apiResponse.message;
+        //   reset(); // Aquí cae el error de negocio del API
+        //   notifyListeners();
+        //   return false;
+        // },
         (apiResponse) {
-          if (apiResponse.success) return true;
-          _errorMessage =
-              apiResponse.message; // Aquí cae el error de negocio del API
+          if (apiResponse.success) {
+            reset();
+            return true;
+          }
+          _errorMessage = apiResponse.message;
           notifyListeners();
           return false;
         },

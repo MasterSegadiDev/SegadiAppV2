@@ -1,10 +1,10 @@
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';
-import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:segadi/features/travel_expenses/data/models/table_expense_model.dart';
 import 'package:segadi/features/travel_expenses/data/models/travel_expense_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:segadi/features/travel_expenses/core/errors/travel_expenses_failure.dart';
 
 class TravelExpensesRemoteDataSource {
   final Dio _dio;
@@ -12,23 +12,39 @@ class TravelExpensesRemoteDataSource {
 
   // 1. Obtener conceptos disponibles para agregar
   Future<List<TravelExpenseModel>> getConcepts(int serviceId) async {
-    final prefs = await SharedPreferences.getInstance();
-    final response = await _dio.get('index.php', queryParameters: {
-      'r': 'esegadi/getcomprobaciones',
-      'id': prefs.getInt('id'),
-      'id_remision': serviceId,
-      'token': prefs.getString('token'),
-    });
-    return (response.data as List)
-        .map((e) => TravelExpenseModel.fromJson(e))
-        .toList();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+
+      // El servidor truena porque no encuentra 'id'
+      final response = await _dio.get('index.php', queryParameters: {
+        'r': 'esegadi/getcomprobaciones',
+        'id': prefs.getInt('id'), // <--- ASEGÚRATE QUE ESTO NO SEA NULL
+        'id_remision': serviceId, // <--- O id_servicio, según pida tu API
+        'token': prefs.getString('token'),
+      });
+
+      final data = response.data;
+
+      if (data is List) {
+        return data.map((json) => TravelExpenseModel.fromJson(json)).toList();
+      }
+
+      // Si el API manda el error_message que manejamos antes
+      if (data is Map && data.containsKey('error_message')) {
+        throw TravelExpensesFailure(message: data['error_message']);
+      }
+
+      return [];
+    } on DioException catch (e) {
+      // Esto atrapará el Error 500 y usará tu clase TravelExpensesFailure
+      throw TravelExpensesFailure.fromDioError(e);
+    }
   }
 
   // 2. Obtener gastos YA registrados (la tabla)
   Future<List<TableExpenseModel>> getRegisteredExpenses(int serviceId) async {
     try {
       final prefs = await SharedPreferences.getInstance();
-
       final response = await _dio.get('index.php', queryParameters: {
         'r': 'esegadi/getcomprobacionestabla',
         'id': prefs.getInt('id'),
@@ -38,22 +54,27 @@ class TravelExpensesRemoteDataSource {
 
       final data = response.data;
 
-      // Si el servidor responde con la lista del JSON que pasaste
+      // Caso de Éxito: Es una lista
       if (data is List) {
         return data.map((e) => TableExpenseModel.fromJson(e)).toList();
       }
 
-      // Si el servidor responde un error en formato Map
+      // Caso de Error del Backend: Viene el Map con error_message
       if (data is Map && data.containsKey('error_message')) {
-        throw Exception(data['error_message']);
+        // Lanzamos un DioException manual para que lo cachee el bloque catch
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+          type: DioExceptionType.badResponse,
+        );
       }
 
       return [];
     } on DioException catch (e) {
-      throw Exception("Error de red: ${e.message}");
+      // Aquí es donde usamos TU CLASE
+      throw TravelExpensesFailure.fromDioError(e);
     } catch (e) {
-      // Este catch atrapará errores de mapeo si el JSON cambia
-      throw Exception("Error al procesar datos: $e");
+      throw TravelExpensesFailure(message: "Error inesperado: $e");
     }
   }
 

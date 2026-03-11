@@ -293,7 +293,7 @@ class _ConfirmEvidencePageState extends State<ConfirmEvidencePage> {
 
     // 2. Guardamos la firma final en el ViewModel
     vm.updateSignature(bytes);
-
+    vm.initCaptureFlow();
     // 3. NAVEGACIÓN a la siguiente pantalla (Escáner)
     if (mounted) {
       Navigator.push(

@@ -13,13 +13,13 @@ class FinishServiceList extends StatelessWidget {
     });
 
     return Scaffold(
-      backgroundColor: Colors.grey[50], // Fondo sutil
       appBar: AppBar(
-        title: const Text('Remisiones Finalizadas',
-            style: TextStyle(fontWeight: FontWeight.bold)),
-        backgroundColor: Colors.white,
-        foregroundColor: const Color(0xFF2C522A),
-        elevation: 0,
+        title: const Text(
+          'Remisiones Finalizadas',
+          style: TextStyle(color: Colors.white, fontSize: 18),
+        ),
+        iconTheme: const IconThemeData(color: Colors.white),
+        backgroundColor: const Color(0xFF2C522A),
       ),
       body: Consumer<FinishedServicesViewModel>(
         builder: (context, vm, child) {

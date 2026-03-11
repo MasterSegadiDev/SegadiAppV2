@@ -31,6 +31,14 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
   void dispose() {
     _amountController.dispose();
     _commentController.dispose();
+
+    Future.microtask(() {
+      if (mounted) {
+        context.read<TravelExpensesViewModel>().clearSelectedImage();
+        context.read<TravelExpensesViewModel>().clearError();
+      }
+    });
+
     super.dispose();
   }
 
@@ -67,18 +75,54 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
 
               // 1. Dropdown de Conceptos
               DropdownButtonFormField<int>(
+                isExpanded: true, // Para que el texto no se corte
                 value:
                     vm.availableConcepts.any((c) => c.id == _selectedConceptId)
                         ? _selectedConceptId
                         : null,
                 decoration: _inputDecoration(
                     'Concepto de Gasto *', Icons.category_outlined),
-                items: vm.availableConcepts
-                    .map((c) => DropdownMenuItem(
-                          value: c.id,
-                          child: Text(c.concept),
-                        ))
-                    .toList(),
+                // Personalizamos el estilo de la lista desplegable
+                dropdownColor: Colors.white,
+                icon: const Icon(Icons.arrow_drop_down_circle_outlined,
+                    color: Colors.blueGrey),
+                items: vm.availableConcepts.map((c) {
+                  return DropdownMenuItem(
+                    value: c.id,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        // Nombre del concepto con límite de espacio
+                        Expanded(
+                          child: Text(
+                            c.concept,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(fontSize: 14),
+                          ),
+                        ),
+                        // Badge del monto disponible
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: Colors.green.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                                color: Colors.green.withOpacity(0.3)),
+                          ),
+                          child: Text(
+                            '\$${c.paymentTotal.toStringAsFixed(2)}',
+                            style: const TextStyle(
+                              color: Colors.green,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 12,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
                 onChanged: (val) => setState(() => _selectedConceptId = val),
                 validator: (val) =>
                     val == null ? 'Selecciona un concepto' : null,
