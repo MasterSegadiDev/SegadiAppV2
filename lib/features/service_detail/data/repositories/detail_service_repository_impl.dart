@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:segadi/core/network/api_result.dart';
 import 'package:segadi/features/service_detail/core/errors/dio_exceptions.dart';
 import 'package:segadi/features/service_detail/core/errors/failures.dart';
@@ -54,6 +55,11 @@ class DetailServiceRepositoryImpl {
 
       final result =
           await api.changeStatus(serviceId: serviceId, statusId: statusId);
+      if (result.success) {
+        debugPrint('✅ Estatus insertado con éxito: ${result.message}');
+      } else {
+        debugPrint('⚠️ El servidor respondió error: ${result.message}');
+      }
       return Right(result);
     } on DioException catch (e) {
       return Left(ServerFailure(DioExceptions.fromDioError(e).toString()));

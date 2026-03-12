@@ -83,6 +83,7 @@ dependencies:
   equatable: ^2.0.8
   dartz: ^0.10.1
   connectivity_plus: ^6.0.3
+  flutter_local_notifications: ^17.0.0
   
 
 

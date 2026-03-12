@@ -50,7 +50,7 @@ class TravelExpensesRepositoryImpl implements TravelExpensesRepository {
     required int serviceId,
     required int conceptId,
     required double amount,
-    required String comments,
+    String? comments,
     String? base64Image,
   }) async {
     try {
@@ -58,7 +58,8 @@ class TravelExpensesRepositoryImpl implements TravelExpensesRepository {
         serviceId: serviceId,
         conceptId: conceptId,
         amount: amount,
-        comments: comments,
+        comments:
+            comments ?? "", // Si comments es null, usar un valor por defecto
         image: base64Image,
       );
       return Right(success);

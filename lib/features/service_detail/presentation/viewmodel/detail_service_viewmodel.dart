@@ -27,6 +27,8 @@ class DetailServiceViewModel extends ChangeNotifier {
     required this.listenServicioUpdates,
   });
 
+  bool _isDisposed = false;
+
   DetailServiceStatus status = DetailServiceStatus.initial;
   DetailServiceEntity? entity;
   DetailServiceState? state;
@@ -78,6 +80,14 @@ class DetailServiceViewModel extends ChangeNotifier {
     super.dispose();
   }
 
+  @override
+  void notifyListeners() {
+    // 🚩 PROTECCIÓN DE ORO: Si ya se hizo dispose, no notificamos nada.
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
+  }
+
   bool _isClosingAutomatically = false;
   ///////////////////////////////////////
   //////////// 📦 LOAD DETAIL ////////////
@@ -89,40 +99,37 @@ class DetailServiceViewModel extends ChangeNotifier {
     errorMessage = null;
     notifyListeners();
 
-    // El repositorio ahora devuelve el Either (Left: Failure, Right: Data)
     final result = await repository.getDetail(id);
+
+    // 🚩 CHEQUEO DE SEGURIDAD POST-AWAIT
+    if (_isDisposed) return;
 
     result.fold(
       (failure) {
-        // ❌ Caso de Error
         status = DetailServiceStatus.error;
         errorMessage = failure.message;
         debugPrint('❌ Error loading detail: $errorMessage');
       },
       (data) {
-        // ✅ Caso de Éxito
         _evidenceNavigationConsumed = false;
-
-        // 1. Asignamos la data a la entidad primero
         entity = data;
 
         if (data.ui.serviceClosed) {
           _isClosingAutomatically = false;
         }
 
-        // 2. Validamos la lógica de evidencia
         if (mustSendEvidence) {
           _navigateToSendEvidence = true;
         }
 
-        // 3. Construimos el estado visual usando la entidad ya cargada
-        // Usamos data directamente para evitar el force unwrap (!) si prefieres
         state = buildDetailServiceState(data);
         status = DetailServiceStatus.loaded;
 
         final permissions = DetailServicePermissions(data);
+
+        // Solo ejecutamos el cierre si seguimos vivos
         if (permissions.shouldAutoClose && !_isClosingAutomatically) {
-          _executeSilentClose(id);
+          if (!_isDisposed) _executeSilentClose(id);
         }
 
         debugPrint('✅ Detail loaded successfully');

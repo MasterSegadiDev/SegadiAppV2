@@ -17,15 +17,19 @@ class CaptureEvidencePage extends StatefulWidget {
 class _CaptureEvidencePageState extends State<CaptureEvidencePage> {
   final Color primaryGreen = const Color(0xFF2C522A);
 
+  late EvidenceFlowViewModel _viewModel;
+
   @override
-  void dispose() {
-    _cleanupResources();
-    super.dispose();
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // 2. GUARDA LA REFERENCIA AQUÍ (Se ejecuta cuando el context es estable)
+    _viewModel = context.read<EvidenceFlowViewModel>();
   }
 
-  void _cleanupResources() {
-    final vm = context.read<EvidenceFlowViewModel>();
-    Future.microtask(() => vm.initCaptureFlow());
+  @override
+  void dispose() {
+    _viewModel.initCaptureFlow(notify: false);
+    super.dispose();
   }
 
   @override

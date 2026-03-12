@@ -32,34 +32,59 @@ class _DetailServicePageState extends State<DetailServicePage> {
   }
 
   /// Método centralizado para navegar al flujo de evidencias
+  // void _navigateToEvidences(BuildContext context, DetailServiceViewModel vm) {
+  //   Navigator.push(
+  //     context,
+  //     MaterialPageRoute(
+  //       settings: const RouteSettings(name: '/flow_evidencias'),
+  //       builder: (context) => EvidenceFlowPage(serviceId: vm.entity!.id),
+  //     ),
+  //   ).then((_) async {
+  //     // 1. Verificamos si la pantalla sigue montada
+  //     if (!mounted) return;
+
+  //     // 2. RECARGAMOS LOS DATOS
+  //     // Esto actualizará el 'nextMandatoryStatusId' desde el servidor
+  //     await context.read<DetailServiceViewModel>().loadDetail(widget.serviceId);
+
+  //     // 3. LÓGICA DE DECISIÓN POST-FLUJO
+  //     if (!mounted) return;
+  //     final currentVm = context.read<DetailServiceViewModel>();
+
+  //     // Si el statusId ya NO es 10, significa que la remisión se finalizó con éxito en el servidor
+  //     if (currentVm.entity?.statusId != 10) {
+  //       // OPCIONAL: Podrías mostrar un Snackbar de éxito aquí
+  //       ScaffoldMessenger.of(context).showSnackBar(
+  //         const SnackBar(content: Text("Servicio finalizado con éxito")),
+  //       );
+  //       // Regresamos al listado porque el trabajo aquí terminó
+  //       Navigator.of(context).pop();
+  //     } else {
+  //       // Si sigue en 10, es porque el usuario regresó voluntariamente (back button)
+  //       // No hacemos nada, permitimos que el Banner de 'CONTINUAR' haga su trabajo.
+  //       print(
+  //           "El usuario regresó sin finalizar. Mostrando banner de pendiente.");
+  //     }
+  //   });
+  // }
+
   void _navigateToEvidences(BuildContext context, DetailServiceViewModel vm) {
     Navigator.push(
       context,
       MaterialPageRoute(
-        settings: const RouteSettings(name: '/detail_service'),
+        settings: const RouteSettings(name: '/flow_evidencias'),
         builder: (context) => EvidenceFlowPage(serviceId: vm.entity!.id),
       ),
     ).then((_) async {
-      // 1. PRIMERA PROTECCIÓN: ¿La pantalla de detalle sigue existiendo?
+      // 1. Verificamos si la pantalla de detalle sigue ahí
       if (!mounted) return;
 
-      // 2. RECARGAMOS:
-      // Usamos context.read para asegurarnos de tener la instancia activa
+      // 2. CARGAMOS LOS DATOS (El "load" que necesitas)
+      // Esto refresca el detalle con la info nueva del servidor
       await context.read<DetailServiceViewModel>().loadDetail(widget.serviceId);
 
-      // 3. SEGUNDA PROTECCIÓN:
-      // Después de un await largo, la pantalla pudo haberse cerrado.
-      if (!mounted) return;
-
-      final currentVm = context.read<DetailServiceViewModel>();
-
-      // 4. VALIDAMOS:
-      if (currentVm.entity?.statusId == 10) {
-        // Si sigue en 10, el chofer canceló. Lo sacamos al listado.
-        Navigator.of(context).pop();
-      } else {
-        print("Permanecemos en detalle: flujo exitoso.");
-      }
+      debugPrint(
+          "Refresco de detalle completado. Permaneciendo en la pantalla.");
     });
   }
 
@@ -89,39 +114,9 @@ class _DetailServicePageState extends State<DetailServicePage> {
       body: SafeArea(
         child: Column(
           children: [
-            // --- BANNER PROFESIONAL DE ACCIÓN PENDIENTE ---
             if (vm.status == DetailServiceStatus.loaded &&
                 vm.entity?.nextMandatoryStatusId == 10)
-              Container(
-                width: double.infinity,
-                color: Colors.amber.shade100,
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                child: Row(
-                  children: [
-                    const Icon(Icons.info_outline, color: Colors.amber),
-                    const SizedBox(width: 12),
-                    const Expanded(
-                      child: Text(
-                        "Confirmación de entrega pendiente",
-                        style: TextStyle(
-                          color: Color(0xFF856404),
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                    TextButton(
-                      onPressed: () => _navigateToEvidences(context, vm),
-                      child: const Text(
-                        "CONTINUAR",
-                        style: TextStyle(
-                            color: Color(0xFF2C522A),
-                            fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildPendingActionBanner(context, vm),
 
             // --- CONTENIDO PRINCIPAL ---
             Expanded(
@@ -129,6 +124,39 @@ class _DetailServicePageState extends State<DetailServicePage> {
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildPendingActionBanner(
+      BuildContext context, DetailServiceViewModel vm) {
+    return Container(
+      width: double.infinity,
+      color: Colors.amber.shade100,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          const Icon(Icons.warning_amber_rounded, color: Colors.orange),
+          const SizedBox(width: 12),
+          const Expanded(
+            child: Text(
+              "Evidencias faltantes. Debe finalizar la remisión.",
+              style: TextStyle(
+                color: Color(0xFF856404),
+                fontWeight: FontWeight.bold,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => _navigateToEvidences(context, vm),
+            child: const Text(
+              "CONTINUAR",
+              style: TextStyle(
+                  color: Color(0xFF2C522A), fontWeight: FontWeight.bold),
+            ),
+          ),
+        ],
       ),
     );
   }

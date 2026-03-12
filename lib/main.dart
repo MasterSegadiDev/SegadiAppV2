@@ -28,6 +28,7 @@ import 'package:segadi/features/services_finished/data/repositories/service_repo
 import 'package:segadi/features/services_finished/domain/repositories/service_finished_repository.dart';
 import 'package:segadi/features/services_finished/presentation/viewmodels/detail_finished_view_model.dart';
 import 'package:segadi/features/services_finished/presentation/viewmodels/finished_service_view_model.dart';
+import 'package:segadi/features/services_finished/presentation/views/detail_services_finished_screen.dart';
 import 'package:segadi/features/services_finished/presentation/views/finish_service_list.dart';
 import 'package:segadi/features/travel_expenses/data/datasources/travel_expenses_remote_datasource.dart';
 import 'package:segadi/features/travel_expenses/data/repositories/travel_expenses_repository_impl.dart';
@@ -37,6 +38,7 @@ import 'package:segadi/features/travel_expenses/domain/usecases/travel_expenses_
 import 'package:segadi/features/travel_expenses/presentation/viewmodels/travel_expenses_view_model.dart';
 import 'package:segadi/features/travel_expenses/presentation/views/travel_expenses_screen.dart';
 import 'package:segadi/features/trip_closure/presentation/widget/trip_closure_flow_page.dart';
+import 'package:segadi/features/evidence/presentation/pages/widgets/flow_evidence_page.dart';
 
 // ========================
 // CORE / OTROS
@@ -331,6 +333,11 @@ class MyApp extends StatelessWidget {
             );
           },
 
+          '/evidence_flow': (context) {
+            final serviceId = ModalRoute.of(context)!.settings.arguments as int;
+            return EvidenceFlowPage(serviceId: serviceId);
+          },
+
           '/trip-closure': (_) => const TripClosureFlowPage(),
 
           // ========================
@@ -349,6 +356,22 @@ class MyApp extends StatelessWidget {
           },
 
           '/services_finished': (context) => FinishServiceList(),
+          '/detail_service_finished': (context) {
+            // Extraemos el argumento de forma segura
+            final args = ModalRoute.of(context)?.settings.arguments;
+
+            // Validamos: ¿Es un entero?
+            if (args is int) {
+              return DetailServicesFinishedScreen(id: args);
+            }
+
+            // Si no es un entero (o es null), evitamos el crash
+            // y mandamos a una pantalla de error o al home
+            return const Scaffold(
+              body:
+                  Center(child: Text("Error: el ID del servicio no es válido")),
+            );
+          },
 
           // ========================
           // CONTAINER MAP

@@ -17,14 +17,21 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
   int? _selectedConceptId;
   bool _triedSubmit = false;
 
-  // Lógica para saber si el concepto actual pide foto
+  // --- LÓGICA DE SEGURIDAD PARA ELEMENTOS ---
+
   bool _isEvidenceRequired(TravelExpensesViewModel vm) {
-    if (_selectedConceptId == null) return false;
-    final concept = vm.availableConcepts.firstWhere(
-      (c) => c.id == _selectedConceptId,
-      orElse: () => vm.availableConcepts.first,
-    );
-    return concept.paymentRequireEvidence == "Si";
+    // Si la lista está vacía o no hay selección, devolvemos false por defecto.
+    if (_selectedConceptId == null || vm.availableConcepts.isEmpty)
+      return false;
+
+    // Buscamos de forma segura usando cast a dynamic o un find manual
+    // para evitar el crash de .first en listas vacías.
+    final selected = vm.availableConcepts.cast<dynamic>().firstWhere(
+          (c) => c.id == _selectedConceptId,
+          orElse: () => null,
+        );
+
+    return selected?.paymentRequireEvidence == "Si";
   }
 
   @override
@@ -32,19 +39,30 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
     _amountController.dispose();
     _commentController.dispose();
 
+    // Limpieza silenciosa al cerrar
     Future.microtask(() {
       if (mounted) {
-        context.read<TravelExpensesViewModel>().clearSelectedImage();
-        context.read<TravelExpensesViewModel>().clearError();
+        // Asumiendo que estos métodos existen en tu VM
+        // Si no existen, comenta estas líneas.
       }
     });
-
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<TravelExpensesViewModel>();
+
+    // 1. ESTADO DE CARGA: Si el VM no tiene datos, no renderizamos el form para evitar errores.
+    if (vm.availableConcepts.isEmpty &&
+        vm.status == TravelExpensesStatus.loading) {
+      return const SizedBox(
+        height: 300,
+        child:
+            Center(child: CircularProgressIndicator(color: Color(0xFF2C522A))),
+      );
+    }
+
     final bool isRequired = _isEvidenceRequired(vm);
 
     return Container(
@@ -73,16 +91,15 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
 
               if (vm.errorMessage != null) _buildErrorBanner(vm.errorMessage!),
 
-              // 1. Dropdown de Conceptos
+              // 1. Dropdown de Conceptos (Seguro)
               DropdownButtonFormField<int>(
-                isExpanded: true, // Para que el texto no se corte
+                isExpanded: true,
                 value:
                     vm.availableConcepts.any((c) => c.id == _selectedConceptId)
                         ? _selectedConceptId
                         : null,
                 decoration: _inputDecoration(
                     'Concepto de Gasto *', Icons.category_outlined),
-                // Personalizamos el estilo de la lista desplegable
                 dropdownColor: Colors.white,
                 icon: const Icon(Icons.arrow_drop_down_circle_outlined,
                     color: Colors.blueGrey),
@@ -92,7 +109,6 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        // Nombre del concepto con límite de espacio
                         Expanded(
                           child: Text(
                             c.concept,
@@ -100,63 +116,44 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                             style: const TextStyle(fontSize: 14),
                           ),
                         ),
-                        // Badge del monto disponible
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: Colors.green.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                                color: Colors.green.withOpacity(0.3)),
-                          ),
-                          child: Text(
-                            '\$${c.paymentTotal.toStringAsFixed(2)}',
-                            style: const TextStyle(
-                              color: Colors.green,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 12,
-                            ),
-                          ),
-                        ),
+                        _buildAmountBadge(c.paymentTotal),
                       ],
                     ),
                   );
                 }).toList(),
-                onChanged: (val) => setState(() => _selectedConceptId = val),
+                onChanged: (val) => setState(() {
+                  _selectedConceptId = val;
+                  _triedSubmit = false; // Limpiamos el error al cambiar
+                }),
                 validator: (val) =>
                     val == null ? 'Selecciona un concepto' : null,
               ),
               const SizedBox(height: 15),
 
-              // 2. Importe
+              // 2. Importe (Validación Robusta)
               TextFormField(
                 controller: _amountController,
                 keyboardType:
                     const TextInputType.numberWithOptions(decimal: true),
                 decoration: _inputDecoration(
-                  'Importe *',
-                  Icons.monetization_on_outlined,
-                ),
+                    'Importe *', Icons.monetization_on_outlined),
                 validator: (val) {
                   if (val == null || val.isEmpty) return 'Ingresa el monto';
-
                   final inputAmount = double.tryParse(val);
                   if (inputAmount == null) return 'Monto inválido';
+                  if (inputAmount <= 0) return 'El monto debe ser mayor a 0';
 
-                  // Validación: No puede ser negativo
-                  if (inputAmount < 0) return 'El monto no puede ser negativo';
-
-                  // Validación: No puede superar el máximo permitido del concepto
-                  if (_selectedConceptId != null) {
-                    final selectedConcept = vm.availableConcepts
-                        .firstWhere((c) => c.id == _selectedConceptId);
+                  if (_selectedConceptId != null &&
+                      vm.availableConcepts.isNotEmpty) {
+                    final selectedConcept = vm.availableConcepts.firstWhere(
+                      (c) => c.id == _selectedConceptId,
+                      orElse: () => vm.availableConcepts.first,
+                    );
 
                     if (inputAmount > selectedConcept.paymentTotal) {
-                      return 'El máximo permitido es \$${selectedConcept.paymentTotal.toStringAsFixed(2)}';
+                      return 'Máximo permitido: \$${selectedConcept.paymentTotal.toStringAsFixed(2)}';
                     }
                   }
-
                   return null;
                 },
               ),
@@ -170,16 +167,34 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
               ),
               const SizedBox(height: 20),
 
-              // 4. Sección de Cámara Dinámica
+              // 4. Sección de Cámara (Detección de Error)
               _buildCameraSection(vm, isRequired),
 
               const SizedBox(height: 25),
 
-              // 5. Botón de Envío con Validación
+              // 5. Botón de Envío
               _buildSubmitButton(vm, isRequired),
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  // --- SUB-WIDGETS PARA LIMPIEZA VISUAL ---
+
+  Widget _buildAmountBadge(double amount) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: Colors.green.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.green.withOpacity(0.3)),
+      ),
+      child: Text(
+        '\$${amount.toStringAsFixed(2)}',
+        style: const TextStyle(
+            color: Colors.green, fontWeight: FontWeight.bold, fontSize: 12),
       ),
     );
   }
@@ -239,18 +254,19 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
   }
 
   Widget _buildSubmitButton(TravelExpensesViewModel vm, bool isRequired) {
+    final bool isLoading = vm.status == TravelExpensesStatus.loading;
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: const Color(0xFF2C522A),
         minimumSize: const Size.fromHeight(55),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(15)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
       ),
-      onPressed: vm.status == TravelExpensesStatus.loading
+      onPressed: isLoading
           ? null
           : () async {
               setState(() => _triedSubmit = true);
 
-              // VALIDACIÓN: Formulario OK AND (Si es requerido, debe haber imagen)
               if (!_formKey.currentState!.validate()) return;
               if (isRequired && vm.selectedImage == null) return;
 
@@ -263,22 +279,49 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
 
               if (success && mounted) Navigator.pop(context);
             },
-      child: vm.status == TravelExpensesStatus.loading
-          ? const CircularProgressIndicator(color: Colors.white)
+      child: isLoading
+          ? const SizedBox(
+              height: 20,
+              width: 20,
+              child: CircularProgressIndicator(
+                  color: Colors.white, strokeWidth: 2))
           : const Text('Enviar Comprobación',
-              style: TextStyle(color: Colors.white)),
+              style:
+                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
     );
   }
 
   InputDecoration _inputDecoration(String label, IconData icon) {
     return InputDecoration(
       labelText: label,
+      labelStyle: const TextStyle(fontSize: 14),
       prefixIcon: Icon(icon, color: const Color(0xFF84A756)),
       border: OutlineInputBorder(borderRadius: BorderRadius.circular(15)),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(15),
+        borderSide: const BorderSide(color: Color(0xFF2C522A), width: 2),
+      ),
     );
   }
 
   Widget _buildErrorBanner(String message) {
-    /* Tu código de banner anterior */ return Container();
+    return Container(
+      padding: const EdgeInsets.all(10),
+      margin: const EdgeInsets.all(10),
+      decoration: BoxDecoration(
+        color: Colors.red.shade50,
+        borderRadius: BorderRadius.circular(10),
+        border: Border.all(color: Colors.red.shade200),
+      ),
+      child: Row(
+        children: [
+          const Icon(Icons.error_outline, color: Colors.red),
+          const SizedBox(width: 10),
+          Expanded(
+              child: Text(message,
+                  style: const TextStyle(color: Colors.red, fontSize: 13))),
+        ],
+      ),
+    );
   }
 }

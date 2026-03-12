@@ -23,6 +23,8 @@ class EvidenceFlowViewModel extends ChangeNotifier {
     required this.detailServiceApi,
   });
 
+  bool _isDisposed = false;
+
   /// 🔹 Evidencias
   final List<EvidenceEntity> _evidences = [];
   List<EvidenceEntity> get evidences => List.unmodifiable(_evidences);
@@ -40,44 +42,18 @@ class EvidenceFlowViewModel extends ChangeNotifier {
   Uint8List? _pdfBytes;
   Uint8List? get pdfBytes => _pdfBytes;
 
-  /// 🔹 Escanear documentos
-  // Future<void> scanFromCamera() async {
-  //   if (_status == EvidenceFlowStatus.scanning) return;
-  //   if (_evidences.length >= _maxEvidences) return;
+  @override
+  void dispose() {
+    _isDisposed = true;
+    super.dispose();
+  }
 
-  //   _setStatus(EvidenceFlowStatus.scanning);
-
-  //   try {
-  //     final List<String>? paths = await CunningDocumentScanner.getPictures(
-  //       noOfPages: _maxEvidences - _evidences.length,
-  //       isGalleryImportAllowed: false,
-  //     );
-
-  //     if (paths == null || paths.isEmpty) {
-  //       _setStatus(EvidenceFlowStatus.idle);
-  //       return;
-  //     }
-
-  //     for (final path in paths) {
-  //       if (_evidences.length >= _maxEvidences) break;
-
-  //       final file = File(path);
-  //       final bytes = await file.readAsBytes();
-
-  //       _evidences.add(
-  //         EvidenceEntity(
-  //           bytes: bytes,
-  //           filename: file.uri.pathSegments.last,
-  //         ),
-  //       );
-  //     }
-
-  //     _setStatus(EvidenceFlowStatus.idle);
-  //   } catch (e) {
-  //     _errorMessage = 'Error al escanear documentos';
-  //     _setStatus(EvidenceFlowStatus.error);
-  //   }
-  // }
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) {
+      super.notifyListeners();
+    }
+  }
 
   Future<void> scanFromCamera() async {
     if (_status == EvidenceFlowStatus.scanning) return;
@@ -86,6 +62,11 @@ class EvidenceFlowViewModel extends ChangeNotifier {
     _setStatus(EvidenceFlowStatus.scanning);
 
     try {
+      // 1. LIMPIEZA PREVENTIVA: Liberamos caché de imágenes de Flutter antes de abrir la cámara
+      // Esto da aire a la GPU/RAM para el proceso del scanner.
+      PaintingBinding.instance.imageCache.clear();
+      PaintingBinding.instance.imageCache.clearLiveImages();
+
       final List<String>? paths = await CunningDocumentScanner.getPictures(
         noOfPages: _maxEvidences - _evidences.length,
         isGalleryImportAllowed: false,
@@ -96,28 +77,41 @@ class EvidenceFlowViewModel extends ChangeNotifier {
         return;
       }
 
+      // 2. PEQUEÑA PAUSA TÉCNICA
+      // Damos tiempo al sistema para cerrar la interfaz de la cámara antes de procesar bytes pesados
+      await Future.delayed(const Duration(milliseconds: 300));
+
       for (final path in paths) {
         final file = File(path);
+        if (!await file.exists()) continue;
 
-        // 1. Extraemos bytes para el PDF (RAM)
-        final bytes = await file.readAsBytes();
+        // 3. PROCESAMIENTO SEGURO
+        // Leemos los bytes pero envolviéndolo en un try por si el archivo está bloqueado
+        try {
+          final bytes = await file.readAsBytes();
 
-        _evidences.add(
-          EvidenceEntity(
-            bytes: bytes,
-            filename: file.uri.pathSegments.last,
-          ),
-        );
+          _evidences.add(
+            EvidenceEntity(
+              bytes: bytes,
+              filename: file.uri.pathSegments.last,
+            ),
+          );
 
-        // 2. BORRADO FÍSICO INMEDIATO (Caché)
-        // Borramos el archivo que creó el plugin scanner apenas terminamos de leerlo
-        if (await file.exists()) {
+          // 4. LIBERACIÓN DE MEMORIA NATIVA
+          // Borramos el archivo físico para que la memoria del teléfono no se llene
           await file.delete();
+        } catch (e) {
+          debugPrint("⚠️ Error procesando archivo individual: $e");
         }
       }
+
+      // 5. NOTIFICACIÓN FINAL SEGURA
+      // Usamos addPostFrameCallback si el error de "widget tree locked" persiste
       _setStatus(EvidenceFlowStatus.idle);
     } catch (e) {
-      _errorMessage = 'Error al escanear documentos';
+      debugPrint("❌ Crash en scanner: $e");
+      _errorMessage =
+          'Error al escanear: memoria insuficiente o fallo de cámara';
       _setStatus(EvidenceFlowStatus.error);
     }
   }
@@ -133,18 +127,22 @@ class EvidenceFlowViewModel extends ChangeNotifier {
     debugPrint("Flujo de evidencias reseteado y memoria liberada.");
   }
 
-  void initCaptureFlow() {
-    // Limpiamos todo rastro de flujos anteriores
+  void initCaptureFlow({bool notify = true}) {
     _evidences.clear();
     _pdfBytes = null;
     _errorMessage = null;
     _status = EvidenceFlowStatus.idle;
 
+    // Limpieza de caché de imágenes
     PaintingBinding.instance.imageCache.clear();
     PaintingBinding.instance.imageCache.clearLiveImages();
 
-    notifyListeners();
-    debugPrint("🚀 Flujo de captura inicializado desde cero.");
+    // 🚩 LA CLAVE: Solo notificamos si no estamos en un ciclo de vida crítico (como dispose)
+    if (notify) {
+      notifyListeners();
+    }
+
+    debugPrint("🚀 Datos reseteados (Notificación: $notify)");
   }
 
   /// 🔹 Eliminar evidencia

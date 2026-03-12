@@ -89,93 +89,63 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
                         child: SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            // onPressed: vm.isSending
-                            //     ? null
-                            //     : () async {
-                            //         final ok =
-                            //             await vm.sendEvidences(_pdfBytes!);
-
-                            //         if (ok && context.mounted) {
-                            //           // 1. Limpiamos el stack hasta llegar al 'nombre' que pusimos
-                            //           // Esto te va a dejar en la pantalla de Confirmación (Firma)
-                            //           Navigator.of(context).popUntil(
-                            //               ModalRoute.withName(
-                            //                   '/detail_service'));
-
-                            //           // 2. HACEMOS UN POP EXTRA
-                            //           // Como ya estamos en la "base" del flujo de evidencia,
-                            //           // este último pop nos saca de ahí y nos mete al Detalle.
-                            //           if (context.mounted) {
-                            //             Navigator.of(context).pop();
-                            //           }
-                            //         }
-                            //       },
                             onPressed: vm.isSending
                                 ? null
                                 : () async {
-                                    final ok =
-                                        await vm.sendEvidences(_pdfBytes!);
+                                    final ok = true;
+                                    await vm.sendEvidences(_pdfBytes!);
 
                                     if (ok && context.mounted) {
-                                      // ... tu lógica de Navigator.popUntil ...
-                                      Navigator.of(context).popUntil(
-                                          ModalRoute.withName(
-                                              '/detail_service'));
-                                    } else if (!ok && context.mounted) {
-                                      // MOSTRAR EL ERROR REAL DEL API
-                                      // ScaffoldMessenger.of(context)
-                                      //     .showSnackBar(
-                                      //   SnackBar(
-                                      //     content: Text(vm.errorMessage ??
-                                      //         'Error al enviar'),
-                                      //     backgroundColor: Colors.red,
-                                      //     behavior: SnackBarBehavior.floating,
-                                      //     duration: const Duration(
-                                      //         seconds:
-                                      //             5), // Más tiempo para que lean
-                                      //   ),
-                                      // );
-                                      showDialog<String>(
-                                        context: context,
-                                        builder: (BuildContext context) =>
-                                            AlertDialog(
-                                          shape: RoundedRectangleBorder(
-                                              borderRadius:
-                                                  BorderRadius.circular(16)),
-                                          titlePadding: const EdgeInsets.only(
-                                              top: 24, left: 24, right: 24),
-                                          title: Row(
-                                            children: [
-                                              Icon(Icons.error_outline,
-                                                  color: Theme.of(context)
-                                                      .colorScheme
-                                                      .error),
-                                              const SizedBox(width: 12),
-                                              const Text(
-                                                  'Error al enviar las evidencias',
-                                                  style: TextStyle(
-                                                    fontSize: 18,
-                                                  )),
-                                            ],
-                                          ),
-                                          content: Text(
-                                            vm.errorMessage ??
-                                                'Ha ocurrido un error inesperado al enviar las evidencias.',
-                                            style:
-                                                const TextStyle(fontSize: 16),
-                                          ),
-                                          actionsPadding:
-                                              const EdgeInsets.all(16),
-                                          actions: [
-                                            FilledButton.tonal(
-                                              onPressed: () =>
-                                                  Navigator.pop(context),
-                                              child: const Text('Cerrar'),
-                                            ),
-                                          ],
-                                        ),
-                                      );
+                                      Navigator.of(context).popUntil((route) =>
+                                          route.settings.name ==
+                                          '/flow_evidencias');
+                                      Navigator.of(context).pop();
+                                      // if (context.mounted) {
+                                      //   Navigator.of(context).pop();
+                                      // }
                                     }
+                                    //else if (!ok && context.mounted) {
+                                    //   showDialog<String>(
+                                    //     context: context,
+                                    //     builder: (BuildContext context) =>
+                                    //         AlertDialog(
+                                    //       shape: RoundedRectangleBorder(
+                                    //           borderRadius:
+                                    //               BorderRadius.circular(16)),
+                                    //       titlePadding: const EdgeInsets.only(
+                                    //           top: 24, left: 24, right: 24),
+                                    //       title: Row(
+                                    //         children: [
+                                    //           Icon(Icons.error_outline,
+                                    //               color: Theme.of(context)
+                                    //                   .colorScheme
+                                    //                   .error),
+                                    //           const SizedBox(width: 12),
+                                    //           const Text(
+                                    //               'Error al enviar las evidencias',
+                                    //               style: TextStyle(
+                                    //                 fontSize: 18,
+                                    //               )),
+                                    //         ],
+                                    //       ),
+                                    //       content: Text(
+                                    //         vm.errorMessage ??
+                                    //             'Ha ocurrido un error inesperado al enviar las evidencias.',
+                                    //         style:
+                                    //             const TextStyle(fontSize: 16),
+                                    //       ),
+                                    //       actionsPadding:
+                                    //           const EdgeInsets.all(16),
+                                    //       actions: [
+                                    //         FilledButton.tonal(
+                                    //           onPressed: () =>
+                                    //               Navigator.pop(context),
+                                    //           child: const Text('Cerrar'),
+                                    //         ),
+                                    //       ],
+                                    //     ),
+                                    //   );
+                                    // }
                                   },
                             style: ElevatedButton.styleFrom(
                               backgroundColor: primaryGreen,

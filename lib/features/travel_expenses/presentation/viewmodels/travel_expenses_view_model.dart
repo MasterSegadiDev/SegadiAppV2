@@ -194,7 +194,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
     required int serviceId,
     required int conceptId,
     required double amount,
-    required String comments,
+    String? comments,
   }) async {
     // 1. Eliminamos el "if (_selectedImage == null) return false;"
     // porque ahora la imagen puede ser opcional según el concepto.
@@ -210,17 +210,20 @@ class TravelExpensesViewModel extends ChangeNotifier {
         base64Image = base64Encode(bytes);
       }
 
+      debugPrint(
+          'Enviando datos: serviceId=$serviceId, conceptId=$conceptId, amount=$amount, comments="$comments", base64Image=$base64Image');
+
       final result = await insertUseCase(
         serviceId: serviceId,
         conceptId: conceptId,
         amount: amount,
-        comments: comments.isEmpty ? "Registro desde App" : comments,
+        comments: comments,
         base64Image: base64Image, // Enviará el String o null
       );
 
       // 3. Imprimir el array result (usando inspección de dartz)
       // Esto imprimirá Right([datos...]) o Left(Failure)
-      debugPrint('Resultado de la inserción: $result');
+      debugPrint('Resultado de la inserción: ${result.toString()}');
 
       return result.fold(
         (failure) {
