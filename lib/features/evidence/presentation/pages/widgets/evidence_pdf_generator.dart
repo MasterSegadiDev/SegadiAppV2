@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -12,7 +13,7 @@ class EvidencePdfGenerator {
   }) async {
     final pdf = pw.Document();
 
-    for (final page in buildEvidencePages(evidences)) {
+    for (var page in await buildEvidencePages(evidences)) {
       pdf.addPage(page);
     }
 
@@ -59,24 +60,37 @@ class EvidencePdfGenerator {
   }
 
   /// -----------------------------
-  static List<pw.Page> buildEvidencePages(List<EvidenceEntity> evidences) {
-    return evidences.map((e) {
-      final image = pw.MemoryImage(e.bytes);
+  static Future<List<pw.Page>> buildEvidencePages(
+      List<EvidenceEntity> evidences) async {
+    List<pw.Page> pages = [];
 
-      return pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.all(24),
-        build: (_) {
-          return pw.Center(
-            child: pw.Image(
-              image,
-              width: PdfPageFormat.a4.width - 48,
-              height: PdfPageFormat.a4.height - 48,
-              fit: pw.BoxFit.contain, // 🔥 CLAVE
-            ),
-          );
-        },
-      );
-    }).toList();
+    for (var e in evidences) {
+      final file = File(e.path);
+
+      if (await file.exists()) {
+        // 1. Leemos los bytes del archivo temporal solo en este momento
+        final bytes = await file.readAsBytes();
+        final image = pw.MemoryImage(bytes);
+
+        pages.add(
+          pw.Page(
+            pageFormat: PdfPageFormat.a4,
+            margin: const pw.EdgeInsets.all(24),
+            build: (_) {
+              return pw.Center(
+                child: pw.Image(
+                  image,
+                  width: PdfPageFormat.a4.width - 48,
+                  height: PdfPageFormat.a4.height - 48,
+                  fit: pw.BoxFit.contain,
+                ),
+              );
+            },
+          ),
+        );
+      }
+    }
+
+    return pages;
   }
 }

@@ -1,5 +1,3 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
@@ -14,158 +12,148 @@ class PdfPreviewPage extends StatefulWidget {
 
 class _PdfPreviewPageState extends State<PdfPreviewPage> {
   final Color primaryGreen = const Color(0xFF2C522A);
-
-  Uint8List? _pdfBytes;
-  bool _isLoading = true;
-  String? _error;
+  late EvidenceFlowViewModel _viewModel;
 
   @override
   void initState() {
     super.initState();
-    _generatePdf();
+    _viewModel = context.read<EvidenceFlowViewModel>();
+
+    // 🚩 Senior Tip: Escuchar errores de forma centralizada
+    _viewModel.addListener(_errorListener);
+
+    // Disparamos la generación del PDF solo si no existe uno previo
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_viewModel.pdfBytes == null) {
+        _viewModel.buildPdf();
+      }
+    });
   }
 
-  Future<void> _generatePdf() async {
-    try {
-      final vm = context.read<EvidenceFlowViewModel>();
-
-      final bytes = await vm.generatePdf();
-
-      if (!mounted) return;
-
-      setState(() {
-        _pdfBytes = bytes;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
+  void _errorListener() {
+    if (_viewModel.status == EvidenceFlowStatus.error &&
+        _viewModel.errorMessage != null &&
+        mounted) {
+      _showErrorDialog(_viewModel.errorMessage!);
+      _viewModel.clearError();
     }
   }
 
   @override
+  void dispose() {
+    _viewModel.removeListener(_errorListener);
+    super.dispose();
+  }
+
+  void _showErrorDialog(String message) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Atención'),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('Cerrar'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
   Widget build(BuildContext context) {
+    // Usamos watch para reaccionar a los cambios de pdfBytes y status
     final vm = context.watch<EvidenceFlowViewModel>();
 
     return Scaffold(
       backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text('Vista previa del PDF a enviar',
+        title: const Text('Vista previa',
             style: TextStyle(color: Colors.white, fontSize: 18)),
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: primaryGreen,
         elevation: 0,
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.red),
-                  ),
-                )
-              : SafeArea(
-                  child: Column(
-                    children: [
-                      /// 📄 PDF
-                      Expanded(
-                        child: PdfPreview(
-                          build: (format) async => _pdfBytes!,
-                          canChangePageFormat: false,
-                          canChangeOrientation: false,
-                          allowPrinting: false,
-                          allowSharing: false,
-                        ),
-                      ),
-
-                      /// 🚀 ENVIAR
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: vm.isSending
-                                ? null
-                                : () async {
-                                    final ok = true;
-                                    await vm.sendEvidences(_pdfBytes!);
-
-                                    if (ok && context.mounted) {
-                                      Navigator.of(context).popUntil((route) =>
-                                          route.settings.name ==
-                                          '/flow_evidencias');
-                                      Navigator.of(context).pop();
-                                      // if (context.mounted) {
-                                      //   Navigator.of(context).pop();
-                                      // }
-                                    }
-                                    //else if (!ok && context.mounted) {
-                                    //   showDialog<String>(
-                                    //     context: context,
-                                    //     builder: (BuildContext context) =>
-                                    //         AlertDialog(
-                                    //       shape: RoundedRectangleBorder(
-                                    //           borderRadius:
-                                    //               BorderRadius.circular(16)),
-                                    //       titlePadding: const EdgeInsets.only(
-                                    //           top: 24, left: 24, right: 24),
-                                    //       title: Row(
-                                    //         children: [
-                                    //           Icon(Icons.error_outline,
-                                    //               color: Theme.of(context)
-                                    //                   .colorScheme
-                                    //                   .error),
-                                    //           const SizedBox(width: 12),
-                                    //           const Text(
-                                    //               'Error al enviar las evidencias',
-                                    //               style: TextStyle(
-                                    //                 fontSize: 18,
-                                    //               )),
-                                    //         ],
-                                    //       ),
-                                    //       content: Text(
-                                    //         vm.errorMessage ??
-                                    //             'Ha ocurrido un error inesperado al enviar las evidencias.',
-                                    //         style:
-                                    //             const TextStyle(fontSize: 16),
-                                    //       ),
-                                    //       actionsPadding:
-                                    //           const EdgeInsets.all(16),
-                                    //       actions: [
-                                    //         FilledButton.tonal(
-                                    //           onPressed: () =>
-                                    //               Navigator.pop(context),
-                                    //           child: const Text('Cerrar'),
-                                    //         ),
-                                    //       ],
-                                    //     ),
-                                    //   );
-                                    // }
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryGreen,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                            ),
-                            child: vm.isSending
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                : const Text('Enviar evidencias',
-                                    style: TextStyle(color: Colors.white)),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+      body: _buildBody(vm),
     );
+  }
+
+  Widget _buildBody(EvidenceFlowViewModel vm) {
+    // 1. Estado de carga (Mientras se genera el PDF)
+    if (vm.pdfBytes == null && vm.status == EvidenceFlowStatus.scanning) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
+    // 2. Si no hay PDF y no está cargando, algo falló
+    if (vm.pdfBytes == null) {
+      return const Center(
+          child: Text(
+              "No se pudo generar el PDF. Intenta capturar las fotos de nuevo."));
+    }
+
+    // 3. Contenido Principal
+    return SafeArea(
+      child: Column(
+        children: [
+          Expanded(
+            child: PdfPreview(
+              // Usamos directamente los bytes del VM
+              build: (format) async => vm.pdfBytes!,
+              canChangePageFormat: false,
+              canChangeOrientation: false,
+              allowPrinting: false,
+              allowSharing: false,
+              // Optimización: No mostrar controles innecesarios
+              maxPageWidth: 700,
+            ),
+          ),
+          _buildActionFooter(vm),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildActionFooter(EvidenceFlowViewModel vm) {
+    return Padding(
+      padding: const EdgeInsets.all(20),
+      child: SizedBox(
+        width: double.infinity,
+        height: 50,
+        child: ElevatedButton(
+          onPressed: vm.isSending ? null : () => _handleSend(vm),
+          style: ElevatedButton.styleFrom(
+            backgroundColor: primaryGreen,
+            shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(100)),
+          ),
+          child: vm.isSending
+              ? const SizedBox(
+                  height: 20,
+                  width: 20,
+                  child: CircularProgressIndicator(
+                      color: Colors.white, strokeWidth: 2),
+                )
+              : const Text('Enviar reporte final',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _handleSend(EvidenceFlowViewModel vm) async {
+    final success = await vm.sendEvidences();
+
+    if (success && mounted) {
+      // 🚩 Senior Tip: Navegación limpia. Volvemos al inicio del flujo.
+      Navigator.of(context)
+          .popUntil((route) => route.settings.name == '/flow_evidencias');
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("✅ Evidencias enviadas con éxito")),
+      );
+    }
   }
 }

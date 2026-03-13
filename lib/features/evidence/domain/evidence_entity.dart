@@ -1,11 +1,9 @@
-import 'dart:typed_data';
-
 class EvidenceEntity {
-  final String filename; // uuid local
-  final Uint8List bytes;
+  final String filename;
+  final String path;
 
   EvidenceEntity({
     required this.filename,
-    required this.bytes,
+    required this.path,
   });
 }

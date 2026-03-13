@@ -6,25 +6,6 @@ class EvidenceRemoteDataSource {
 
   EvidenceRemoteDataSource(this._dio);
 
-  // Future<void> postEvidence(Map<String, dynamic> body) async {
-  //   try {
-  //     final response = await _dio.post(
-  //       'index.php',
-  //       queryParameters: {'r': 'esegadi/evidenciaspost'},
-  //       data: body,
-  //     );
-
-  //     if (response.data is Map && response.data['success'] == false) {
-  //       throw ApiException(response.data['message'] ??
-  //           'Ha ocurrido un error al enviar evidencias');
-  //     }
-  //   } on DioException catch (e) {
-  //     throw ApiException.fromDioError(e);
-  //   } catch (e) {
-  //     throw ApiException("Error inesperado al enviar evidencias");
-  //   }
-  // }
-
   Future<void> postEvidence(Map<String, dynamic> body) async {
     try {
       final response = await _dio.post(
@@ -33,20 +14,32 @@ class EvidenceRemoteDataSource {
         data: body,
       );
 
-      // Validamos el campo 'success' o la existencia de errores en el mapa
-      if (response.data is Map) {
-        if (response.data['success'] == false ||
-            response.data.containsKey('error_message')) {
-          throw ApiException(response.data['error_message'] ??
-              response.data['message'] ??
-              'Error al procesar la evidencia');
-        }
-      }
+      // 🚩 Senior Tip: Validamos la respuesta exitosa
+      _validateResponse(response.data);
     } on DioException catch (e) {
-      // Esto usará la lógica de fromDioError que extrae el JSON del servidor
+      // 🚩 Esto garantiza que ApiException.fromDioError extraiga el JSON del 401
       throw ApiException.fromDioError(e);
+    } on ApiException {
+      // 🚩 Si nosotros lanzamos la excepción en _validateResponse, que siga su camino
+      rethrow;
     } catch (e) {
-      throw ApiException("Error inesperado al enviar evidencias");
+      // Errores de casteo o lógica inesperada
+      throw ApiException("Error inesperado: ${e.toString()}");
+    }
+  }
+
+  /// Separa la lógica de validación del flujo principal (Clean Code)
+  void _validateResponse(dynamic data) {
+    if (data is Map<String, dynamic>) {
+      final bool success = data['success'] ?? true;
+      final hasError = data.containsKey('error_message') ||
+          data.containsKey('message') && data['success'] == false;
+
+      if (!success || hasError) {
+        throw ApiException(data['error_message']?.toString() ??
+            data['message']?.toString() ??
+            'Error al procesar la evidencia');
+      }
     }
   }
 }

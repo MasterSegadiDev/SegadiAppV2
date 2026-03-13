@@ -1,51 +1,10 @@
-import 'dart:typed_data';
-
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/trip_closure/presentation/viewmodels/trip_closure_viewmodel.dart';
 
-class PdfPreviewPage extends StatefulWidget {
+class PdfPreviewPage extends StatelessWidget {
   const PdfPreviewPage({super.key});
-
-  @override
-  State<PdfPreviewPage> createState() => _PdfPreviewPageState();
-}
-
-class _PdfPreviewPageState extends State<PdfPreviewPage> {
-  final Color primaryGreen = const Color(0xFF2C522A);
-  Uint8List? _pdfBytes;
-  bool _isLoading = true;
-  String? _error;
-
-  @override
-  void initState() {
-    super.initState();
-    _generatePdf();
-  }
-
-  Future<void> _generatePdf() async {
-    try {
-      final vm = context.read<TripClosureViewModel>();
-
-      final bytes = await vm.generatePdf();
-
-      if (!mounted) return;
-
-      setState(() {
-        _pdfBytes = bytes;
-        _isLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _error = e.toString();
-        _isLoading = false;
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -53,91 +12,75 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Vista previa del PDF',
-          style: TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Confirmar Documento'),
         backgroundColor: const Color(0xFF2C522A),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _error != null
-              ? Center(
-                  child: Text(
-                    _error!,
-                    style: const TextStyle(color: Colors.red),
+      body: Column(
+        children: [
+          // Visualizador de PDF
+          Expanded(
+            child: vm.pdfBytes == null
+                ? const Center(child: CircularProgressIndicator())
+                : PdfPreview(
+                    build: (_) => vm.pdfBytes!,
+                    allowPrinting: false,
+                    allowSharing: false,
+                    canChangePageFormat: false,
                   ),
-                )
-              : SafeArea(
-                  child: Column(
-                    children: [
-                      /// 📄 PDF
-                      Expanded(
-                        child: PdfPreview(
-                          build: (format) async => _pdfBytes!,
-                          canChangePageFormat: false,
-                          canChangeOrientation: false,
-                          allowPrinting: false,
-                          allowSharing: false,
-                        ),
-                      ),
+          ),
 
-                      /// 🚀 ENVIAR
-                      Padding(
-                        padding: const EdgeInsets.all(16),
-                        child: SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: vm.isSending
-                                ? null
-                                : () async {
-                                    final ok = await vm.sendTripClosure(
-                                        pdfBytes: _pdfBytes!, id: vm.id);
-
-                                    if (ok && context.mounted) {
-                                      // 1. Cerramos la vista previa y devolvemos TRUE
-                                      Navigator.of(context).pop(true);
-                                    } else if (!ok && context.mounted) {
-                                      showCupertinoDialog(
-                                        context: context,
-                                        builder: (ctx) => CupertinoAlertDialog(
-                                          title: const Text(
-                                              'Ha ocurrido un error'),
-                                          content: Text(vm.errorMessage ??
-                                              'Error desconocido al enviar la captura del documento.'),
-                                          actions: [
-                                            CupertinoDialogAction(
-                                              child: const Text('Aceptar'),
-                                              onPressed: () =>
-                                                  Navigator.pop(ctx),
-                                            ),
-                                          ],
-                                        ),
-                                      );
-                                    }
-                                  },
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: primaryGreen,
-                              padding: const EdgeInsets.symmetric(vertical: 14),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(100),
-                              ),
-                            ),
-                            child: vm.isSending
-                                ? const CircularProgressIndicator(
-                                    color: Colors.white,
-                                  )
-                                : const Text(
-                                    'Enviar',
-                                    style: TextStyle(color: Colors.white),
-                                  ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+          // Botón de Envío Final
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: SizedBox(
+              width: double.infinity,
+              height: 50,
+              child: ElevatedButton(
+                onPressed: vm.isSending ? null : () => _handleSend(context, vm),
+                style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFF2C522A)),
+                child: vm.isSending
+                    ? const CircularProgressIndicator(color: Colors.white)
+                    : const Text("FINALIZAR Y ENVIAR",
+                        style: TextStyle(
+                            color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
+  }
+
+  Future<void> _handleSend(
+      BuildContext context, TripClosureViewModel vm) async {
+    final success = await vm.sendTripClosure();
+
+    if (!context.mounted) return;
+
+    if (success) {
+      // Limpiamos el stack y volvemos al inicio (donde están las remisiones)
+      Navigator.of(context).popUntil((route) => route.isFirst);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text("✅ EIR enviado correctamente"),
+            backgroundColor: Colors.green),
+      );
+    } else {
+      // Mostrar error si falla
+      showDialog(
+        context: context,
+        builder: (_) => AlertDialog(
+          title: const Text("Error"),
+          content: Text(vm.errorMessage ?? "Ocurrió un error inesperado"),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(context),
+                child: const Text("Cerrar"))
+          ],
+        ),
+      );
+    }
   }
 }

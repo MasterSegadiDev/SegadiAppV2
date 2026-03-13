@@ -5,6 +5,8 @@ import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/core/network/dio_client.dart';
 import 'package:segadi/core/network/network_info.dart';
+import 'package:segadi/features/evidence/presentation/pages/confirm_evidence_page.dart';
+import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
 import 'package:segadi/features/firebase_cloud_messaging.dart/data/datasources/fcm_datasource.dart';
 import 'package:segadi/features/firebase_cloud_messaging.dart/data/repositories/service_repository_impl.dart';
 import 'package:segadi/features/firebase_cloud_messaging.dart/domain/usecases/listen_service_update.dart';
@@ -37,8 +39,11 @@ import 'package:segadi/features/travel_expenses/domain/usecases/get_evidence_ima
 import 'package:segadi/features/travel_expenses/domain/usecases/travel_expenses_usecases.dart';
 import 'package:segadi/features/travel_expenses/presentation/viewmodels/travel_expenses_view_model.dart';
 import 'package:segadi/features/travel_expenses/presentation/views/travel_expenses_screen.dart';
+import 'package:segadi/features/trip_closure/data/datasources/trip_closure_remote_datasource.dart';
+import 'package:segadi/features/trip_closure/data/trip_closure_repository_impl.dart';
+import 'package:segadi/features/trip_closure/domain/trip_closure_repository.dart';
+import 'package:segadi/features/trip_closure/presentation/viewmodels/trip_closure_viewmodel.dart';
 import 'package:segadi/features/trip_closure/presentation/widget/trip_closure_flow_page.dart';
-import 'package:segadi/features/evidence/presentation/pages/widgets/flow_evidence_page.dart';
 
 // ========================
 // CORE / OTROS
@@ -85,6 +90,7 @@ import 'package:segadi/viewmodels/home/home_view_model.dart';
 /////  FIREBASE PACKAGE //////
 /////////////////////////////
 import 'package:firebase_core/firebase_core.dart';
+import 'core/utils/mobile_document_scanner.dart';
 import 'firebase_options.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 
@@ -255,6 +261,19 @@ class MyApp extends StatelessWidget {
             );
           },
         ),
+
+        ProxyProvider<DioClient, TripClosureRepository>(
+          update: (_, dioClient, __) => TripClosureRepositoryImpl(
+            TripClosureRemoteDataSource(dioClient.dio),
+          ),
+        ),
+
+        ChangeNotifierProvider(
+          create: (context) => TripClosureViewModel(
+            repository: context.read<TripClosureRepository>(),
+            scanner: MobileDocumentScanner(),
+          ),
+        ),
         // ========================
         // SERVICES (CLEAN + MVVM)
         // ========================
@@ -335,7 +354,15 @@ class MyApp extends StatelessWidget {
 
           '/evidence_flow': (context) {
             final serviceId = ModalRoute.of(context)!.settings.arguments as int;
-            return EvidenceFlowPage(serviceId: serviceId);
+
+            // 1. Buscamos el ViewModel que YA EXISTE en el main y le damos el ID
+            // SIN crear uno nuevo.
+            final vm = context.read<EvidenceFlowViewModel>();
+            vm.startNewFlow(serviceId);
+
+            // 2. Retornamos la página directamente.
+            // Ella buscará al "abuelo" (el main) para sacar los datos.
+            return const ConfirmEvidencePage();
           },
 
           '/trip-closure': (_) => const TripClosureFlowPage(),

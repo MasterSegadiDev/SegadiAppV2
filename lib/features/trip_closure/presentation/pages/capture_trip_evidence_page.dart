@@ -1,200 +1,135 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/features/trip_closure/presentation/pages/pdf_preview_page.dart';
 import '../viewmodels/trip_closure_viewmodel.dart';
 
 class CaptureTripEvidencePage extends StatelessWidget {
   const CaptureTripEvidencePage({super.key});
-  final Color primaryGreen = const Color(0xFF2C522A);
 
   @override
   Widget build(BuildContext context) {
-    // Usamos TripClosureViewModel como en tu código original
+    // Escuchamos el ViewModel global
     final vm = context.watch<TripClosureViewModel>();
 
-    final width = MediaQuery.of(context).size.width;
-    final responsiveFontSize = width * 0.030;
-
     return Scaffold(
-      backgroundColor: Colors.grey[100],
       appBar: AppBar(
-        title: const Text(
-          'Enviar EIR ',
-          style: TextStyle(color: Colors.white),
-        ),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: Text('Evidencias EIR - ${vm.serviceId}'),
         backgroundColor: const Color(0xFF2C522A),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-          child: Column(
-            children: [
-              /// 🔹 GRID DE IMÁGENES
-              Expanded(
-                child: vm.images.isEmpty
-                    ? _buildEmptyState()
-                    : GridView.builder(
-                        padding: const EdgeInsets.only(bottom: 20),
-                        gridDelegate:
-                            const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          crossAxisSpacing: 12,
-                          mainAxisSpacing: 12,
-                        ),
-                        itemCount: vm.images.length,
-                        itemBuilder: (_, index) {
-                          return ClipRRect(
-                            borderRadius: BorderRadius.circular(12),
-                            child: Stack(
-                              fit: StackFit.expand,
-                              children: [
-                                Image.memory(
-                                  vm.images[index],
-                                  fit: BoxFit.cover,
-                                ),
-                                // Botón para eliminar imagen
-                                Positioned(
-                                  top: 6,
-                                  right: 6,
-                                  child: GestureDetector(
-                                    onTap: () => vm.removeImage(
-                                        index), // Asegúrate de tener este método en tu VM
-                                    child: Container(
-                                      decoration: const BoxDecoration(
-                                        color: Colors.black54,
-                                        shape: BoxShape.circle,
-                                      ),
-                                      padding: const EdgeInsets.all(5),
-                                      child: const Icon(
-                                        Icons.close,
-                                        color: Colors.white,
-                                        size: 18,
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          );
-                        },
-                      ),
-              ),
-
-              const SizedBox(height: 12),
-
-              /// 🔹 BOTONES HORIZONTALES
-              Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Row(
-                  children: [
-                    /// BOTÓN ESCANEAR (Naranja)
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          await vm.captureImage();
-                        },
-                        icon: Icon(
-                          Icons.document_scanner,
-                          size: responsiveFontSize + 4,
-                        ),
-                        label: Text(
-                          "Escanear",
-                          style: TextStyle(fontSize: responsiveFontSize),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.orangeAccent,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(width: 10),
-
-                    /// BOTÓN CONTINUAR (Verde)
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: vm.images.isNotEmpty
-                            ? () async {
-                                await vm.generatePdf();
-                                if (!context.mounted) return;
-
-                                final result = await Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (_) =>
-                                        ChangeNotifierProvider.value(
-                                      value: vm,
-                                      child: const PdfPreviewPage(),
-                                    ),
-                                  ),
-                                );
-
-                                // ESTA PARTE ES CRÍTICA:
-                                if (result == true && context.mounted) {
-                                  print(
-                                      "PDF enviado con éxito, cerrando flujo de evidencias...");
-                                  Navigator.of(context).pop(
-                                      true); // <--- DEBE REGRESAR TRUE AL DETALLE
-                                }
-                              }
-                            : null,
-                        icon: Icon(
-                          Icons.arrow_forward,
-                          size: responsiveFontSize + 4,
-                        ),
-                        label: Text(
-                          "Continuar",
-                          style: TextStyle(fontSize: responsiveFontSize),
-                        ),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: vm.images.isNotEmpty
-                              ? primaryGreen
-                              : Colors.grey.shade400,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(100),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+      body: Column(
+        children: [
+          // 1. Grid de imágenes con scroll
+          Expanded(
+            child: vm.images.isEmpty ? _buildEmptyState() : _ImagesGrid(vm: vm),
           ),
-        ),
+
+          // 2. Panel de control inferior
+          _BottomPanel(vm: vm),
+        ],
       ),
     );
   }
 
-  /// 🔹 ESTADO VACÍO
   Widget _buildEmptyState() {
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          Icons.camera_alt_outlined,
-          size: 70,
-          color: Colors.grey.shade400,
-        ),
-        const SizedBox(height: 10),
-        const Text(
-          "Captura tu EIR para enviarlo al sistema",
-          style: TextStyle(
-              fontSize: 16, color: Colors.grey, fontWeight: FontWeight.bold),
-        ),
-        const SizedBox(height: 5),
-        const Text(
-          "Captura las fotos necesarias para finalizar",
-          style: TextStyle(fontSize: 14, color: Colors.grey),
-        ),
-      ],
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: const [
+          Icon(Icons.camera_enhance_outlined, size: 70, color: Colors.grey),
+          SizedBox(height: 16),
+          Text("No has capturado evidencias",
+              style: TextStyle(color: Colors.grey)),
+        ],
+      ),
+    );
+  }
+}
+
+class _ImagesGrid extends StatelessWidget {
+  final TripClosureViewModel vm;
+  const _ImagesGrid({required this.vm});
+
+  @override
+  Widget build(BuildContext context) {
+    return GridView.builder(
+      padding: const EdgeInsets.all(12),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+      ),
+      itemCount: vm.images.length,
+      itemBuilder: (_, i) => Stack(
+        fit: StackFit.expand,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(12),
+            child: Image.memory(vm.images[i], fit: BoxFit.cover),
+          ),
+          Positioned(
+            top: 5,
+            right: 5,
+            child: GestureDetector(
+              onTap: vm.isSending ? null : () => vm.removeImage(i),
+              child: Container(
+                decoration: const BoxDecoration(
+                    color: Colors.white, shape: BoxShape.circle),
+                child: const Icon(Icons.remove_circle, color: Colors.red),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _BottomPanel extends StatelessWidget {
+  final TripClosureViewModel vm;
+  const _BottomPanel({required this.vm});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        boxShadow: [BoxShadow(color: Colors.black12, blurRadius: 10)],
+      ),
+      child: Row(
+        children: [
+          // Botón Escanear
+          Expanded(
+            child: OutlinedButton.icon(
+              onPressed: vm.isSending ? null : () => vm.captureImage(),
+              icon: vm.isSending
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(strokeWidth: 2))
+                  : const Icon(Icons.document_scanner),
+              label: const Text("Escanear"),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Botón Continuar
+          Expanded(
+            child: ElevatedButton(
+              onPressed: (vm.images.isEmpty || vm.isSending)
+                  ? null
+                  : () async {
+                      await vm.preparePdf();
+                      if (context.mounted) {
+                        Navigator.pushNamed(context, '/pdf_preview');
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2C522A)),
+              child: const Text("Vista Previa",
+                  style: TextStyle(color: Colors.white)),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

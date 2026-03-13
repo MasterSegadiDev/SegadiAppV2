@@ -25,8 +25,6 @@ class TripClosureFlowPage extends StatelessWidget {
           TripClosureRemoteDataSource(dio),
         ),
         scanner: MobileDocumentScanner(),
-        id: id,
-        serviceId: serviceId,
       ),
       child: const CaptureTripEvidencePage(),
     );

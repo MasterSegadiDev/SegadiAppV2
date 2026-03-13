@@ -1,171 +1,46 @@
 import 'dart:io';
+import 'package:flutter/material.dart';
+
 import 'package:flutter/foundation.dart';
 import 'package:cunning_document_scanner/cunning_document_scanner.dart';
-import 'package:flutter/material.dart';
-import 'package:segadi/core/network/api_exceptions.dart';
+
 import 'package:segadi/features/evidence/domain/repositories/evidence_repository.dart';
 import 'package:segadi/features/evidence/presentation/pages/widgets/evidence_pdf_generator.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
 import '../../domain/evidence_entity.dart';
 
+/// Estatus del flujo de evidencias
 enum EvidenceFlowStatus { idle, scanning, error, sending, success }
 
 class EvidenceFlowViewModel extends ChangeNotifier {
-  final int id;
-
-  // final SendEvidenceUseCase sendEvidenceUseCase;
+  int _id;
   final EvidenceRepository repository;
   final DetailServiceRepositoryImpl detailServiceApi;
 
   EvidenceFlowViewModel({
-    required this.id,
+    required int id,
     required this.repository,
     required this.detailServiceApi,
-  });
+  }) : _id = id;
 
+  int get id => _id;
+
+  // Control de ciclo de vida
   bool _isDisposed = false;
 
-  /// 🔹 Evidencias
+  // ---------------------------------------------------------
+  // EVIDENCIAS (Imágenes)
+  // ---------------------------------------------------------
   final List<EvidenceEntity> _evidences = [];
   List<EvidenceEntity> get evidences => List.unmodifiable(_evidences);
 
-  /// 🔹 Estado
-  EvidenceFlowStatus _status = EvidenceFlowStatus.idle;
-  EvidenceFlowStatus get status => _status;
-
-  String? _errorMessage;
-  String? get errorMessage => _errorMessage;
-
   static const int _maxEvidences = 5;
-
-  //////pdf preview page
-  Uint8List? _pdfBytes;
-  Uint8List? get pdfBytes => _pdfBytes;
-
-  @override
-  void dispose() {
-    _isDisposed = true;
-    super.dispose();
-  }
-
-  @override
-  void notifyListeners() {
-    if (!_isDisposed) {
-      super.notifyListeners();
-    }
-  }
-
-  Future<void> scanFromCamera() async {
-    if (_status == EvidenceFlowStatus.scanning) return;
-    if (_evidences.length >= _maxEvidences) return;
-
-    _setStatus(EvidenceFlowStatus.scanning);
-
-    try {
-      // 1. LIMPIEZA PREVENTIVA: Liberamos caché de imágenes de Flutter antes de abrir la cámara
-      // Esto da aire a la GPU/RAM para el proceso del scanner.
-      PaintingBinding.instance.imageCache.clear();
-      PaintingBinding.instance.imageCache.clearLiveImages();
-
-      final List<String>? paths = await CunningDocumentScanner.getPictures(
-        noOfPages: _maxEvidences - _evidences.length,
-        isGalleryImportAllowed: false,
-      );
-
-      if (paths == null || paths.isEmpty) {
-        _setStatus(EvidenceFlowStatus.idle);
-        return;
-      }
-
-      // 2. PEQUEÑA PAUSA TÉCNICA
-      // Damos tiempo al sistema para cerrar la interfaz de la cámara antes de procesar bytes pesados
-      await Future.delayed(const Duration(milliseconds: 300));
-
-      for (final path in paths) {
-        final file = File(path);
-        if (!await file.exists()) continue;
-
-        // 3. PROCESAMIENTO SEGURO
-        // Leemos los bytes pero envolviéndolo en un try por si el archivo está bloqueado
-        try {
-          final bytes = await file.readAsBytes();
-
-          _evidences.add(
-            EvidenceEntity(
-              bytes: bytes,
-              filename: file.uri.pathSegments.last,
-            ),
-          );
-
-          // 4. LIBERACIÓN DE MEMORIA NATIVA
-          // Borramos el archivo físico para que la memoria del teléfono no se llene
-          await file.delete();
-        } catch (e) {
-          debugPrint("⚠️ Error procesando archivo individual: $e");
-        }
-      }
-
-      // 5. NOTIFICACIÓN FINAL SEGURA
-      // Usamos addPostFrameCallback si el error de "widget tree locked" persiste
-      _setStatus(EvidenceFlowStatus.idle);
-    } catch (e) {
-      debugPrint("❌ Crash en scanner: $e");
-      _errorMessage =
-          'Error al escanear: memoria insuficiente o fallo de cámara';
-      _setStatus(EvidenceFlowStatus.error);
-    }
-  }
-
-  void reset() {
-    _evidences.clear(); // Limpia las fotos escaneadas
-    _signatureBytes = null; // Limpia la firma
-    _receiverName = ''; // Limpia el nombre
-    _pdfBytes = null; // Limpia el PDF generado
-    _errorMessage = null;
-    _status = EvidenceFlowStatus.idle;
-    notifyListeners();
-    debugPrint("Flujo de evidencias reseteado y memoria liberada.");
-  }
-
-  void initCaptureFlow({bool notify = true}) {
-    _evidences.clear();
-    _pdfBytes = null;
-    _errorMessage = null;
-    _status = EvidenceFlowStatus.idle;
-
-    // Limpieza de caché de imágenes
-    PaintingBinding.instance.imageCache.clear();
-    PaintingBinding.instance.imageCache.clearLiveImages();
-
-    // 🚩 LA CLAVE: Solo notificamos si no estamos en un ciclo de vida crítico (como dispose)
-    if (notify) {
-      notifyListeners();
-    }
-
-    debugPrint("🚀 Datos reseteados (Notificación: $notify)");
-  }
-
-  /// 🔹 Eliminar evidencia
-  void removeEvidence(int index) {
-    if (index < 0 || index >= _evidences.length) return;
-
-    _evidences.removeAt(index);
-    notifyListeners();
-  }
-
-  /// 🔹 Validaciones
   bool get hasEvidences => _evidences.isNotEmpty;
   bool get canScanMore => _evidences.length < _maxEvidences;
 
-  void _setStatus(EvidenceFlowStatus status) {
-    _status = status;
-    notifyListeners();
-  }
-
-  // ========================
-// CONFIRMACIÓN
-// ========================
-
+  // ---------------------------------------------------------
+  // DATOS DE CONFIRMACIÓN (Firma y Nombre)
+  // ---------------------------------------------------------
   String _receiverName = '';
   String get receiverName => _receiverName;
 
@@ -175,175 +50,253 @@ class EvidenceFlowViewModel extends ChangeNotifier {
   final DateTime _confirmationDate = DateTime.now();
   DateTime get confirmationDate => _confirmationDate;
 
-  void updateReceiverName(String value) {
-    _receiverName = value;
-    notifyListeners(); // Esto activa el botón cuando escriben
+  // ---------------------------------------------------------
+  // RESULTADO DEL PROCESAMIENTO (PDF)
+  // ---------------------------------------------------------
+  Uint8List? _pdfBytes;
+  Uint8List? get pdfBytes => _pdfBytes;
+
+  // ---------------------------------------------------------
+  // ESTADO DE LA UI
+  // ---------------------------------------------------------
+  EvidenceFlowStatus _status = EvidenceFlowStatus.idle;
+  EvidenceFlowStatus get status => _status;
+
+  String? _errorMessage;
+  String? get errorMessage => _errorMessage;
+
+  bool get isSending => _status == EvidenceFlowStatus.sending;
+
+  //bool get hasSignature => signatureBytes != null && signatureBytes!.isNotEmpty;
+  bool get hasSignature => _signatureBytes != null;
+  // =========================================================
+  // PROTOCOLO DE LIMPIEZA (Manejo Senior de Memoria)
+  // =========================================================
+
+  void startNewFlow(int serviceId) {
+    _id = serviceId; // Asignamos el ID de la remisión actual
+
+    // Limpieza total de datos previos
+    _signatureBytes = null;
+    _pdfBytes = null;
+    _receiverName = "";
+    _errorMessage = null;
+    _evidences.clear(); // Borra la lista de fotos
+
+    _status = EvidenceFlowStatus.idle;
+
+    print("✅ Flujo inicializado para la remisión: $_id");
+    notifyListeners(); // Avisamos a las pantallas que todo está en cero
   }
 
-  void updateSignature(Uint8List? bytes) {
-    if (bytes == null || bytes.isEmpty) {
-      _signatureBytes = null;
-    } else {
-      _signatureBytes = bytes;
+  /// Libera la RAM de imágenes que Flutter mantiene en caché
+  void _clearRamCache() {
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    debugPrint("🧠 RAM: Caché de imágenes liberada");
+  }
+
+  /// Borra físicamente los archivos .jpg del almacenamiento del teléfono
+  Future<void> _clearDiskFiles() async {
+    for (final evidence in _evidences) {
+      try {
+        final file = File(evidence.path);
+        if (await file.exists()) {
+          await file.delete();
+          debugPrint("🗑️ DISCO: Archivo eliminado: ${evidence.path}");
+        }
+      } catch (e) {
+        debugPrint("❌ Error eliminando archivo físico: $e");
+      }
     }
-    notifyListeners(); // Esto activa el botón cuando firman
   }
 
-  bool get hasSignature => signatureBytes != null && signatureBytes!.isNotEmpty;
-
-  Future<void> saveSignature(Uint8List bytes) async {
-    _signatureBytes = bytes;
+  /// Resetea el flujo completo y limpia memoria
+  Future<void> reset() async {
+    await _clearDiskFiles();
+    _evidences.clear();
+    _pdfBytes = null;
+    _signatureBytes = null;
+    _receiverName = '';
+    _errorMessage = null;
+    _status = EvidenceFlowStatus.idle;
+    _clearRamCache();
     notifyListeners();
   }
 
-  bool get isConfirmationValid {
-    final hasName = _receiverName.trim().length > 3; // Al menos 4 caracteres
-    final hasSign = _signatureBytes != null && _signatureBytes!.isNotEmpty;
-    return hasName && hasSign;
-  }
-  ///////////////////////////////////
-  ////  GENERAR PDF
-  //////////////////////////////////
-
-  Future<Uint8List> generatePdf() async {
-    return EvidencePdfGenerator.generate(
-      serviceId: id,
-      evidences: evidences,
-      receiverName: receiverName,
-      confirmationDate: confirmationDate,
-      //signatureBytes: signatureBytes!,
-    );
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _clearDiskFiles(); // Limpia archivos al cerrar la pantalla
+    _clearRamCache(); // Limpia RAM
+    super.dispose();
   }
 
-  Future<void> buildPdf() async {
-    _pdfBytes = await EvidencePdfGenerator.generate(
-      serviceId: id,
-      evidences: evidences,
-      receiverName: receiverName,
-      confirmationDate: confirmationDate,
-    );
-    notifyListeners();
+  // =========================================================
+  // ACCIONES DEL FLUJO
+  // =========================================================
+
+  /// Captura de imágenes desde la cámara
+  Future<void> scanFromCamera() async {
+    if (_status == EvidenceFlowStatus.scanning) return;
+    _setStatus(EvidenceFlowStatus.scanning);
+
+    try {
+      _clearRamCache(); // Dar aire a la RAM antes de abrir cámara
+
+      final List<String>? paths = await CunningDocumentScanner.getPictures(
+        noOfPages: _maxEvidences - _evidences.length,
+        isGalleryImportAllowed: false,
+      );
+
+      if (paths != null && paths.isNotEmpty) {
+        for (final path in paths) {
+          _evidences.add(EvidenceEntity(
+            path: path,
+            filename: path.split('/').last,
+          ));
+        }
+      }
+      _setStatus(EvidenceFlowStatus.idle);
+    } catch (e) {
+      _errorMessage = 'Fallo en cámara o memoria insuficiente';
+      _setStatus(EvidenceFlowStatus.error);
+    }
   }
 
-  bool isSending = false;
+  void removeEvidence(int index) async {
+    if (index < 0 || index >= _evidences.length) return;
 
-  // Future<bool> sendEvidences(Uint8List pdfBytes) async {
-  //   if (signatureBytes == null) return false;
-
-  //   isSending = true;
-  //   notifyListeners();
-
-  //   try {
-  //     // 1. Envíos de archivos
-  //     await repository.sendPdf(
-  //       serviceId: id,
-  //       pdfBytes: pdfBytes,
-  //       receiverName: receiverName,
-  //       receiverDate: confirmationDate,
-  //     );
-
-  //     await repository.sendSignature(
-  //       serviceId: id,
-  //       signatureBytes: signatureBytes!,
-  //       receiverName: receiverName,
-  //       receiverDate: confirmationDate,
-  //     );
-
-  //     // 2. Cambio de estatus (Manejo de Either)
-  //     final result = await detailServiceApi.changeStatus(
-  //       serviceId: id,
-  //       statusId: 10,
-  //     );
-
-  //     // Usamos fold para "abrir" la caja del Either
-  //     bool isStatusOk = result.fold(
-  //       (failure) {
-  //         debugPrint('❌ Error de red/servidor: ${failure.message}');
-  //         return false;
-  //       },
-  //       (apiResponse) {
-  //         if (apiResponse.success) {
-  //           debugPrint('✅ Estatus insertado con éxito: ${apiResponse.message}');
-  //           return true;
-  //         } else {
-  //           debugPrint(
-  //               '⚠️ El servidor respondió error: ${apiResponse.message}');
-  //           return false;
-  //         }
-  //       },
-  //     );
-
-  //     return isStatusOk; // Retorna true solo si el estatus se cambió bien
-  //   } catch (e) {
-  //     debugPrint('❌ Error fatal enviando evidencias: $e');
-  //     return false;
-  //   } finally {
-  //     isSending = false;
-  //     notifyListeners();
-  //   }
-  // }
-
-  Future<bool> sendEvidences(Uint8List pdfBytes) async {
-    if (signatureBytes == null) return false;
-
-    isSending = true;
-    _errorMessage = null; // Limpiamos errores previos
+    final path = _evidences[index].path;
+    _evidences.removeAt(index);
     notifyListeners();
 
     try {
-      // 1. Envíos de archivos (Capturamos el mensaje de ApiException)
+      final file = File(path);
+      if (await file.exists()) await file.delete();
+    } catch (_) {}
+  }
+
+  /// Genera el PDF una sola vez y lo guarda en memoria
+  Future<void> buildPdf() async {
+    if (_evidences.isEmpty) return;
+    _setStatus(EvidenceFlowStatus.scanning);
+
+    try {
+      _pdfBytes = await EvidencePdfGenerator.generate(
+        serviceId: id,
+        evidences: evidences,
+        receiverName: receiverName,
+        confirmationDate: confirmationDate,
+      );
+      _setStatus(EvidenceFlowStatus.idle);
+    } catch (e) {
+      _errorMessage = "No se pudo generar el documento PDF";
+      _setStatus(EvidenceFlowStatus.error);
+    }
+  }
+
+  /// Envío final de evidencias
+  Future<bool> sendEvidences() async {
+    print("DEBUG: Iniciando envío de evidencias");
+    print("DEBUG: ID actual: $_id");
+    print("DEBUG: Firma presente: ${_signatureBytes != null}");
+    print("DEBUG: PDF generado: ${_pdfBytes != null}");
+    print("DEBUG: Cantidad de fotos: ${evidences.length}");
+
+    if (_pdfBytes == null || _signatureBytes == null) {
+      _errorMessage =
+          "Faltan documentos o firma (Firma: ${_signatureBytes != null}, PDF: ${_pdfBytes != null})";
+      _setStatus(EvidenceFlowStatus.error);
+      return false;
+    }
+
+    _setStatus(EvidenceFlowStatus.sending);
+
+    try {
+      // 1. Enviar archivos
       await repository.sendPdf(
         serviceId: id,
-        pdfBytes: pdfBytes,
+        pdfBytes: _pdfBytes!,
         receiverName: receiverName,
         receiverDate: confirmationDate,
       );
 
       await repository.sendSignature(
         serviceId: id,
-        signatureBytes: signatureBytes!,
+        signatureBytes: _signatureBytes!,
         receiverName: receiverName,
         receiverDate: confirmationDate,
       );
 
-      // 2. Cambio de estatus
-      final result = await detailServiceApi.changeStatus(
-        serviceId: id,
-        statusId: 10,
-      );
+      // 2. Cambiar estatus en el servidor
+      final result =
+          await detailServiceApi.changeStatus(serviceId: id, statusId: 10);
 
       return result.fold(
         (failure) {
-          _errorMessage = failure.message; // Aquí cae el error de red
-          notifyListeners();
+          _errorMessage = failure.message;
+          _setStatus(EvidenceFlowStatus.error);
           return false;
         },
-        // (apiResponse) {
-        //   if (apiResponse.success) return true;
-        //   _errorMessage = apiResponse.message;
-        //   reset(); // Aquí cae el error de negocio del API
-        //   notifyListeners();
-        //   return false;
-        // },
-        (apiResponse) {
+        (apiResponse) async {
           if (apiResponse.success) {
-            reset();
+            await reset(); // Limpiar todo tras el éxito
+            _setStatus(EvidenceFlowStatus.success);
             return true;
           }
           _errorMessage = apiResponse.message;
-          notifyListeners();
+          _setStatus(EvidenceFlowStatus.error);
           return false;
         },
       );
-    } on ApiException catch (e) {
-      _errorMessage = e.message; // "Existe un estatus de soporte iniciado..."
-      return false;
     } catch (e) {
-      _errorMessage = 'Error fatal: ${e.toString()}';
+      _errorMessage =
+          e.toString(); // Esto usará el toString() de tu ApiException
+      _setStatus(EvidenceFlowStatus.error);
+      debugPrint("❌ Error capturado en VM: $e");
       return false;
-    } finally {
-      isSending = false;
+    }
+  }
+
+  // =========================================================
+  // ACTUALIZACIÓN DE DATOS
+  // =========================================================
+
+  void updateReceiverName(String value) {
+    _receiverName = value;
+    notifyListeners();
+  }
+
+  void updateSignature(Uint8List? bytes) {
+    _signatureBytes = (bytes == null || bytes.isEmpty) ? null : bytes;
+    notifyListeners();
+  }
+
+  void clearError() {
+    _errorMessage = null;
+    _status = EvidenceFlowStatus.idle;
+    notifyListeners();
+  }
+
+  void _setStatus(EvidenceFlowStatus status) {
+    if (!_isDisposed) {
+      _status = status;
       notifyListeners();
     }
+  }
+
+  @override
+  void notifyListeners() {
+    if (!_isDisposed) super.notifyListeners();
+  }
+
+  void initCaptureFlow({bool notify = true}) {
+    _clearRamCache();
+    _evidences.clear();
+    _pdfBytes = null;
+    _errorMessage = null;
+    _status = EvidenceFlowStatus.idle;
+    if (notify) notifyListeners();
   }
 }

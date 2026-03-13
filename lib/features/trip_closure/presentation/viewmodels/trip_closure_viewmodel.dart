@@ -1,92 +1,176 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
-import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:segadi/features/trip_closure/domain/services/document_scanner.dart';
 import 'package:segadi/features/trip_closure/domain/trip_closure_repository.dart';
 import 'package:segadi/features/trip_closure/pdf/trip_pdf_generator.dart';
 
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:path_provider/path_provider.dart';
+
+enum TripClosureStatus { idle, loading, success, error }
+
 class TripClosureViewModel extends ChangeNotifier {
-  final int id;
-  final String serviceId;
   final TripClosureRepository repository;
   final DocumentScanner scanner;
 
   TripClosureViewModel({
     required this.repository,
     required this.scanner,
-    required this.id,
-    required this.serviceId,
   });
 
-  final List<Uint8List> images = [];
-  bool isSending = false;
-
+  // Estado y Control
+  TripClosureStatus _status = TripClosureStatus.idle;
   String? _errorMessage;
-  String? get errorMessage => _errorMessage;
+  bool _isDisposed = false;
 
-  void removeImage(int index) {
-    images.removeAt(index);
+  // Datos del Negocio
+  int _id = 0;
+  String _serviceId = "";
+  final List<Uint8List> _images = [];
+  Uint8List? _pdfBytes;
+
+  // Getters
+  int get id => _id;
+  String get serviceId => _serviceId;
+  TripClosureStatus get status => _status;
+  String? get errorMessage => _errorMessage;
+  bool get isSending => _status == TripClosureStatus.loading;
+  List<Uint8List> get images => _images;
+  Uint8List? get pdfBytes => _pdfBytes;
+
+  /// Inicializa el flujo
+  void startNewTripClosure(int newId, String newServiceId) {
+    _id = newId;
+    _serviceId = newServiceId;
+
+    // Limpiamos todo lo anterior explícitamente
+    _images.clear();
+    _pdfBytes = null;
+    _errorMessage = null;
+    _status = TripClosureStatus.idle;
+
+    _clearRamCache();
+    _clearDiskFiles(); // <--- Agrega esta llamada aquí también
     notifyListeners();
   }
 
+  /// Reset completo de datos
+  Future<void> reset() async {
+    _images.clear();
+    _pdfBytes = null;
+    _errorMessage = null;
+    _status = TripClosureStatus.idle;
+    _clearRamCache();
+    await _clearDiskFiles();
+    _safeNotify();
+  }
+
+  /// Captura de imagen con scanner
   Future<void> captureImage() async {
-    final image = await scanner.scan();
-    if (image != null) {
-      images.add(image);
+    if (_images.length >= 5) {
+      _errorMessage = "Límite de 5 imágenes alcanzado";
       notifyListeners();
+      return;
     }
-  }
 
-  Future<Uint8List> generatePdf() async {
-    return TripPdfGenerator.generate(images);
-  }
-
-  // Future<bool> sendTripClosure({
-  //   required Uint8List pdfBytes,
-  //   required int id,
-  // }) async {
-  //   isSending = true;
-  //   notifyListeners();
-
-  //   try {
-  //     await repository.sendTripClosure(
-  //       id: id,
-  //       pdfBytes: pdfBytes,
-  //     );
-  //     images.clear();
-  //     return true;
-  //   } catch (_) {
-  //     return false;
-  //   } finally {
-  //     isSending = false;
-  //     notifyListeners();
-  //   }
-  // }
-
-  Future<bool> sendTripClosure(
-      {required Uint8List pdfBytes, required int id}) async {
     try {
-      isSending = true;
-      _errorMessage = null; // Limpiamos errores previos
-      notifyListeners();
+      _status = TripClosureStatus.loading;
+      _errorMessage = null;
+      _safeNotify();
 
-      await repository.sendTripClosure(id: id, pdfBytes: pdfBytes);
+      final image = await scanner.scan();
 
-      isSending = false;
-      notifyListeners();
-      return true;
-    } on ApiException catch (e) {
-      isSending = false;
-      // 📢 Aquí capturamos el mensaje de "evidencias cerradas"
-      _errorMessage = e.message;
-      notifyListeners();
-      return false;
+      if (image != null) {
+        _images.add(image);
+        _clearRamCache(); // Limpia RAM al añadir imagen pesada
+        _status = TripClosureStatus.idle;
+      } else {
+        _status = TripClosureStatus.idle;
+      }
     } catch (e) {
-      isSending = false;
-      _errorMessage = "Error inesperado al procesar el envío.";
-      notifyListeners();
+      _status = TripClosureStatus.error;
+      _errorMessage = "Error al escanear: ${e.toString()}";
+    } finally {
+      _safeNotify();
+    }
+  }
+
+  void removeImage(int index) {
+    _images.removeAt(index);
+    _clearRamCache();
+    notifyListeners();
+  }
+
+  Future<void> preparePdf() async {
+    if (_images.isEmpty) return;
+    _status = TripClosureStatus.loading;
+    _safeNotify();
+
+    try {
+      _pdfBytes = await TripPdfGenerator.generate(_images);
+      _status = TripClosureStatus.idle;
+    } catch (e) {
+      _status = TripClosureStatus.error;
+      _errorMessage = "Error al generar PDF";
+    } finally {
+      _safeNotify();
+    }
+  }
+
+  Future<bool> sendTripClosure() async {
+    if (_pdfBytes == null) return false;
+
+    try {
+      _status = TripClosureStatus.loading;
+      _safeNotify();
+
+      await repository.sendTripClosure(id: _id, pdfBytes: _pdfBytes!);
+
+      _status = TripClosureStatus.success;
+      await reset();
+      return true;
+    } catch (e) {
+      _status = TripClosureStatus.error;
+      _errorMessage = e.toString();
+      _safeNotify();
       return false;
     }
+  }
+
+  // --- Herramientas de Limpieza ---
+
+  void _clearRamCache() {
+    PaintingBinding.instance.imageCache.clear();
+    PaintingBinding.instance.imageCache.clearLiveImages();
+    debugPrint("🧠 RAM: Caché de imágenes liberada");
+  }
+
+  Future<void> _clearDiskFiles() async {
+    try {
+      final cacheDir = await getTemporaryDirectory();
+      if (cacheDir.existsSync()) {
+        final files = cacheDir.listSync();
+        for (var file in files) {
+          if (file is File && file.path.endsWith('.jpg')) {
+            await file.delete();
+          }
+        }
+        debugPrint("🗑️ DISCO: Temporales limpiados");
+      }
+    } catch (e) {
+      debugPrint("❌ Error limpiando disco: $e");
+    }
+  }
+
+  void _safeNotify() {
+    if (!_isDisposed) notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    _isDisposed = true;
+    _clearRamCache();
+    _clearDiskFiles();
+    super.dispose();
   }
 }
