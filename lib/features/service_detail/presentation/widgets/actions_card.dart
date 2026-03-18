@@ -9,14 +9,17 @@ import 'package:segadi/features/check_list/data/datasources/checklist_remote_dat
 import 'package:segadi/features/check_list/data/repositories/checklist_repository_impl.dart';
 import 'package:segadi/features/check_list/presentation/pages/checklist_page.dart';
 import 'package:segadi/features/check_list/presentation/viewmodels/checklist_viewmodel.dart';
+import 'package:segadi/features/evidence/presentation/pages/capture_evidence_page.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_entity.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_permissions.dart';
-import 'package:segadi/features/service_detail/domain/helpers/detail_service_rules.dart';
 import 'package:segadi/features/service_detail/presentation/viewmodel/detail_service_viewmodel.dart';
 import 'package:segadi/features/support_status/data/api/support_status_api.dart';
 import 'package:segadi/features/support_status/data/repositories/support_status_repository_impl.dart';
 import 'package:segadi/features/support_status/presentation/ui/status_support_view.dart';
 import 'package:segadi/features/support_status/presentation/viewmodel/support_status_viewmodel.dart';
+import 'package:segadi/features/trip_closure/presentation/pages/capture_trip_evidence_page.dart';
+
+import 'package:segadi/features/trip_closure/presentation/viewmodels/trip_closure_viewmodel.dart';
 
 class ActionsCard extends StatelessWidget {
   final DetailServiceEntity ui;
@@ -113,53 +116,61 @@ class ActionsCard extends StatelessWidget {
         onPressed: null,
       ),
       if (ui.serviceType == 'contenedor')
-        ActionButton(
-          icon: FontAwesomeIcons.circleCheck,
-          label: 'Subir EIR',
-          color: Colors.green,
-          enabled: rules.canShowEIR,
-          onPressed: rules.canShowEIR
-              ? () async {
-                  // 4. Esperamos a que todo el flujo termine
-                  final result = await await Navigator.pushNamed(
-                    context,
-                    '/trip-closure',
-                    arguments: {'id': ui.id, 'serviceId': ui.service},
-                  );
-                  print(
-                      'context mounted después de trip closure? ${context.mounted}');
-                  if (result == true && context.mounted) {
-                    print(
-                        'Usuario regresó de evidencias. Forzando recarga de seguridad...');
+        Consumer<TripClosureViewModel>(
+          builder: (context, tripVm, child) {
+            return ActionButton(
+              icon: FontAwesomeIcons.circleCheck,
+              label: 'Subir EIR',
+              color: Colors.green,
+              enabled: rules.canShowEIR,
+              onPressed: rules.canShowEIR
+                  ? () async {
+                      tripVm.startNewTripClosure(ui.id, ui.service);
 
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Row(
-                          // Quitamos el const de aquí porque Expanded no lo es
-                          children: [
-                            const Icon(Icons.check_circle, color: Colors.white),
-                            const SizedBox(width: 12),
-                            // 🔥 Usamos Expanded para evitar la franja amarilla/negra
-                            const Expanded(
-                              child: Text(
-                                'EIR enviado correctamente. Tu Remisión sera finalizada ...',
-                                style: TextStyle(color: Colors.white),
-                              ),
+                      // 2. Navegamos
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                            builder: (_) => const CaptureTripEvidencePage()),
+                      );
+
+                      if (result == true && context.mounted) {
+                        print(
+                            'Usuario regresó de evidencias. Forzando recarga de seguridad...');
+
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(
+                            content: Row(
+                              // Quitamos el const de aquí porque Expanded no lo es
+                              children: [
+                                const Icon(Icons.check_circle,
+                                    color: Colors.white),
+                                const SizedBox(width: 12),
+                                // 🔥 Usamos Expanded para evitar la franja amarilla/negra
+                                const Expanded(
+                                  child: Text(
+                                    'EIR enviado correctamente. Tu Remisión sera finalizada ...',
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ),
+                              ],
                             ),
-                          ],
-                        ),
-                        backgroundColor: Colors.green[700],
-                        behavior: SnackBarBehavior.floating,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        duration: const Duration(seconds: 3),
-                      ),
-                    );
-                    context.read<DetailServiceViewModel>().loadDetail(state.id);
-                  }
-                }
-              : null,
+                            backgroundColor: Colors.green[700],
+                            behavior: SnackBarBehavior.floating,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            duration: const Duration(seconds: 3),
+                          ),
+                        );
+                        context
+                            .read<DetailServiceViewModel>()
+                            .loadDetail(state.id);
+                      }
+                    }
+                  : null,
+            );
+          },
         ),
       ActionButton(
         icon: FontAwesomeIcons.moneyBillTransfer,

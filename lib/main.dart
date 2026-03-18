@@ -43,7 +43,6 @@ import 'package:segadi/features/trip_closure/data/datasources/trip_closure_remot
 import 'package:segadi/features/trip_closure/data/trip_closure_repository_impl.dart';
 import 'package:segadi/features/trip_closure/domain/trip_closure_repository.dart';
 import 'package:segadi/features/trip_closure/presentation/viewmodels/trip_closure_viewmodel.dart';
-import 'package:segadi/features/trip_closure/presentation/widget/trip_closure_flow_page.dart';
 
 // ========================
 // CORE / OTROS
@@ -262,9 +261,9 @@ class MyApp extends StatelessWidget {
           },
         ),
 
-        ProxyProvider<DioClient, TripClosureRepository>(
-          update: (_, dioClient, __) => TripClosureRepositoryImpl(
-            TripClosureRemoteDataSource(dioClient.dio),
+        Provider<TripClosureRepository>(
+          create: (_) => TripClosureRepositoryImpl(
+            TripClosureRemoteDataSource(DioClient().dio),
           ),
         ),
 
@@ -274,6 +273,7 @@ class MyApp extends StatelessWidget {
             scanner: MobileDocumentScanner(),
           ),
         ),
+
         // ========================
         // SERVICES (CLEAN + MVVM)
         // ========================
@@ -364,8 +364,6 @@ class MyApp extends StatelessWidget {
             // Ella buscará al "abuelo" (el main) para sacar los datos.
             return const ConfirmEvidencePage();
           },
-
-          '/trip-closure': (_) => const TripClosureFlowPage(),
 
           // ========================
           // USERS

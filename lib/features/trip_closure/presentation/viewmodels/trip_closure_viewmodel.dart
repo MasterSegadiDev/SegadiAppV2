@@ -1,3 +1,4 @@
+import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:segadi/features/trip_closure/domain/services/document_scanner.dart';
 import 'package:segadi/features/trip_closure/domain/trip_closure_repository.dart';
@@ -18,58 +19,68 @@ class TripClosureViewModel extends ChangeNotifier {
     required this.scanner,
   });
 
-  // Estado y Control
+  // --- Estado y Control ---
   TripClosureStatus _status = TripClosureStatus.idle;
   String? _errorMessage;
   bool _isDisposed = false;
 
-  // Datos del Negocio
+  // --- Datos del Negocio ---
   int _id = 0;
   String _serviceId = "";
-  final List<Uint8List> _images = [];
+  // CAMBIO: Ahora guardamos rutas (Strings) para no saturar la RAM
+  final List<String> _images = [];
   Uint8List? _pdfBytes;
 
-  // Getters
+  // --- Getters ---
   int get id => _id;
   String get serviceId => _serviceId;
   TripClosureStatus get status => _status;
   String? get errorMessage => _errorMessage;
   bool get isSending => _status == TripClosureStatus.loading;
-  List<Uint8List> get images => _images;
+  List<String> get images => _images;
   Uint8List? get pdfBytes => _pdfBytes;
 
-  /// Inicializa el flujo
+  // --- Lógica de Interfaz ---
+
+  /// Limpia el error para que la UI deje de mostrar el SnackBar
+  void clearError() {
+    _errorMessage = null;
+    _safeNotify();
+  }
+
+  /// Inicializa el flujo de un nuevo cierre
   void startNewTripClosure(int newId, String newServiceId) {
     _id = newId;
     _serviceId = newServiceId;
 
-    // Limpiamos todo lo anterior explícitamente
     _images.clear();
     _pdfBytes = null;
     _errorMessage = null;
     _status = TripClosureStatus.idle;
 
     _clearRamCache();
-    _clearDiskFiles(); // <--- Agrega esta llamada aquí también
+    _clearDiskFiles();
     notifyListeners();
   }
 
-  /// Reset completo de datos
   Future<void> reset() async {
     _images.clear();
-    _pdfBytes = null;
+    _pdfBytes = null; // Liberar la RAM del PDF inmediatamente
     _errorMessage = null;
     _status = TripClosureStatus.idle;
+
     _clearRamCache();
-    await _clearDiskFiles();
+    await _clearDiskFiles(); // Esperamos el borrado físico
     _safeNotify();
   }
 
-  /// Captura de imagen con scanner
+  /// Captura imágenes usando el scanner controlado
   Future<void> captureImage() async {
-    if (_images.length >= 5) {
-      _errorMessage = "Límite de 5 imágenes alcanzado";
-      notifyListeners();
+    const int maxAllowed = 5;
+    if (_images.length >= maxAllowed) {
+      _errorMessage = "Límite de $maxAllowed imágenes alcanzado";
+      _status = TripClosureStatus.error; // Para que el listener lo detecte
+      _safeNotify();
       return;
     }
 
@@ -78,47 +89,86 @@ class TripClosureViewModel extends ChangeNotifier {
       _errorMessage = null;
       _safeNotify();
 
-      final image = await scanner.scan();
+      _clearRamCache(); // Liberar RAM antes de abrir la cámara
 
-      if (image != null) {
-        _images.add(image);
-        _clearRamCache(); // Limpia RAM al añadir imagen pesada
+      final List<String>? paths = await CunningDocumentScanner.getPictures(
+        noOfPages: maxAllowed - _images.length,
+        isGalleryImportAllowed: false,
+      );
+
+      if (paths != null && paths.isNotEmpty) {
+        // Guardamos las rutas directamente (String)
+        _images.addAll(paths);
         _status = TripClosureStatus.idle;
       } else {
         _status = TripClosureStatus.idle;
       }
     } catch (e) {
       _status = TripClosureStatus.error;
-      _errorMessage = "Error al escanear: ${e.toString()}";
+      _errorMessage = "Fallo en cámara o memoria insuficiente";
+      debugPrint("Error captureImage: $e");
     } finally {
+      _clearRamCache();
       _safeNotify();
     }
   }
 
-  void removeImage(int index) {
-    _images.removeAt(index);
-    _clearRamCache();
-    notifyListeners();
+  void removeImage(int index) async {
+    if (index >= 0 && index < _images.length) {
+      final path = _images[index];
+      _images.removeAt(index);
+
+      // Borrado físico inmediato del archivo removido
+      try {
+        final file = File(path);
+        if (await file.exists()) {
+          await file.delete();
+          debugPrint("🗑️ Archivo individual eliminado: $path");
+        }
+      } catch (e) {
+        debugPrint("Error borrando archivo individual: $e");
+      }
+
+      _clearRamCache();
+      notifyListeners();
+    }
   }
 
+  /// Prepara el PDF convirtiendo las rutas a bytes solo en este momento
   Future<void> preparePdf() async {
     if (_images.isEmpty) return;
+
     _status = TripClosureStatus.loading;
     _safeNotify();
 
     try {
-      _pdfBytes = await TripPdfGenerator.generate(_images);
+      // Convertimos las rutas a bytes temporalmente para el generador de PDF
+      final List<Uint8List> imageBytesList = [];
+      for (final path in _images) {
+        final bytes = await File(path).readAsBytes();
+        imageBytesList.add(bytes);
+      }
+
+      _pdfBytes = await TripPdfGenerator.generate(imageBytesList);
       _status = TripClosureStatus.idle;
+
+      _pdfBytes!.clear();
+      _clearRamCache();
     } catch (e) {
       _status = TripClosureStatus.error;
-      _errorMessage = "Error al generar PDF";
+      _errorMessage = "Error al generar el documento PDF";
     } finally {
       _safeNotify();
     }
   }
 
   Future<bool> sendTripClosure() async {
-    if (_pdfBytes == null) return false;
+    if (_pdfBytes == null || _pdfBytes!.isEmpty) {
+      _errorMessage = "El documento PDF no se generó correctamente.";
+      _status = TripClosureStatus.error;
+      _safeNotify();
+      return false;
+    }
 
     try {
       _status = TripClosureStatus.loading;
@@ -127,11 +177,15 @@ class TripClosureViewModel extends ChangeNotifier {
       await repository.sendTripClosure(id: _id, pdfBytes: _pdfBytes!);
 
       _status = TripClosureStatus.success;
+
+      // 🚩 AQUÍ: Antes de retornar true, limpiamos TODO
+      // Esto garantiza que al volver a la pantalla anterior no haya basura
       await reset();
+
       return true;
     } catch (e) {
       _status = TripClosureStatus.error;
-      _errorMessage = e.toString();
+      _errorMessage = e.toString().replaceAll("Exception:", "").trim();
       _safeNotify();
       return false;
     }
@@ -149,13 +203,20 @@ class TripClosureViewModel extends ChangeNotifier {
     try {
       final cacheDir = await getTemporaryDirectory();
       if (cacheDir.existsSync()) {
-        final files = cacheDir.listSync();
+        // Usamos recursividad simple para asegurar que entramos a subcarpetas si el scanner las crea
+        final files = cacheDir.listSync(recursive: true);
         for (var file in files) {
-          if (file is File && file.path.endsWith('.jpg')) {
-            await file.delete();
+          if (file is File) {
+            final path = file.path.toLowerCase();
+            // Borramos imágenes Y cualquier PDF residual
+            if (path.endsWith('.jpg') ||
+                path.endsWith('.png') ||
+                path.endsWith('.pdf')) {
+              await file.delete();
+            }
           }
         }
-        debugPrint("🗑️ DISCO: Temporales limpiados");
+        debugPrint("🗑️ DISCO: Limpieza profunda completada (Imágenes y PDFs)");
       }
     } catch (e) {
       debugPrint("❌ Error limpiando disco: $e");
@@ -170,6 +231,7 @@ class TripClosureViewModel extends ChangeNotifier {
   void dispose() {
     _isDisposed = true;
     _clearRamCache();
+    // No esperamos el clearDiskFiles porque es async, pero se dispara
     _clearDiskFiles();
     super.dispose();
   }

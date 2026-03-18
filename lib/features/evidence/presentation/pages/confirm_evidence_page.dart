@@ -279,7 +279,7 @@ class _ConfirmEvidencePageState extends State<ConfirmEvidencePage> {
           elevation: 0,
         ),
         child: Text(
-          canSubmit ? "CONTINUAR A EVIDENCIAS" : "FALTA NOMBRE O FIRMA",
+          canSubmit ? "Continuar" : "Falta el campo nombre o la firma",
           style:
               const TextStyle(fontWeight: FontWeight.bold, letterSpacing: 0.5),
         ),
@@ -288,7 +288,6 @@ class _ConfirmEvidencePageState extends State<ConfirmEvidencePage> {
   }
 
   Future<void> _processSubmission(EvidenceFlowViewModel vm) async {
-    // 1. Convertimos la firma a imagen solo al presionar el botón (Eficiencia)
     final Uint8List? signatureBytes = await _signatureController.toPngBytes();
 
     if (signatureBytes == null || signatureBytes.isEmpty) {
@@ -301,15 +300,20 @@ class _ConfirmEvidencePageState extends State<ConfirmEvidencePage> {
       return;
     }
 
-    // 2. Guardamos la firma final y limpiamos el flujo de capturas previas
     vm.updateSignature(signatureBytes);
     vm.initCaptureFlow();
 
-    // 3. Navegación limpia
     if (mounted) {
+      // NAVEGACIÓN NIVEL SENIOR:
+      // Inyectamos la instancia existente usando .value para que la nueva ruta la encuentre
       Navigator.push(
         context,
-        MaterialPageRoute(builder: (_) => const CaptureEvidencePage()),
+        MaterialPageRoute(
+          builder: (context) => ChangeNotifierProvider.value(
+            value: vm, // Pasamos el VM que ya tenemos
+            child: const CaptureEvidencePage(),
+          ),
+        ),
       );
     }
   }

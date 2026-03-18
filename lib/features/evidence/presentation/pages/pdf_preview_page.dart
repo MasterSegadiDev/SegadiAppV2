@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
+import 'package:segadi/repo/api_status.dart';
 
 class PdfPreviewPage extends StatefulWidget {
   const PdfPreviewPage({super.key});
@@ -147,9 +148,10 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
     final success = await vm.sendEvidences();
 
     if (success && mounted) {
-      // 🚩 Senior Tip: Navegación limpia. Volvemos al inicio del flujo.
       Navigator.of(context)
-          .popUntil((route) => route.settings.name == '/flow_evidencias');
+        ..pop()
+        ..pop()
+        ..pop(true);
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("✅ Evidencias enviadas con éxito")),

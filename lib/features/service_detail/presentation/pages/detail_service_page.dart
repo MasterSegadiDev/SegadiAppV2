@@ -31,43 +31,6 @@ class _DetailServicePageState extends State<DetailServicePage> {
     });
   }
 
-  /// Método centralizado para navegar al flujo de evidencias
-  // void _navigateToEvidences(BuildContext context, DetailServiceViewModel vm) {
-  //   Navigator.push(
-  //     context,
-  //     MaterialPageRoute(
-  //       settings: const RouteSettings(name: '/flow_evidencias'),
-  //       builder: (context) => EvidenceFlowPage(serviceId: vm.entity!.id),
-  //     ),
-  //   ).then((_) async {
-  //     // 1. Verificamos si la pantalla sigue montada
-  //     if (!mounted) return;
-
-  //     // 2. RECARGAMOS LOS DATOS
-  //     // Esto actualizará el 'nextMandatoryStatusId' desde el servidor
-  //     await context.read<DetailServiceViewModel>().loadDetail(widget.serviceId);
-
-  //     // 3. LÓGICA DE DECISIÓN POST-FLUJO
-  //     if (!mounted) return;
-  //     final currentVm = context.read<DetailServiceViewModel>();
-
-  //     // Si el statusId ya NO es 10, significa que la remisión se finalizó con éxito en el servidor
-  //     if (currentVm.entity?.statusId != 10) {
-  //       // OPCIONAL: Podrías mostrar un Snackbar de éxito aquí
-  //       ScaffoldMessenger.of(context).showSnackBar(
-  //         const SnackBar(content: Text("Servicio finalizado con éxito")),
-  //       );
-  //       // Regresamos al listado porque el trabajo aquí terminó
-  //       Navigator.of(context).pop();
-  //     } else {
-  //       // Si sigue en 10, es porque el usuario regresó voluntariamente (back button)
-  //       // No hacemos nada, permitimos que el Banner de 'CONTINUAR' haga su trabajo.
-  //       print(
-  //           "El usuario regresó sin finalizar. Mostrando banner de pendiente.");
-  //     }
-  //   });
-  // }
-
   void _navigateToEvidences(BuildContext context, DetailServiceViewModel vm) {
     Navigator.push(
       context,
