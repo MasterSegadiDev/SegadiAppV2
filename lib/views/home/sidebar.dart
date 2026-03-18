@@ -248,7 +248,7 @@ class _DrawerScreen extends State<DrawerScreen> {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: Colors.red.shade50,
-            borderRadius: BorderRadius.circular(15),
+            borderRadius: BorderRadius.circular(50),
             border: Border.all(color: Colors.red.shade100),
           ),
           child: Row(

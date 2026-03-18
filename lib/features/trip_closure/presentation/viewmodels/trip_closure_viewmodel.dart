@@ -142,19 +142,28 @@ class TripClosureViewModel extends ChangeNotifier {
     _safeNotify();
 
     try {
-      // Convertimos las rutas a bytes temporalmente para el generador de PDF
+      // 1. Convertimos rutas a bytes
       final List<Uint8List> imageBytesList = [];
       for (final path in _images) {
-        final bytes = await File(path).readAsBytes();
-        imageBytesList.add(bytes);
+        final file = File(path);
+        if (await file.exists()) {
+          imageBytesList.add(await file.readAsBytes());
+        }
       }
 
+      // 2. Generamos el PDF y lo guardamos en el estado
+      // IMPORTANTE: Aquí se asigna, NO se limpia todavía.
       _pdfBytes = await TripPdfGenerator.generate(imageBytesList);
-      _status = TripClosureStatus.idle;
 
-      _pdfBytes!.clear();
-      _clearRamCache();
+      // 3. LIMPIEZA CORRECTA:
+      // Limpiamos la lista temporal de bytes de imágenes, ya que ya están dentro del PDF.
+      imageBytesList.clear();
+      _clearRamCache(); // Limpia la caché visual para los Axon 50/60
+
+      _status = TripClosureStatus.idle;
     } catch (e) {
+      debugPrint(
+          "Ha ocurrido un error : $e"); // Para que veas en consola qué pasó exactamente
       _status = TripClosureStatus.error;
       _errorMessage = "Error al generar el documento PDF";
     } finally {

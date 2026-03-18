@@ -65,11 +65,9 @@ class _CaptureTripEvidencePageState extends State<CaptureTripEvidencePage> {
           children: [
             const Text('Captura de Evidencias',
                 style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold)),
-            Text('ID Servicio: ${vm.serviceId}',
-                style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                    color: Colors.white, fontWeight: FontWeight.bold)),
+            Text('Remisión: ${vm.serviceId}',
+                style: const TextStyle(color: Colors.white70, fontSize: 16)),
           ],
         ),
         iconTheme: const IconThemeData(color: Colors.white),
@@ -267,15 +265,14 @@ class _ActionButton extends StatelessWidget {
     return ElevatedButton.icon(
       onPressed: onPressed,
       icon: Icon(icon, size: fontSize + 4),
-      label: Text(label,
-          style: TextStyle(fontSize: fontSize, fontWeight: FontWeight.bold)),
+      label: Text(label, style: TextStyle(fontSize: fontSize)),
       style: ElevatedButton.styleFrom(
         backgroundColor: color,
         foregroundColor: Colors.white,
         disabledBackgroundColor: Colors.grey[300],
         padding: const EdgeInsets.symmetric(vertical: 14),
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
       ),
     );
   }
