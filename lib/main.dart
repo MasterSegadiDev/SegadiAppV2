@@ -43,6 +43,15 @@ import 'package:segadi/features/trip_closure/data/datasources/trip_closure_remot
 import 'package:segadi/features/trip_closure/data/trip_closure_repository_impl.dart';
 import 'package:segadi/features/trip_closure/domain/trip_closure_repository.dart';
 import 'package:segadi/features/trip_closure/presentation/viewmodels/trip_closure_viewmodel.dart';
+import 'package:segadi/features/ubications/data/datasources/ubicaciones_remote_datasource.dart';
+import 'package:segadi/features/ubications/data/repositories/ubicaciones_repository_impl.dart';
+import 'package:segadi/features/ubications/domain/repositories/ubicaciones_repository.dart';
+import 'package:segadi/features/ubications/domain/usecases/get_mapa_ubicaciones_usecase.dart';
+import 'package:segadi/features/ubications/domain/usecases/get_movimientos_usecase.dart';
+import 'package:segadi/features/ubications/domain/usecases/registrar_movimiento_usecase.dart';
+import 'package:segadi/features/ubications/presentation/screens/movimiento_list_screen.dart';
+import 'package:segadi/features/ubications/presentation/viewmodels/movimiento_list_viewmodel.dart';
+import 'package:segadi/features/ubications/presentation/viewmodels/ubicaciones_mapa_viewmodel.dart';
 
 // ========================
 // CORE / OTROS
@@ -76,7 +85,6 @@ import 'package:segadi/viewmodels/user/user_information.dart';
 // ========================
 import 'package:segadi/views/login/splash_screen.dart';
 import 'package:segadi/views/home/routes.dart';
-import 'package:segadi/views/container_movements/container_movement_list_view.dart';
 
 // ========================
 // VIEWMODELS EXISTENTES
@@ -274,6 +282,58 @@ class MyApp extends StatelessWidget {
           ),
         ),
 
+        Provider<UbicacionesRemoteDataSource>(
+          create: (_) => UbicacionesRemoteDataSourceImpl(DioClient().dio),
+        ),
+
+        ProxyProvider<UbicacionesRemoteDataSource, UbicacionesRepositoryImpl>(
+          update: (_, dataSource, __) =>
+              UbicacionesRepositoryImpl(remoteDataSource: dataSource),
+        ),
+
+        ProxyProvider<UbicacionesRepositoryImpl, GetMovimientosUseCase>(
+          update: (_, repository, __) => GetMovimientosUseCase(repository),
+        ),
+
+        ChangeNotifierProvider<MovimientoListViewModel>(
+          create: (context) => MovimientoListViewModel(
+            getMovimientosUseCase: context.read<GetMovimientosUseCase>(),
+          ),
+        ),
+
+        Provider<UbicacionesRemoteDataSource>(
+          create: (_) => UbicacionesRemoteDataSourceImpl(DioClient().dio),
+        ),
+
+        ProxyProvider<UbicacionesRemoteDataSource, UbicacionesRepository>(
+          update: (_, dataSource, __) =>
+              UbicacionesRepositoryImpl(remoteDataSource: dataSource),
+        ),
+
+        ProxyProvider<UbicacionesRepository, GetMapaUbicacionesUseCase>(
+          update: (_, repo, __) => GetMapaUbicacionesUseCase(repo),
+        ),
+
+        ProxyProvider<UbicacionesRepository, RegistrarMovimientoUseCase>(
+          update: (_, repo, __) => RegistrarMovimientoUseCase(repo),
+        ),
+
+        ChangeNotifierProxyProvider2<GetMapaUbicacionesUseCase,
+            RegistrarMovimientoUseCase, UbicacionesMapaViewModel>(
+          create: (context) => UbicacionesMapaViewModel(
+            getMapaUbicacionesUseCase:
+                context.read<GetMapaUbicacionesUseCase>(),
+            registrarMovimientoUseCase:
+                context.read<RegistrarMovimientoUseCase>(),
+          ),
+          update: (context, getMapa, registrar, previous) =>
+              previous ??
+              UbicacionesMapaViewModel(
+                getMapaUbicacionesUseCase: getMapa,
+                registrarMovimientoUseCase: registrar,
+              ),
+        ),
+
         // ========================
         // SERVICES (CLEAN + MVVM)
         // ========================
@@ -401,7 +461,7 @@ class MyApp extends StatelessWidget {
           // ========================
           // CONTAINER MAP
           // ========================
-          '/container_map': (_) => MovimientoView(),
+          '/container_map': (_) => MovimientoView()
         },
       ),
     );

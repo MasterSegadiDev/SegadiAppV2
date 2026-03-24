@@ -128,73 +128,12 @@ class UbicacionesViewModel extends ChangeNotifier {
     print("Origen: ${origen!.area}-${origen!.espacio} Nivel ${origen!.nivel}");
   }
 
-  // String? seleccionarPuntoReacomodo(String area, String espacio, String nivel) {
-  //   final ubic = getUbicacion(area, espacio, nivel);
-  //   if (ubic == null) return "Ubicación inválida.";
-
-  //   final ocupado = ubic.numberSerie != null && ubic.numberSerie!.isNotEmpty;
-
-  //   // ============================================================
-  //   // 1) No hay ORIGEN → debe ser OCUPADO
-  //   // ============================================================
-  //   if (origen == null) {
-  //     if (!ocupado) return "El origen debe estar ocupado.";
-  //     origen = PuntoMovimiento(
-  //       area: area,
-  //       espacio: espacio,
-  //       nivel: nivel,
-  //       numeroSerie: ubic.numberSerie!,
-  //     );
-  //     destino = null;
-  //     return null;
-  //   }
-
-  //   // ============================================================
-  //   // 2) Ya hay ORIGEN pero NO destino
-  //   // ============================================================
-  //   if (origen != null && destino == null) {
-  //     // Toca OTRO ocupado → CAMBIAR ORIGEN
-  //     if (ocupado) {
-  //       origen = PuntoMovimiento(
-  //         area: area,
-  //         espacio: espacio,
-  //         nivel: nivel,
-  //         numeroSerie: ubic.numberSerie!,
-  //       );
-  //       return null;
-  //     }
-
-  //     // Toca VACÍO → seleccionar DESTINO
-  //     if (!ocupado) {
-  //       destino = PuntoMovimiento(
-  //         area: area,
-  //         espacio: espacio,
-  //         nivel: nivel,
-  //         numeroSerie: null,
-  //       );
-  //       return null;
-  //     }
-  //   }
-
-  //   // ============================================================
-  //   // 3) Ya hay origen y destino → esto no modifica nada
-  //   // ============================================================
-  //   return null;
-  // }
-
   String? seleccionarPuntoReacomodo(String area, String espacio, String nivel) {
     final ubic = getUbicacion(area, espacio, nivel);
     if (ubic == null) return "Ubicación inválida.";
 
     final serie = (ubic.numberSerie ?? '').trim();
     final ocupado = serie.isNotEmpty;
-
-    // ------------------------------------------------------------
-    // REGLA GLOBAL DE SELECCIÓN (evita el bug de "me lo toma como destino")
-    // ------------------------------------------------------------
-    // 1) Cualquier CASO ocupado -> siempre se interpreta como ORIGEN (y se limpia destino)
-    // 2) Cualquier CASO vacío   -> se interpreta como DESTINO (con validación de niveles)
-    // ------------------------------------------------------------
 
     if (ocupado) {
       final tieneBloqueo = tieneArribaOcupados(area, espacio, nivel);

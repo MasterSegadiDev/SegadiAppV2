@@ -7,14 +7,14 @@ import 'package:segadi/viewmodels/container_movement/container_movement_view_mod
 import 'package:segadi/views/container_movements/containers_map.dart';
 import 'package:segadi/views/home/sidebar.dart';
 
-class MovimientoView extends StatefulWidget {
-  const MovimientoView({super.key});
+class MovimientoViewFake extends StatefulWidget {
+  const MovimientoViewFake({super.key});
 
   @override
-  State<MovimientoView> createState() => _MovimientoViewState();
+  State<MovimientoViewFake> createState() => _MovimientoViewState();
 }
 
-class _MovimientoViewState extends State<MovimientoView> {
+class _MovimientoViewState extends State<MovimientoViewFake> {
   final TextEditingController _searchController = TextEditingController();
   String _searchQuery = "";
   String? _currentSiteId;

@@ -1,6 +1,4 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/viewmodels/container_movement/container_movement_list_view_model.dart';
 import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
@@ -38,7 +36,7 @@ class _MapaUbicacionesWidgetState extends State<MapaUbicacionesWidget> {
   void initState() {
     super.initState();
     vm = widget.vm;
-    tipoMovimientoNormalized = _toCanonical(widget.tipoMovimiento ?? '');
+    tipoMovimientoNormalized = _toCanonical(widget.tipoMovimiento);
     print(
         'Normalized tipoMovimiento: $tipoMovimientoNormalized'); // debe imprimir 'pisocamion' etc
   }
