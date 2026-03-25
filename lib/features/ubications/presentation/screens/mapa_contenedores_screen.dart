@@ -205,18 +205,30 @@ class _MapaHorizontalView extends StatelessWidget {
                 //     context, area.nombre, numEspacio, nivelesDelEspacio);
                 return InkWell(
                   onTap: () {
-                    // 1. SI ESTAMOS EN REACOMODO (Buscando dónde soltar)
-                    if (vm.enModoReacomodo) {
+                    // 1. Si estamos buscando dónde dejar el contenedor (Fase Destino)
+                    if (vm.faseReacomodo == FaseReacomodo.destino) {
+                      // 2. Verificamos que el espacio que tocó el operador tenga lugar
                       if (tieneNivelLibre) {
+                        // 3. Buscamos el primer nivel 'free' en esa columna/espacio
+                        final nivelVacio = nivelesDelEspacio.firstWhere(
+                            (n) => n.estatus.toLowerCase() == 'free');
+
+                        // 4. GUARDAMOS EL DESTINO EN EL VIEWMODEL
+                        vm.ubicacionDestino = nivelVacio;
+
+                        // 5. ¡ESTO ES LO QUE TE FALTA! Disparar el modal de confirmación
+                        // Pasamos el contexto, el área donde tocó, el espacio y los niveles para mostrar el resumen
                         _confirmarAterrizajeReacomodo(context, area.nombre,
                             numEspacio, nivelesDelEspacio);
                       } else {
                         ScaffoldMessenger.of(context).showSnackBar(
-                          const SnackBar(
-                              content: Text("Espacio ocupado por completo.")),
-                        );
+                            const SnackBar(
+                                content: Text(
+                                    "⚠️ Este espacio está lleno, busca otro.")));
                       }
-                    } else {
+                    }
+                    // 6. Si no estamos en reacomodo, flujo normal (abrir selector de origen)
+                    else {
                       _showNivelesSelector(
                           context, area.nombre, numEspacio, nivelesDelEspacio);
                     }
@@ -241,8 +253,12 @@ class _MapaHorizontalView extends StatelessWidget {
     // 1. Contamos cuántos niveles están realmente libres
     int desocupados = niveles.where((n) => n.estatus == "Free").length;
 
+    final bool esElObjetivo =
+        niveles.any((n) => n.serie == vm.movimientoEnProceso?.serieReal);
+
     // 2. Determinamos el color de fondo basado en tu nueva regla
-    Color bgColor = vm.getEspacioColor(niveles);
+    Color bgColor =
+        esElObjetivo ? Colors.blue[50]! : vm.getEspacioColor(niveles);
 
     // 3. Verificamos si este bloque es el que la API nos mandó (Origen/Destino)
     bool esOrigen = niveles.any((n) => n.id == vm.ubicacionOrigen?.id);
@@ -260,10 +276,12 @@ class _MapaHorizontalView extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
         side: BorderSide(
           // Si está seleccionado, el borde es fuerte; si no, un gris suave
-          color: esOrigen
-              ? Colors.blue[900]!
-              : (esDestino ? Colors.orange[900]! : Colors.black12),
-          width: (esOrigen || esDestino) ? 3 : 1,
+          color: esElObjetivo
+              ? Colors.amber[700]!
+              : (esOrigen
+                  ? Colors.blue[900]!
+                  : (esDestino ? Colors.orange[900]! : Colors.black12)),
+          width: (esElObjetivo || esOrigen || esDestino) ? 3.5 : 1,
         ),
       ),
       child: InkWell(
@@ -340,6 +358,7 @@ class _MapaHorizontalView extends StatelessWidget {
 
   void _showNivelesSelector(BuildContext context, String area, String esp,
       List<UbicacionEntity> niveles) {
+    // 1. Identificamos el contenedor que el sistema mandó a buscar (el objetivo)
     final UbicacionEntity? nivelAsignado =
         niveles.any((n) => n.serie == vm.movimientoEnProceso?.serieReal)
             ? niveles
@@ -348,18 +367,38 @@ class _MapaHorizontalView extends StatelessWidget {
 
     showModalBottomSheet(
       context: context,
-      isScrollControlled: true, // Permite que el sheet crezca si es necesario
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
+        // --- LÓGICA INTELIGENTE DE SELECCIÓN ---
+        UbicacionEntity? proximoMovimiento;
         bool tieneBloqueo = false;
+
         if (nivelAsignado != null) {
-          tieneBloqueo = !vm.puedeRealizarSalidaDirecta(nivelAsignado, niveles);
+          // Convertimos el nivel asignado a int para comparar
+          int nAsignado = int.tryParse(nivelAsignado.nivel.toString()) ?? 0;
+
+          // Buscamos si hay contenedores en niveles superiores (Bloqueadores)
+          final bloqueadores = niveles.where((n) {
+            int nActual = int.tryParse(n.nivel.toString()) ?? 0;
+            return nActual > nAsignado && n.estatus.toLowerCase() != 'free';
+          }).toList();
+
+          if (bloqueadores.isNotEmpty) {
+            tieneBloqueo = true;
+            // Ordenamos para que el "proximo" sea el de nivel más alto (el de hasta arriba)
+            bloqueadores.sort((a, b) => (int.tryParse(b.nivel.toString()) ?? 0)
+                .compareTo(int.tryParse(a.nivel.toString()) ?? 0));
+            proximoMovimiento = bloqueadores.first;
+          } else {
+            tieneBloqueo = false;
+            proximoMovimiento = nivelAsignado;
+          }
         }
 
         return Padding(
-          // Agregamos padding inferior para evitar que el teclado o gestos corten la vista
           padding: EdgeInsets.only(
               top: 20,
               left: 16,
@@ -383,24 +422,25 @@ class _MapaHorizontalView extends StatelessWidget {
               ),
               const Divider(),
 
+              // Banner de Alerta si hay bloqueo
               if (tieneBloqueo)
                 Container(
                   margin: const EdgeInsets.only(bottom: 12),
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: Colors.red[50],
+                    color: Colors.orange[50],
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.red[200]!),
+                    border: Border.all(color: Colors.orange[200]!),
                   ),
                   child: Row(
-                    children: const [
-                      Icon(Icons.warning_amber_rounded, color: Colors.red),
-                      SizedBox(width: 10),
+                    children: [
+                      const Icon(Icons.priority_high, color: Colors.orange),
+                      const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          "BLOQUEADO: Debe reacomodar los niveles superiores primero.",
+                          "BLOQUEO DETECTADO: Debe despejar el Nivel ${proximoMovimiento?.nivel} primero.",
                           style: TextStyle(
-                              color: Colors.red,
+                              color: Colors.orange[900],
                               fontWeight: FontWeight.bold,
                               fontSize: 13),
                         ),
@@ -409,93 +449,92 @@ class _MapaHorizontalView extends StatelessWidget {
                   ),
                 ),
 
-              // --- AQUÍ EL CAMBIO CLAVE: .reversed.map ---
-              // Esto pone el Nivel 3 arriba y el Nivel 1 abajo
+              // Listado de niveles (Invertido para ver el 3 arriba y 1 abajo)
               ...niveles.reversed.map((n) {
-                bool esElAsignado =
+                bool esElObjetivo =
                     n.serie == vm.movimientoEnProceso?.serieReal;
+                bool esElQueTocaMover = n.serie == proximoMovimiento?.serie;
                 bool estaVacio = n.estatus.toLowerCase() == 'free';
 
                 return Container(
                   margin: const EdgeInsets.only(bottom: 8),
                   decoration: BoxDecoration(
-                    color: esElAsignado ? Colors.blue[50] : Colors.transparent,
+                    color:
+                        esElQueTocaMover ? Colors.blue[50] : Colors.transparent,
                     borderRadius: BorderRadius.circular(10),
                     border: Border.all(
-                      color: esElAsignado ? Colors.blue : Colors.grey[300]!,
-                      width: esElAsignado ? 2 : 1,
+                      color: esElQueTocaMover ? Colors.blue : Colors.grey[300]!,
+                      width: esElQueTocaMover ? 2 : 1,
                     ),
                   ),
                   child: ListTile(
-                    leading: Icon(Icons.inventory_2,
-                        color: estaVacio
-                            ? Colors.grey
-                            : (esElAsignado ? Colors.blue : Colors.black87)),
-                    title: Text(
-                      "Nivel ${n.nivel}",
-                      style: const TextStyle(fontWeight: FontWeight.bold),
+                    leading: Icon(
+                      esElQueTocaMover
+                          ? Icons.move_to_inbox
+                          : Icons.inventory_2,
+                      color: estaVacio
+                          ? Colors.grey
+                          : (esElQueTocaMover ? Colors.blue : Colors.black87),
                     ),
+                    title: Text("Nivel ${n.nivel}",
+                        style: const TextStyle(fontWeight: FontWeight.bold)),
                     subtitle: Text(
-                      esElAsignado
-                          ? "CONTENEDOR A MOVER: ${n.serie}"
+                      esElObjetivo
+                          ? "Contenedor a mover: ${n.serie}"
                           : (estaVacio ? "Espacio Libre" : "Serie: ${n.serie}"),
                       style: TextStyle(
-                          color:
-                              esElAsignado ? Colors.blue[700] : Colors.black54,
-                          fontWeight: esElAsignado
+                          color: esElQueTocaMover
+                              ? Colors.blue[700]
+                              : Colors.black54,
+                          fontWeight: esElQueTocaMover
                               ? FontWeight.bold
                               : FontWeight.normal),
                     ),
-                    // Solo habilitar si es el asignado y NO hay nada arriba
-                    enabled: esElAsignado && !tieneBloqueo,
-                    onTap: () {
-                      print('Confirmando salida: ${n.serie}');
-                    },
+                    trailing: esElQueTocaMover
+                        ? const Icon(Icons.arrow_forward_ios,
+                            size: 14, color: Colors.blue)
+                        : null,
                   ),
                 );
               }).toList(),
 
-              // if (tieneBloqueo)
-              //   Padding(
-              //     padding: const EdgeInsets.only(top: 10),
-              //     child: SizedBox(
-              //       width: double.infinity,
-              //       child: ElevatedButton.icon(
-              //         style: ElevatedButton.styleFrom(
-              //           backgroundColor: Colors.orange[800],
-              //           foregroundColor: Colors.white,
-              //           padding: const EdgeInsets.symmetric(vertical: 12),
-              //         ),
-              //         onPressed: () {
-              //           Navigator.pop(context);
-              //           vm.prepararMovimiento();
-              //         },
-              //         icon: const Icon(Icons.sync_alt),
-              //         label: const Text("INICIAR REACOMODO"),
-              //       ),
-              //     ),
-              //   )
-              if (tieneBloqueo)
+              // BOTÓN INTELIGENTE
+              if (proximoMovimiento != null)
                 Padding(
                   padding: const EdgeInsets.only(top: 10),
                   child: SizedBox(
                     width: double.infinity,
                     child: ElevatedButton.icon(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.orange[800],
+                        backgroundColor: tieneBloqueo
+                            ? Colors.orange[800]
+                            : Colors.green[700],
                         foregroundColor: Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 15),
                       ),
                       onPressed: () {
-                        // 1. Cerramos el modal primero
                         Navigator.pop(context);
-
-                        // 2. Usamos 'nivelAsignado' que ya lo tienes definido arriba del build
-                        if (nivelAsignado != null) {
-                          vm.activarReacomodo(nivelAsignado);
+                        // La App manda a reacomodar el que detectó como prioritario
+                        if (tieneBloqueo) {
+                          // --- CASO A: Hay que despejar la pila ---
+                          // Manda a la fase de buscar un hueco en el mapa
+                          vm.activarReacomodo(proximoMovimiento!);
+                        } else {
+                          // --- CASO B: El contenedor está libre para salir ---
+                          // Aquí disparas tu lógica de Despacho (Piso - Camión)
+                          _confirmarDespachoACamion(
+                              context, proximoMovimiento!);
                         }
                       },
-                      icon: const Icon(Icons.sync_alt),
-                      label: const Text("INICIAR REACOMODO"),
+                      icon: Icon(tieneBloqueo
+                          ? Icons.layers_clear
+                          : Icons.local_shipping),
+                      label: Text(
+                        tieneBloqueo
+                            ? "Reacomodar Nivel ${proximoMovimiento.nivel}"
+                            : "Despachar Contenedor",
+                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      ),
                     ),
                   ),
                 )
@@ -653,7 +692,7 @@ class _MapaHorizontalView extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text("CANCELAR", style: TextStyle(color: Colors.red)),
+            child: const Text("Cancelar", style: TextStyle(color: Colors.red)),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -665,7 +704,34 @@ class _MapaHorizontalView extends StatelessWidget {
               // Ejecutamos la lógica en el ViewModel
               vm.finalizarReacomodo(destino);
             },
-            child: const Text("CONFIRMAR Y UBICAR"),
+            child: const Text("Confirmar y Ubicar"),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _confirmarDespachoACamion(
+      BuildContext context, UbicacionEntity contenedor) {
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Confirmar Despacho"),
+        content: Text(
+            "¿Confirmas la carga al camión del contenedor ${contenedor.serie}?"),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text("CANCELAR"),
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.green[700]),
+            onPressed: () {
+              Navigator.pop(context);
+              // Aquí llamas a tu función de despacho real
+              vm.ejecutarDespachoPisoCamion(contenedor);
+            },
+            child: const Text("CONFIRMAR DESPACHO"),
           ),
         ],
       ),

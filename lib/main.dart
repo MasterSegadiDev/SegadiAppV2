@@ -43,8 +43,14 @@ import 'package:segadi/features/trip_closure/data/datasources/trip_closure_remot
 import 'package:segadi/features/trip_closure/data/trip_closure_repository_impl.dart';
 import 'package:segadi/features/trip_closure/domain/trip_closure_repository.dart';
 import 'package:segadi/features/trip_closure/presentation/viewmodels/trip_closure_viewmodel.dart';
+import 'package:segadi/features/ubications/data/datasources/movimientos_list_datasource.dart';
+import 'package:segadi/features/ubications/data/datasources/movimientos_remote_datasource.dart';
 import 'package:segadi/features/ubications/data/datasources/ubicaciones_remote_datasource.dart';
+import 'package:segadi/features/ubications/data/repositories/movimientos_list_repository_impl.dart';
+import 'package:segadi/features/ubications/data/repositories/movimientos_repository_impl.dart';
 import 'package:segadi/features/ubications/data/repositories/ubicaciones_repository_impl.dart';
+import 'package:segadi/features/ubications/domain/repositories/movimientos_repository.dart';
+import 'package:segadi/features/ubications/domain/repositories/registro_movimiento_repository.dart';
 import 'package:segadi/features/ubications/domain/repositories/ubicaciones_repository.dart';
 import 'package:segadi/features/ubications/domain/usecases/get_mapa_ubicaciones_usecase.dart';
 import 'package:segadi/features/ubications/domain/usecases/get_movimientos_usecase.dart';
@@ -137,185 +143,110 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiProvider(
       providers: [
-        // ========================
-        // APIs
-        // ========================
-
-        Provider(create: (_) => DioClient()),
-        Provider<NetworkInfo>(
-          create: (_) => NetworkInfoImpl(Connectivity()),
-        ),
+        // ==========================================
+        // 1. INFRAESTRUCTURA BASE
+        // ==========================================
+        Provider<DioClient>(create: (_) => DioClient()),
+        Provider<NetworkInfo>(create: (_) => NetworkInfoImpl(Connectivity())),
         Provider<ServicesApi>(create: (_) => ServicesApi()),
-        ChangeNotifierProvider(
-          create: (context) => ServicesViewModel(
-              getAssignedServicesUseCase: GetAssignedServices(
-            ServicesRepositoryImpl(
-              remoteDataSource: ServicesRemoteDataSourceImpl(
-                context.read<DioClient>().dio,
-              ),
-              networkInfo: context.read<NetworkInfo>(),
-            ),
-          ))
-            ..loadServices(),
-        ),
-        ProxyProvider<DioClient, ServiceRepository>(
-          update: (context, dioClient, previous) =>
-              ServiceRepositoryImpl(dioClient.dio),
-        ),
-        Provider(
+        Provider<FcmDatasource>(create: (_) => FcmDatasource()..init()),
+        Provider<AuthService>(
             create: (context) => AuthService(context.read<DioClient>().dio)),
-        Provider(
+        Provider<User>(
+            create: (context) => User(context.read<DioClient>().dio)),
+
+        // ==========================================
+        // 2. DATA SOURCES (Fuentes de Datos)
+        // ==========================================
+        // --- Clean DataSources ---
+        ProxyProvider<DioClient, UbicacionesRemoteDataSource>(
+          update: (_, dc, __) => UbicacionesRemoteDataSourceImpl(dc.dio),
+        ),
+        ProxyProvider<DioClient, MovimientoRemoteDataSource>(
+          update: (_, dc, __) => MovimientoRemoteDataSourceImpl(dc.dio),
+        ),
+        ProxyProvider<DioClient, RegistroMovimientoRemoteDataSource>(
+          update: (_, dc, __) => RegistroMovimientoRemoteDataSource(dc.dio),
+        ),
+
+        // --- Legacy Services (Tus servicios originales) ---
+        Provider<MovimientoService>(
             create: (context) =>
                 MovimientoService(context.read<DioClient>().dio)),
-
-        Provider(create: (_) => FcmDatasource()..init()),
-        Provider<DetailServiceApi>(
-          create: (context) => DetailServiceApi(
-            context
-                .read<DioClient>()
-                .dio, // <--- Esto soluciona el "1 positional argument"
-          ),
-        ),
         Provider<UbicationMovement>(
-          create: (context) => UbicationMovement(context.read<DioClient>().dio),
-        ),
-        Provider<UbicacionesService>(
-          create: (context) =>
-              UbicacionesService(context.read<DioClient>().dio),
-        ),
-        Provider<MovimientosService>(
-          create: (context) =>
-              MovimientosService(context.read<DioClient>().dio),
-        ),
-
-        Provider(create: (context) => User(context.read<DioClient>().dio)),
-
-        // ========================
-        // AUTH / HOME (SIN CAMBIOS)
-        // ========================
-        ChangeNotifierProvider(
-          create: (context) => LoginViewModel(context.read<AuthService>()),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => LoginViewModel(context.read<AuthService>()),
-        ),
-        ChangeNotifierProvider(create: (_) => HomeViewModel()),
-
-        ChangeNotifierProvider(
-          create: (context) => ContainerMovementListViewModel(
-            context.read<MovimientoService>(), // <-- Ahora sí lo va a encontrar
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => BiometricViewModel(
-            context
-                .read<AuthService>(), // <--- PASAMOS EL AUTHSERVICE, NO EL DIO
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => UbicacionesViewModel(
-            context.read<UbicationMovement>(),
-          ),
-        ),
-
-        ChangeNotifierProvider(
-          create: (context) => MovimientoPisoViewModel(
-            context.read<MovimientosService>(),
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => movimientosContenedoresListadoViewModel(
-            context.read<MovimientosService>(),
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => UbicacionesViewModel(
-            context.read<UbicationMovement>(),
-            // Si pide UbicacionesService, cambia la línea de arriba por este.
-          ),
-        ),
-
-        ChangeNotifierProvider(
-          create: (context) => FinishedServicesViewModel(
-            repository: context.read<ServiceRepository>(),
-          ),
-        ),
-        ChangeNotifierProvider(
-          create: (context) => DetailFinishedViewModel(
-            repository: context.read<ServiceRepository>(),
-          ),
-        ),
-
-        // =======================
-        // TRAVEL EXPENSES (SIN CAMBIOS)
-        // =======================
-        Provider(
             create: (context) =>
-                TravelExpensesRemoteDataSource(context.read<DioClient>().dio)),
+                UbicationMovement(context.read<DioClient>().dio)),
+        Provider<UbicacionesService>(
+            create: (context) =>
+                UbicacionesService(context.read<DioClient>().dio)),
+        Provider<MovimientosService>(
+            create: (context) =>
+                MovimientosService(context.read<DioClient>().dio)),
+        Provider<DetailServiceApi>(
+            create: (context) =>
+                DetailServiceApi(context.read<DioClient>().dio)),
+        Provider<TravelExpensesRemoteDataSource>(
+          create: (context) =>
+              TravelExpensesRemoteDataSource(context.read<DioClient>().dio),
+        ),
+
+        // ==========================================
+        // 3. REPOSITORIOS (Implementaciones)
+        // ==========================================
+        // Repositorio para Listado de Movimientos
+        ProxyProvider<MovimientoRemoteDataSource, MovimientoRepository>(
+          update: (_, ds, __) =>
+              MovimientosListRepositoryImpl(remoteDataSource: ds),
+        ),
+        // Repositorio para Registro de Movimientos (Reacomodo)
+        ProxyProvider<RegistroMovimientoRemoteDataSource,
+            RegistroMovimientoRepository>(
+          update: (_, ds, __) =>
+              RegistroMovimientoRepositoryImpl(remoteDataSource: ds),
+        ),
+        // Repositorio para Ubicaciones/Mapa
+        ProxyProvider<UbicacionesRemoteDataSource, UbicacionesRepository>(
+          update: (_, ds, __) =>
+              UbicacionesRepositoryImpl(remoteDataSource: ds),
+        ),
+
+        // Otros Repositorios
+        ProxyProvider<DioClient, ServiceRepository>(
+          update: (_, dc, __) => ServiceRepositoryImpl(dc.dio),
+        ),
         ProxyProvider<TravelExpensesRemoteDataSource, TravelExpensesRepository>(
           update: (_, ds, __) => TravelExpensesRepositoryImpl(ds),
         ),
-        ChangeNotifierProvider(
-          create: (context) {
-            final repo = context.read<TravelExpensesRepository>();
-
-            return TravelExpensesViewModel(
-              getConceptsUseCase: GetAvailableConceptsUseCase(repo),
-              getRegisteredUseCase: GetRegisteredExpensesUseCase(repo),
-              insertUseCase: InsertExpenseUseCase(repo),
-              getEvidenceUseCase:
-                  GetEvidenceImageUseCase(repo), // <--- REVISA QUE ESTÉ AQUÍ
-            );
-          },
-        ),
-
         Provider<TripClosureRepository>(
-          create: (_) => TripClosureRepositoryImpl(
-            TripClosureRemoteDataSource(DioClient().dio),
+          create: (context) => TripClosureRepositoryImpl(
+            TripClosureRemoteDataSource(context.read<DioClient>().dio),
           ),
         ),
 
-        ChangeNotifierProvider(
-          create: (context) => TripClosureViewModel(
-            repository: context.read<TripClosureRepository>(),
-            scanner: MobileDocumentScanner(),
-          ),
+        // ==========================================
+        // 4. USE CASES (Lógica de Negocio)
+        // ==========================================
+        ProxyProvider<MovimientoRepository, GetMovimientosUseCase>(
+          update: (_, repo, __) => GetMovimientosUseCase(repo),
         ),
-
-        Provider<UbicacionesRemoteDataSource>(
-          create: (_) => UbicacionesRemoteDataSourceImpl(DioClient().dio),
+        ProxyProvider<RegistroMovimientoRepository, RegistrarMovimientoUseCase>(
+          update: (_, repo, __) => RegistrarMovimientoUseCase(repo),
         ),
-
-        ProxyProvider<UbicacionesRemoteDataSource, UbicacionesRepositoryImpl>(
-          update: (_, dataSource, __) =>
-              UbicacionesRepositoryImpl(remoteDataSource: dataSource),
-        ),
-
-        ProxyProvider<UbicacionesRepositoryImpl, GetMovimientosUseCase>(
-          update: (_, repository, __) => GetMovimientosUseCase(repository),
-        ),
-
-        ChangeNotifierProvider<MovimientoListViewModel>(
-          create: (context) => MovimientoListViewModel(
-            getMovimientosUseCase: context.read<GetMovimientosUseCase>(),
-          ),
-        ),
-
-        Provider<UbicacionesRemoteDataSource>(
-          create: (_) => UbicacionesRemoteDataSourceImpl(DioClient().dio),
-        ),
-
-        ProxyProvider<UbicacionesRemoteDataSource, UbicacionesRepository>(
-          update: (_, dataSource, __) =>
-              UbicacionesRepositoryImpl(remoteDataSource: dataSource),
-        ),
-
         ProxyProvider<UbicacionesRepository, GetMapaUbicacionesUseCase>(
           update: (_, repo, __) => GetMapaUbicacionesUseCase(repo),
         ),
 
-        ProxyProvider<UbicacionesRepository, RegistrarMovimientoUseCase>(
-          update: (_, repo, __) => RegistrarMovimientoUseCase(repo),
+        // ==========================================
+        // 5. VIEW MODELS (Capa de Presentación)
+        // ==========================================
+
+        // --- ViewModels con ProxyProvider (Nueva Arquitectura) ---
+        ChangeNotifierProxyProvider<GetMovimientosUseCase,
+            MovimientoListViewModel>(
+          create: (context) => MovimientoListViewModel(
+              getMovimientosUseCase: context.read<GetMovimientosUseCase>()),
+          update: (_, uc, prev) =>
+              prev ?? MovimientoListViewModel(getMovimientosUseCase: uc),
         ),
 
         ChangeNotifierProxyProvider2<GetMapaUbicacionesUseCase,
@@ -323,20 +254,65 @@ class MyApp extends StatelessWidget {
           create: (context) => UbicacionesMapaViewModel(
             getMapaUbicacionesUseCase:
                 context.read<GetMapaUbicacionesUseCase>(),
-            registrarMovimientoUseCase:
-                context.read<RegistrarMovimientoUseCase>(),
+            reacomodoUseCase: context.read<RegistrarMovimientoUseCase>(),
           ),
-          update: (context, getMapa, registrar, previous) =>
-              previous ??
+          update: (_, mapa, reg, prev) =>
+              prev ??
               UbicacionesMapaViewModel(
-                getMapaUbicacionesUseCase: getMapa,
-                registrarMovimientoUseCase: registrar,
+                getMapaUbicacionesUseCase: mapa,
+                reacomodoUseCase: reg,
               ),
         ),
 
-        // ========================
-        // SERVICES (CLEAN + MVVM)
-        // ========================
+        // --- ViewModels Directos (Tus originales) ---
+        ChangeNotifierProvider(
+            create: (context) => LoginViewModel(context.read<AuthService>())),
+        ChangeNotifierProvider(create: (_) => HomeViewModel()),
+        ChangeNotifierProvider(
+            create: (context) => ServicesViewModel(
+                  getAssignedServicesUseCase: GetAssignedServices(
+                    ServicesRepositoryImpl(
+                      remoteDataSource: ServicesRemoteDataSourceImpl(
+                          context.read<DioClient>().dio),
+                      networkInfo: context.read<NetworkInfo>(),
+                    ),
+                  ),
+                )..loadServices()),
+        ChangeNotifierProvider(
+            create: (context) => ContainerMovementListViewModel(
+                context.read<MovimientoService>())),
+        ChangeNotifierProvider(
+            create: (context) =>
+                BiometricViewModel(context.read<AuthService>())),
+        ChangeNotifierProvider(
+            create: (context) =>
+                MovimientoPisoViewModel(context.read<MovimientosService>())),
+        ChangeNotifierProvider(
+            create: (context) => movimientosContenedoresListadoViewModel(
+                context.read<MovimientosService>())),
+        ChangeNotifierProvider(
+            create: (context) =>
+                UbicacionesViewModel(context.read<UbicationMovement>())),
+        ChangeNotifierProvider(
+            create: (context) => FinishedServicesViewModel(
+                repository: context.read<ServiceRepository>())),
+        ChangeNotifierProvider(
+            create: (context) => DetailFinishedViewModel(
+                repository: context.read<ServiceRepository>())),
+        ChangeNotifierProvider(
+            create: (context) => TripClosureViewModel(
+                  repository: context.read<TripClosureRepository>(),
+                  scanner: MobileDocumentScanner(),
+                )),
+        ChangeNotifierProvider(create: (context) {
+          final repo = context.read<TravelExpensesRepository>();
+          return TravelExpensesViewModel(
+            getConceptsUseCase: GetAvailableConceptsUseCase(repo),
+            getRegisteredUseCase: GetRegisteredExpensesUseCase(repo),
+            insertUseCase: InsertExpenseUseCase(repo),
+            getEvidenceUseCase: GetEvidenceImageUseCase(repo),
+          );
+        }),
       ],
       child: MaterialApp(
         debugShowCheckedModeBanner: false,

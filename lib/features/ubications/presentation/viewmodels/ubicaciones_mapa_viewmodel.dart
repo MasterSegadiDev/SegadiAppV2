@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:segadi/core/theme/app_colors.dart';
+import 'package:segadi/features/ubications/domain/entities/movimiento_registro.dart';
 import 'package:segadi/features/ubications/domain/entities/movimientos_list_entity.dart';
 import 'package:segadi/features/ubications/domain/entities/ubicaciones_mapa_entity.dart';
 import 'package:segadi/features/ubications/domain/usecases/get_mapa_ubicaciones_usecase.dart';
 import 'package:segadi/features/ubications/domain/usecases/registrar_movimiento_usecase.dart';
+import 'package:segadi/utils/user_session.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum TipoMovimiento { pisoCamion, camionPiso, reacomodo }
 
@@ -16,8 +19,12 @@ class ReacomodoTemporal {
 }
 
 class UbicacionesMapaViewModel extends ChangeNotifier {
+  final RegistrarMovimientoUseCase reacomodoUseCase;
   final GetMapaUbicacionesUseCase getMapaUbicacionesUseCase;
-  final RegistrarMovimientoUseCase registrarMovimientoUseCase;
+
+  FaseReacomodo get faseReacomodo => _faseReacomodo;
+  UbicacionEntity? get containerParaMover => _containerParaMover;
+
   dynamic movimientoActivo;
 
   TipoMovimiento? movimientoActaul;
@@ -30,25 +37,41 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
 
   UbicacionesMapaViewModel({
     required this.getMapaUbicacionesUseCase,
-    required this.registrarMovimientoUseCase,
+    required this.reacomodoUseCase,
   });
 
   void cargarOrden(dynamic orden) {
     movimientoActivo = orden;
+
+    print('movimiento activo ${movimientoActivo}');
     notifyListeners();
   }
 
   bool get enModoReacomodo => _faseReacomodo != FaseReacomodo.ninguno;
 
   void activarReacomodo(UbicacionEntity contenedor) {
-    _containerParaMover = contenedor; // Guardamos el objeto completo
+    // 1. Sincronizamos: El contenedor que la app detectó como bloqueador
+    // se convierte en nuestro ORIGEN para el movimiento.
+    ubicacionOrigen = contenedor;
+    _containerParaMover =
+        contenedor; // Mantén esta si la usas para mostrar la serie en la UI
+
+    // 2. Cambiamos la fase para que el mapa ahora acepte el toque de DESTINO
     _faseReacomodo = FaseReacomodo.destino;
+
+    // 3. Limpiamos cualquier destino previo por si acaso
+    ubicacionDestino = null;
+
+    print(
+        "Propagando Origen Inteligente: ${contenedor.serie} en nivel ${contenedor.nivel}");
     notifyListeners();
   }
 
   void cancelarReacomodo() {
     _faseReacomodo = FaseReacomodo.ninguno; // Apaga la barra naranja
-    _containerParaMover = null; // Suelta el contenedor "virtualmente"
+    _containerParaMover = null;
+    ubicacionDestino = null;
+    ubicacionOrigen = null; // Suelta el contenedor "virtualmente"
     notifyListeners(); // Refresca la tableta para quitar la barra
   }
 
@@ -146,6 +169,29 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
         break;
     }
     notifyListeners();
+  }
+
+  UbicacionEntity obtenerContenedorPrioritario(
+      List<UbicacionEntity> niveles, UbicacionEntity objetivo) {
+    // Convertimos el nivel del objetivo a entero una sola vez
+    final int nivelObjetivo = int.parse(objetivo.nivel.toString());
+
+    final bloqueadores = niveles.where((n) {
+      // 1. Convertimos el nivel de la iteración actual a entero
+      final int nivelActual = int.parse(n.nivel.toString());
+
+      // 2. Ahora sí podemos usar '>'
+      return nivelActual > nivelObjetivo && n.estatus.toLowerCase() != 'free';
+    }).toList();
+
+    if (bloqueadores.isEmpty) {
+      return objetivo;
+    } else {
+      // También corregimos el sort para que sea numérico
+      bloqueadores.sort((a, b) => int.parse(b.nivel.toString())
+          .compareTo(int.parse(a.nivel.toString())));
+      return bloqueadores.first;
+    }
   }
 
   List<int> obtenerNivelesObstruyendo(List<UbicacionEntity> nivelesDelEspacio) {
@@ -246,6 +292,26 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
     }
   }
 
+  void seleccionarOrigen(UbicacionEntity ubi) {
+    // 1. Validamos que la ubicación NO esté libre (debe haber algo que mover)
+    if (ubi.estatus.toLowerCase() != 'free') {
+      ubicacionOrigen = ubi;
+
+      // 2. Limpiamos el destino anterior por seguridad
+      // (si el operador cambia de opinión sobre qué contenedor mover)
+      ubicacionDestino = null;
+      errorMessage = null; // Limpiamos errores previos
+
+      print("Origen fijado: ${ubi.serie} en ${ubi.codigo}");
+      notifyListeners();
+    } else {
+      // 3. Error: No puedes mover un espacio vacío
+      errorMessage =
+          "La ubicación ${ubi.codigo} está vacía. Selecciona un contenedor.";
+      notifyListeners();
+    }
+  }
+
   /// Selecciona una ubicación del mapa como destino
   void seleccionarDestino(UbicacionEntity ubi) {
     // Solo permitimos seleccionar si la ubicación está libre (Free)
@@ -259,41 +325,11 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
     }
   }
 
-  /// Ejecuta el registro final en el servidor
-  Future<bool> confirmarRegistro(String comentarios) async {
-    if (movimientoEnProceso == null || ubicacionDestino == null) {
-      errorMessage = "Falta seleccionar un movimiento o un destino.";
-      notifyListeners();
-      return false;
-    }
-
-    isLoading = true;
+  void limpiarSeleccion() {
+    ubicacionOrigen = null;
+    ubicacionDestino = null;
     notifyListeners();
-
-    final success = await registrarMovimientoUseCase.execute(
-      movimientoId: movimientoEnProceso!.id,
-      ubicacionDestinoId: ubicacionDestino!.id,
-      comentarios: comentarios,
-    );
-
-    if (success) {
-      // Limpiamos la selección tras el éxito
-      movimientoEnProceso = null;
-      ubicacionDestino = null;
-      ubicacionOrigen = null;
-      await cargarMapa(); // Refrescamos el mapa para ver los nuevos estados
-    } else {
-      errorMessage = "Error al registrar el movimiento en el sistema.";
-    }
-
-    isLoading = false;
-    notifyListeners();
-    return success;
   }
-
-  ////// funciones para el movimiento de contenedores //////////////
-  ///
-  ///
 
   /// funcion para poner Piso - Camion
   bool puedeExtraer(
@@ -311,29 +347,6 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
     // El Nivel 3 siempre se puede extraer si está ocupado
     return true;
   }
-
-  /// funcion y logica para el movimiento piso - camion
-  ///
-
-  //pendiente de revisar por que esta realiza la validacion
-  // bool puedeRealizarSalidaDirecta(
-  //     UbicacionEntity asignada, List<UbicacionEntity> todosLosNiveles) {
-  //   // Regla: No debe haber ningún contenedor en niveles superiores con estatus 'Used'
-
-  //   int nivelAsignado =
-  //       int.parse(asignada.nivel); // Convertimos "1", "2" o "3" a int
-
-  //   // Buscamos si hay niveles mayores al asignado que estén ocupados
-  //   bool estaBloqueado = todosLosNiveles.any((n) {
-  //     int nivelIterado = int.parse(n.nivel);
-  //     return nivelIterado > nivelAsignado && n.estatus.toLowerCase() == 'used';
-  //   });
-
-  //   return !estaBloqueado;
-  // }
-
-  /// funcion y logica camion - piso
-  ///
 
   bool puedeDepositar(
       UbicacionEntity nivelTocado, List<UbicacionEntity> nivelesDelEspacio) {
@@ -353,11 +366,28 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
   }
 
   void finalizarReacomodo(UbicacionEntity destino) async {
-    // 1. Aquí harías tu petición HTTP a la API de reacomodo
-    // await api.moverContenedor(_containerParaMover.serie, destino.id);
+    final user = UserSession();
+    final siteId = user.siteId;
 
-    print(
-        "Movimiento exitoso de ${_containerParaMover?.serie} a ${destino.area}-${destino.espacio}-${destino.nivel}");
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final movimiento = MovimientoRegistro(
+      crane_movement_id: null,
+      movement_type: 'Reacomodo',
+      crane_operator_id: user.id.toString(),
+      container_location_id: int.parse(ubicacionOrigen!.id),
+      new_container_location_id: ubicacionDestino!.id,
+      container_number: _containerParaMover?.serie,
+      status: null,
+      token: token,
+      weight: '',
+      document_name: '',
+      document: '',
+      site_id: siteId ?? '',
+    );
+
+    await reacomodoUseCase.execute(movimiento);
 
     // 2. Limpiamos el modo reacomodo
     _faseReacomodo = FaseReacomodo.ninguno;
@@ -365,6 +395,39 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
 
     // 3. Refrescamos el mapa para que el contenedor aparezca en su nuevo lugar
     await cargarMapa();
+
+    // 4. Avisamos a la UI para que quite la barra naranja
+    notifyListeners();
+  }
+
+  Future<void> ejecutarDespachoPisoCamion(UbicacionEntity ubi) async {
+    print('ejecutando movimiento PISO-CAMION');
+    final user = UserSession();
+    final siteId = user.siteId;
+
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final movimiento = MovimientoRegistro(
+      crane_movement_id: movimientoEnProceso!.id,
+      movement_type: 'Piso-Camion',
+      crane_operator_id: user.id.toString(),
+      container_location_id: int.parse(ubi.id),
+      new_container_location_id: null,
+      container_number: _containerParaMover?.serie,
+      status: null,
+      token: token,
+      weight: '',
+      document_name: '',
+      document: '',
+      site_id: siteId ?? '',
+    );
+
+    debugPrint('crane_movement_id ${movimiento.crane_movement_id}');
+
+    //await reacomodoUseCase.execute(movimiento);
+
+    //await cargarMapa();
 
     // 4. Avisamos a la UI para que quite la barra naranja
     notifyListeners();

@@ -4,7 +4,6 @@ import 'package:segadi/features/ubications/domain/usecases/get_movimientos_useca
 
 class MovimientoListViewModel extends ChangeNotifier {
   final GetMovimientosUseCase getMovimientosUseCase;
-
   MovimientoListViewModel({required this.getMovimientosUseCase});
 
   List<Movimiento> movimientos = [];
