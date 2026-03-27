@@ -1,16 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/features/ubications/domain/entities/movimientos_list_entity.dart';
 import 'package:segadi/features/ubications/presentation/screens/mapa_contenedores_screen.dart';
 import 'package:segadi/features/ubications/presentation/viewmodels/movimiento_list_viewmodel.dart';
 import 'package:segadi/features/ubications/presentation/viewmodels/ubicaciones_mapa_viewmodel.dart';
 
 // Importaciones de tu proyecto
 import 'package:segadi/models/user/UserSession.dart';
-import 'package:segadi/viewmodels/container_movement/container_movement_list_view_model.dart';
 import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
-import 'package:segadi/views/container_movements/containers_map.dart';
 import 'package:segadi/views/home/sidebar.dart';
 
 class MovimientoView extends StatefulWidget {
@@ -71,50 +68,99 @@ class _MovimientoViewState extends State<MovimientoView> {
     if (_isLoading)
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
 
-    if (_error != null) {
-      return Scaffold(
-        appBar: AppBar(backgroundColor: const Color(0xFF2C522A)),
-        body: Center(
-            child: Text(_error!, style: const TextStyle(color: Colors.red))),
-      );
-    }
-
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Movimiento de contenedores',
+        title: const Text('Movimientos Activos',
             style: TextStyle(color: Colors.white)),
         iconTheme: const IconThemeData(color: Colors.white),
         backgroundColor: const Color(0xFF2C522A),
+        elevation: 0, // Quitamos sombra para que se una con el buscador
       ),
-      backgroundColor: Colors.white,
+      backgroundColor: const Color(
+          0xFFF5F7F5), // Un gris muy ligero para que resalten las tarjetas
       drawer: const DrawerScreen(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _handleRefresh,
           child: Column(
             children: [
-              // 🔍 BUSCADOR PROFESIONAL
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-                child: TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    hintText: "Buscar por contenedor, tipo o remisión...",
-                    prefixIcon:
-                        const Icon(Icons.search, color: Color(0xFF2C522A)),
-                    filled: true,
-                    fillColor: Colors.grey.shade100,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(15),
-                      borderSide: BorderSide.none,
-                    ),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 0),
+              // --- PANEL DE HERRAMIENTAS SUPERIOR ---
+              Container(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
+                decoration: const BoxDecoration(
+                  color:
+                      Color(0xFF2C522A), // Fondo verde para integrar con AppBar
+                  borderRadius: BorderRadius.only(
+                    bottomLeft: Radius.circular(25),
+                    bottomRight: Radius.circular(25),
                   ),
-                  onChanged: (value) => setState(() => _searchQuery = value),
+                ),
+                child: Column(
+                  children: [
+                    Row(
+                      children: [
+                        // BUSCADOR (Flexible para que use el espacio restante)
+                        Expanded(
+                          child: Container(
+                            height: 45,
+                            decoration: BoxDecoration(
+                              color: Colors.white,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: TextField(
+                              controller: _searchController,
+                              decoration: const InputDecoration(
+                                hintText: "Buscar contenedor...",
+                                prefixIcon:
+                                    Icon(Icons.search, color: Colors.grey),
+                                border: InputBorder.none,
+                                contentPadding:
+                                    EdgeInsets.symmetric(vertical: 10),
+                              ),
+                              onChanged: (value) =>
+                                  setState(() => _searchQuery = value),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+
+                        // BOTÓN REACOMODO (Icono circular)
+                        _actionIconBtn(
+                          icon: Icons.swap_horiz,
+                          color: Colors.teal.shade400,
+                          onTap: () {
+                            context
+                                .read<UbicacionesMapaViewModel>()
+                                .prepararMovimiento();
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const GestionInventarioPage()));
+                          },
+                        ),
+                        const SizedBox(width: 8),
+
+                        // BOTÓN PESAJE (Icono circular)
+                        _actionIconBtn(
+                          icon: Icons.scale,
+                          color: Colors.orange.shade700,
+                          onTap: () {
+                            // Tu lógica de pesaje
+                            Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (_) =>
+                                        const GestionInventarioPage()));
+                          },
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
               ),
 
-              // LISTADO
+              // --- LISTADO ---
               Expanded(
                 child: _buildListContent(viewModel, ubicacionesvM),
               ),
@@ -122,7 +168,29 @@ class _MovimientoViewState extends State<MovimientoView> {
           ),
         ),
       ),
-      floatingActionButton: _buildFloatingButtons(),
+    );
+  }
+
+  Widget _actionIconBtn(
+      {required IconData icon,
+      required Color color,
+      required VoidCallback onTap}) {
+    return InkWell(
+      onTap: onTap,
+      child: Container(
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: [
+            BoxShadow(
+                color: Colors.black.withOpacity(0.1),
+                blurRadius: 4,
+                offset: const Offset(0, 2))
+          ],
+        ),
+        child: Icon(icon, color: color, size: 24),
+      ),
     );
   }
 
@@ -300,47 +368,6 @@ class _MovimientoViewState extends State<MovimientoView> {
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildFloatingButtons() {
-    final movementVm =
-        Provider.of<ContainerMovementListViewModel>(context, listen: false);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        FloatingActionButton.extended(
-          heroTag: 'reacomodo',
-          onPressed: () {
-            final vm = context.read<UbicacionesMapaViewModel>();
-
-            // ✅ CORRECTO: Al no pasar nada, el ViewModel activa el modo reacomodo
-            vm.prepararMovimiento();
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const GestionInventarioPage()),
-            );
-          },
-          icon: const Icon(Icons.swap_horiz, color: Colors.white),
-          label: const Text('Reacomodo', style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.teal,
-        ),
-        const SizedBox(height: 10),
-        FloatingActionButton.extended(
-          heroTag: 'pesaje',
-          onPressed: () {
-            movementVm.setManualMovement(type: "Pesaje");
-            Navigator.push(
-                context,
-                MaterialPageRoute(
-                    builder: (_) => const GestionInventarioPage()));
-          },
-          icon: const Icon(Icons.scale, color: Colors.white),
-          label: const Text('Pesaje', style: TextStyle(color: Colors.white)),
-          backgroundColor: Colors.deepOrange,
-        ),
-      ],
     );
   }
 }

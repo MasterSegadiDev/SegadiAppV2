@@ -16,9 +16,10 @@ class DioClient {
     );
 
     dio.interceptors.add(PrettyDioLogger(
-      requestHeader: true,
-      requestBody: true,
-      responseBody: true,
+      requestBody: true, // Ver qué mandas (útil para errores)
+      responseBody: true, // <--- ESTO QUITA EL LISTADO GIGANTE
+      error: true, // Ver si algo truena
+      compact: true,
     ));
   }
 }

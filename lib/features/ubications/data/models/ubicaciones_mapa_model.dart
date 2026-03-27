@@ -61,16 +61,29 @@ class UbicacionModel extends UbicacionEntity {
   });
 
   factory UbicacionModel.fromJson(Map<String, dynamic> json) {
+    // 1. Extraemos los valores básicos
+    String serieRaw = json['container_number']?.toString() ?? '';
+    String estatusRaw = json['estatus']?.toString() ?? 'Free';
+
+    // 2. LÓGICA DE SANITIZACIÓN:
+    // Si dice que está usado pero no tiene serie, lo forzamos a 'Free'
+    String estatusFinal = estatusRaw;
+    if (estatusRaw.toLowerCase() == 'used' &&
+        (serieRaw.isEmpty || serieRaw.toLowerCase() == 'null')) {
+      estatusFinal = 'Free';
+    }
+
     return UbicacionModel(
       id: json['id']?.toString() ?? '',
       codigo: json['ubicacion_contenedor']?.toString() ?? '',
       area: json['area_contenedor']?.toString() ?? '',
-      espacio: json['espacio_contenedor']?.toString() ??
-          '', // <--- Clave para tu cuadrícula
+      espacio: json['espacio_contenedor']?.toString() ?? '',
       nivel: json['nivel_contenedor']?.toString() ?? '',
-      estatus: json['estatus']?.toString() ?? 'Free',
-      serie: json['container_number']?.toString(), // Puede ser null
-      color: json['color']?.toString() ?? 'green',
+      estatus: estatusFinal, // <--- Usamos el estatus sanitizado
+      serie: serieRaw.isEmpty ? null : serieRaw,
+      color: estatusFinal == 'Free'
+          ? 'green'
+          : (json['color']?.toString() ?? 'red'),
     );
   }
 }

@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/ubications/domain/entities/ubicaciones_mapa_entity.dart';
 import 'package:segadi/features/ubications/presentation/viewmodels/ubicaciones_mapa_viewmodel.dart';
+import 'package:segadi/features/ubications/widgets/mapa_espacio_item.dart';
+import 'package:segadi/features/ubications/widgets/selector_ingreso_modal.dart';
+import 'package:segadi/features/ubications/widgets/selector_niveles_modal.dart';
 
 class GestionInventarioPage extends StatefulWidget {
   const GestionInventarioPage({super.key});
@@ -15,9 +18,9 @@ class _GestionInventarioPageState extends State<GestionInventarioPage> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) {
+      // ESTO ES VITAL: Limpia cualquier residuo de navegación previa
+      context.read<UbicacionesMapaViewModel>().limpiarEstado();
       context.read<UbicacionesMapaViewModel>().cancelarReacomodo();
-    });
-    WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<UbicacionesMapaViewModel>().cargarMapa();
     });
   }
@@ -130,26 +133,8 @@ class _MapaHorizontalView extends StatelessWidget {
 
   Widget _buildAreaColumn(
       BuildContext context, AreaEntity area, UbicacionesMapEntity data) {
-    // 1. Filtramos las ubicaciones de esta área específica
-    final ubicacionesDelArea =
-        data.ubicaciones.where((u) => u.area == area.nombre).toList();
-
-    if (ubicacionesDelArea.isEmpty) return const SizedBox.shrink();
-
-    // 2. EXTRAEMOS SOLO NÚMEROS DE ESPACIO
-    // Usamos int.tryParse para ignorar valores como "A", "B", etc., que se cuelan en el campo espacio
-    final espaciosNumeros = ubicacionesDelArea
-        .map((u) => u.espacio)
-        .where((e) =>
-            int.tryParse(e) !=
-            null) // <--- ESTO ELIMINA EL ERROR DE LOS 27 NIVELES
-        .toSet()
-        .toList()
-      ..sort((a, b) {
-        final aNum = int.tryParse(a) ?? 0;
-        final bNum = int.tryParse(b) ?? 0;
-        return aNum.compareTo(bNum);
-      });
+    final espaciosNumeros = vm.getEspaciosNumericos(area.nombre);
+    if (espaciosNumeros.isEmpty) return const SizedBox.shrink();
 
     return Container(
       width: 320,
@@ -191,54 +176,17 @@ class _MapaHorizontalView extends StatelessWidget {
               itemCount: espaciosNumeros.length,
               itemBuilder: (context, idx) {
                 final numEspacio = espaciosNumeros[idx];
+                final niveles =
+                    vm.getNivelesDelEspacio(area.nombre, numEspacio);
 
-                // Filtramos niveles: Deben coincidir ÁREA y ESPACIO
-                final nivelesDelEspacio = ubicacionesDelArea
-                    .where((u) => u.espacio == numEspacio)
-                    .toList()
-                  ..sort((a, b) => a.nivel.compareTo(b.nivel));
-
-                bool tieneNivelLibre = nivelesDelEspacio
-                    .any((n) => n.estatus.toLowerCase() == 'free');
-
-                // return _buildEspacioCard(
-                //     context, area.nombre, numEspacio, nivelesDelEspacio);
-                return InkWell(
-                  onTap: () {
-                    // 1. Si estamos buscando dónde dejar el contenedor (Fase Destino)
-                    if (vm.faseReacomodo == FaseReacomodo.destino) {
-                      // 2. Verificamos que el espacio que tocó el operador tenga lugar
-                      if (tieneNivelLibre) {
-                        // 3. Buscamos el primer nivel 'free' en esa columna/espacio
-                        final nivelVacio = nivelesDelEspacio.firstWhere(
-                            (n) => n.estatus.toLowerCase() == 'free');
-
-                        // 4. GUARDAMOS EL DESTINO EN EL VIEWMODEL
-                        vm.ubicacionDestino = nivelVacio;
-
-                        // 5. ¡ESTO ES LO QUE TE FALTA! Disparar el modal de confirmación
-                        // Pasamos el contexto, el área donde tocó, el espacio y los niveles para mostrar el resumen
-                        _confirmarAterrizajeReacomodo(context, area.nombre,
-                            numEspacio, nivelesDelEspacio);
-                      } else {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                                content: Text(
-                                    "⚠️ Este espacio está lleno, busca otro.")));
-                      }
-                    }
-                    // 6. Si no estamos en reacomodo, flujo normal (abrir selector de origen)
-                    else {
-                      _showNivelesSelector(
-                          context, area.nombre, numEspacio, nivelesDelEspacio);
-                    }
-                  },
-                  child: AbsorbPointer(
-                    absorbing: vm
-                        .enModoReacomodo, // Si reacomodamos, ignoramos clics internos de los niveles
-                    child: _buildEspacioCard(
-                        context, area.nombre, numEspacio, nivelesDelEspacio),
-                  ),
+                // AQUÍ MANDAS LLAMAR TU WIDGET SEPARADO
+                return MapaEspacioItem(
+                  area: area.nombre,
+                  espacio: numEspacio,
+                  niveles: niveles,
+                  // AQUÍ ES DONDE CONECTAS EL CLICK CON LA FUNCIÓN "CEREBRO"
+                  onTap: () => _gestionarClicEspacio(
+                      context, area.nombre, numEspacio, niveles, vm),
                 );
               },
             ),
@@ -248,382 +196,95 @@ class _MapaHorizontalView extends StatelessWidget {
     );
   }
 
-  Widget _buildEspacioCard(BuildContext context, String areaNom, String espNom,
-      List<UbicacionEntity> niveles) {
-    // 1. Contamos cuántos niveles están realmente libres
-    int desocupados = niveles.where((n) => n.estatus == "Free").length;
+  /// ESTA FUNCION VALIDA EL TIPO DE MOVIMIENTO, DE ACUERDO AL TIPO DE MOVIMIENTO ES COMO MOSTRARA LA MODAL.
+  void _gestionarClicEspacio(
+      BuildContext context,
+      String areaNom,
+      String espNom,
+      List<UbicacionEntity> niveles,
+      UbicacionesMapaViewModel vm) {
+    print(
+        'DEBUG: Clic en $areaNom-$espNom | Mov: ${vm.movimientoActual} | Fase: ${vm.faseReacomodo}');
 
-    final bool esElObjetivo =
-        niveles.any((n) => n.serie == vm.movimientoEnProceso?.serieReal);
+    // 1. PRIORIDAD MÁXIMA: ATERRIZAJE (Soltar el contenedor)
+    // Se activa si ya tenemos algo en el "gancho" (Reacomodo en curso)
+    if (vm.faseReacomodo == FaseReacomodo.destino) {
+      final bool tieneEspacioLibre =
+          niveles.any((n) => n.estatus.toLowerCase() == 'free');
 
-    // 2. Determinamos el color de fondo basado en tu nueva regla
-    Color bgColor =
-        esElObjetivo ? Colors.blue[50]! : vm.getEspacioColor(niveles);
+      if (tieneEspacioLibre) {
+        _confirmarAterrizajeReacomodo(context, areaNom, espNom, niveles);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text("Espacio sin niveles libres para aterrizar")),
+        );
+      }
+      return;
+    }
 
-    // 3. Verificamos si este bloque es el que la API nos mandó (Origen/Destino)
-    bool esOrigen = niveles.any((n) => n.id == vm.ubicacionOrigen?.id);
-    bool esDestino = niveles.any((n) => n.id == vm.ubicacionDestino?.id);
+    // 2. FLUJOS DE ORIGEN (Cuando NO estamos aterrizando)
+    final tipo = vm.movimientoActual;
 
-    final bool tieneEspacioLibre =
-        niveles.any((n) => n.estatus.toLowerCase() == 'free');
+    // --- CASO A: REACOMODO MANUAL (Botón Naranja del listado o del mapa) ---
+    if (tipo == TipoMovimiento.reacomodo) {
+      final bool tieneContenedores =
+          niveles.any((n) => n.estatus.toLowerCase() == 'used');
 
-    return Card(
-      elevation: 2,
-      margin: const EdgeInsets.all(2),
-      // Aplicamos el color de fondo aquí
-      color: bgColor,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
-        side: BorderSide(
-          // Si está seleccionado, el borde es fuerte; si no, un gris suave
-          color: esElObjetivo
-              ? Colors.amber[700]!
-              : (esOrigen
-                  ? Colors.blue[900]!
-                  : (esDestino ? Colors.orange[900]! : Colors.black12)),
-          width: (esElObjetivo || esOrigen || esDestino) ? 3.5 : 1,
+      if (tieneContenedores) {
+        _abrirSelectorNiveles(context, areaNom, espNom, niveles, vm);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text(
+                  "Este espacio está vacío, selecciona un contenedor para mover.")),
+        );
+      }
+      return;
+    }
+
+    // --- CASO B: DESPACHO (PISO A CAMIÓN) ---
+    if (tipo == TipoMovimiento.pisoCamion) {
+      _abrirSelectorNiveles(context, areaNom, espNom, niveles, vm);
+      return;
+    }
+
+    // --- CASO C: INGRESO (CAMIÓN A PISO) ---
+    if (tipo == TipoMovimiento.camionPiso) {
+      showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+        builder: (context) => SelectorIngresoModal(
+          area: areaNom,
+          espacio: espNom,
+          niveles: niveles,
+          vm: vm,
         ),
-      ),
-      child: InkWell(
-        onTap: () {
-          // 1. Verificamos qué tipo de movimiento traemos desde el ViewModel
-          final tipo = vm.movimientoActaul;
-
-          if (tipo == TipoMovimiento.reacomodo) {
-            if (tieneEspacioLibre) {
-              // Si hay hueco, abrimos el diálogo para confirmar en qué nivel aterrizar
-              _confirmarAterrizajeReacomodo(context, areaNom, espNom, niveles);
-            } else {
-              // Si está lleno, avisamos
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text("Espacio sin niveles disponibles")),
-              );
-            }
-          }
-
-          if (tipo == TipoMovimiento.pisoCamion) {
-            // Llamamos al selector de extracción (lo que ya hicimos)
-            _showNivelesSelector(context, areaNom, espNom, niveles);
-          } else if (tipo == TipoMovimiento.camionPiso) {
-            // LLAMAMOS AL NUEVO SELECTOR DE INGRESO
-            _showNivelesSelectorCamionPiso(context, areaNom, espNom, niveles);
-          } else if (tipo == TipoMovimiento.reacomodo) {
-            print('Mandando llamar funcion reacomodo');
-            // Llamaremos al de reacomodo (siguiente paso)
-            // _showNivelesSelectorReacomodo(context, areaNom, espNom, niveles);
-          }
-        },
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              "$areaNom-$espNom",
-              style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                  color: Colors.black87),
-            ),
-            const SizedBox(height: 2),
-            // Texto descriptivo de capacidad
-            Text(
-              desocupados == 0 ? "Lleno" : "$desocupados Libres",
-              style: TextStyle(
-                fontSize: 10,
-                fontWeight: FontWeight.bold,
-                color: desocupados == 0 ? Colors.red[900] : Colors.black87,
-              ),
-            ),
-            const SizedBox(height: 4),
-            // Mantenemos las bolitas pequeñas para ver la posición exacta
-            Wrap(
-              spacing: 3,
-              children: niveles.take(3).map((n) {
-                return Container(
-                  width: 6,
-                  height: 6,
-                  decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      // La bolita interna sigue marcando ocupado/libre individual
-                      color: n.estatus == "Free" ? Colors.green : Colors.red,
-                      border: Border.all(color: Colors.white, width: 0.5)),
-                );
-              }).toList(),
-            ),
-          ],
-        ),
-      ),
-    );
+      );
+      return;
+    }
   }
 
-  void _showNivelesSelector(BuildContext context, String area, String esp,
-      List<UbicacionEntity> niveles) {
-    // 1. Identificamos el contenedor que el sistema mandó a buscar (el objetivo)
-    final UbicacionEntity? nivelAsignado =
-        niveles.any((n) => n.serie == vm.movimientoEnProceso?.serieReal)
-            ? niveles
-                .firstWhere((n) => n.serie == vm.movimientoEnProceso?.serieReal)
-            : null;
-
+// Función auxiliar para no repetir código del BottomSheet
+  void _abrirSelectorNiveles(BuildContext context, String area, String espacio,
+      List<UbicacionEntity> niveles, UbicacionesMapaViewModel vm) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
-      builder: (context) {
-        // --- LÓGICA INTELIGENTE DE SELECCIÓN ---
-        UbicacionEntity? proximoMovimiento;
-        bool tieneBloqueo = false;
-
-        if (nivelAsignado != null) {
-          // Convertimos el nivel asignado a int para comparar
-          int nAsignado = int.tryParse(nivelAsignado.nivel.toString()) ?? 0;
-
-          // Buscamos si hay contenedores en niveles superiores (Bloqueadores)
-          final bloqueadores = niveles.where((n) {
-            int nActual = int.tryParse(n.nivel.toString()) ?? 0;
-            return nActual > nAsignado && n.estatus.toLowerCase() != 'free';
-          }).toList();
-
-          if (bloqueadores.isNotEmpty) {
-            tieneBloqueo = true;
-            // Ordenamos para que el "proximo" sea el de nivel más alto (el de hasta arriba)
-            bloqueadores.sort((a, b) => (int.tryParse(b.nivel.toString()) ?? 0)
-                .compareTo(int.tryParse(a.nivel.toString()) ?? 0));
-            proximoMovimiento = bloqueadores.first;
-          } else {
-            tieneBloqueo = false;
-            proximoMovimiento = nivelAsignado;
-          }
-        }
-
-        return Padding(
-          padding: EdgeInsets.only(
-              top: 20,
-              left: 16,
-              right: 16,
-              bottom: MediaQuery.of(context).viewInsets.bottom + 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "MOVIMIENTO: PISO - CAMIÓN",
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
-                    fontSize: 12),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Espacio: $area-$esp",
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const Divider(),
-
-              // Banner de Alerta si hay bloqueo
-              if (tieneBloqueo)
-                Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: Colors.orange[50],
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.orange[200]!),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.priority_high, color: Colors.orange),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Text(
-                          "BLOQUEO DETECTADO: Debe despejar el Nivel ${proximoMovimiento?.nivel} primero.",
-                          style: TextStyle(
-                              color: Colors.orange[900],
-                              fontWeight: FontWeight.bold,
-                              fontSize: 13),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-
-              // Listado de niveles (Invertido para ver el 3 arriba y 1 abajo)
-              ...niveles.reversed.map((n) {
-                bool esElObjetivo =
-                    n.serie == vm.movimientoEnProceso?.serieReal;
-                bool esElQueTocaMover = n.serie == proximoMovimiento?.serie;
-                bool estaVacio = n.estatus.toLowerCase() == 'free';
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color:
-                        esElQueTocaMover ? Colors.blue[50] : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: esElQueTocaMover ? Colors.blue : Colors.grey[300]!,
-                      width: esElQueTocaMover ? 2 : 1,
-                    ),
-                  ),
-                  child: ListTile(
-                    leading: Icon(
-                      esElQueTocaMover
-                          ? Icons.move_to_inbox
-                          : Icons.inventory_2,
-                      color: estaVacio
-                          ? Colors.grey
-                          : (esElQueTocaMover ? Colors.blue : Colors.black87),
-                    ),
-                    title: Text("Nivel ${n.nivel}",
-                        style: const TextStyle(fontWeight: FontWeight.bold)),
-                    subtitle: Text(
-                      esElObjetivo
-                          ? "Contenedor a mover: ${n.serie}"
-                          : (estaVacio ? "Espacio Libre" : "Serie: ${n.serie}"),
-                      style: TextStyle(
-                          color: esElQueTocaMover
-                              ? Colors.blue[700]
-                              : Colors.black54,
-                          fontWeight: esElQueTocaMover
-                              ? FontWeight.bold
-                              : FontWeight.normal),
-                    ),
-                    trailing: esElQueTocaMover
-                        ? const Icon(Icons.arrow_forward_ios,
-                            size: 14, color: Colors.blue)
-                        : null,
-                  ),
-                );
-              }).toList(),
-
-              // BOTÓN INTELIGENTE
-              if (proximoMovimiento != null)
-                Padding(
-                  padding: const EdgeInsets.only(top: 10),
-                  child: SizedBox(
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: tieneBloqueo
-                            ? Colors.orange[800]
-                            : Colors.green[700],
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 15),
-                      ),
-                      onPressed: () {
-                        Navigator.pop(context);
-                        // La App manda a reacomodar el que detectó como prioritario
-                        if (tieneBloqueo) {
-                          // --- CASO A: Hay que despejar la pila ---
-                          // Manda a la fase de buscar un hueco en el mapa
-                          vm.activarReacomodo(proximoMovimiento!);
-                        } else {
-                          // --- CASO B: El contenedor está libre para salir ---
-                          // Aquí disparas tu lógica de Despacho (Piso - Camión)
-                          _confirmarDespachoACamion(
-                              context, proximoMovimiento!);
-                        }
-                      },
-                      icon: Icon(tieneBloqueo
-                          ? Icons.layers_clear
-                          : Icons.local_shipping),
-                      label: Text(
-                        tieneBloqueo
-                            ? "Reacomodar Nivel ${proximoMovimiento.nivel}"
-                            : "Despachar Contenedor",
-                        style: const TextStyle(fontWeight: FontWeight.bold),
-                      ),
-                    ),
-                  ),
-                )
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  // funcion para mostrar la modal de seleccion camion - piso
-
-  void _showNivelesSelectorCamionPiso(BuildContext context, String area,
-      String esp, List<UbicacionEntity> niveles) {
-    showModalBottomSheet(
-      context: context,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      builder: (context) => SelectorNivelesModal(
+        area: area,
+        espacio: espacio,
+        niveles: niveles,
+        vm: vm,
       ),
-      builder: (context) {
-        return Padding(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text(
-                "MOVIMIENTO: CAMIÓN - PISO",
-                style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey[600],
-                    fontSize: 12),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                "Seleccione destino para: ${vm.movimientoEnProceso?.serieReal}",
-                style:
-                    const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-              ),
-              const Divider(),
-              ...niveles.map((n) {
-                // Validamos si este nivel específico es apto para recibir el contenedor
-                bool esApto = vm.puedeDepositar(n, niveles);
-                bool estaOcupado = n.estatus.toLowerCase() == 'used';
-
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: esApto ? Colors.green[50] : Colors.transparent,
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(
-                      color: esApto ? Colors.green : Colors.grey[300]!,
-                      width: esApto ? 2 : 1,
-                    ),
-                  ),
-                  child: ListTile(
-                    leading: Icon(Icons.move_to_inbox,
-                        color: esApto ? Colors.green : Colors.grey),
-                    title: Text("Nivel ${n.nivel}"),
-                    subtitle: Text(
-                      estaOcupado
-                          ? "OCUPADO (Serie: ${n.serie})"
-                          : (esApto
-                              ? "LISTO PARA RECIBIR"
-                              : "BLOQUEADO: Requiere nivel inferior"),
-                      style: TextStyle(
-                          color: esApto ? Colors.green[700] : Colors.black54,
-                          fontWeight:
-                              esApto ? FontWeight.bold : FontWeight.normal),
-                    ),
-                    // Solo dejamos clickear si es apto (tiene sustento y está libre)
-                    enabled: esApto,
-                    onTap: () {
-                      // Guardamos el destino en el ViewModel
-                      vm.seleccionarDestino(n);
-                      Navigator.pop(context);
-
-                      // Aquí podrías mostrar un SnackBar o Dialog de confirmación final
-                      print(
-                          'Destino seleccionado: Area $area, Espacio $esp, Nivel ${n.nivel}');
-                    },
-                  ),
-                );
-              }).toList(),
-            ],
-          ),
-        );
-      },
     );
   }
+  // funcion para mostrar la modal de seleccion camion - piso
 
   Widget _statusLabel(Color color, String text) {
     return Row(
@@ -691,7 +352,10 @@ class _MapaHorizontalView extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              vm.limpiarEstado();
+            },
             child: const Text("Cancelar", style: TextStyle(color: Colors.red)),
           ),
           ElevatedButton(
@@ -703,6 +367,8 @@ class _MapaHorizontalView extends StatelessWidget {
               Navigator.pop(context);
               // Ejecutamos la lógica en el ViewModel
               vm.finalizarReacomodo(destino);
+
+              print('confirmando y ubicando ${destino}');
             },
             child: const Text("Confirmar y Ubicar"),
           ),
@@ -729,7 +395,7 @@ class _MapaHorizontalView extends StatelessWidget {
             onPressed: () {
               Navigator.pop(context);
               // Aquí llamas a tu función de despacho real
-              vm.ejecutarDespachoPisoCamion(contenedor);
+              vm.registrarMovimientoPisoCamion(contenedor);
             },
             child: const Text("CONFIRMAR DESPACHO"),
           ),

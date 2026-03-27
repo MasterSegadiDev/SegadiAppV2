@@ -97,4 +97,17 @@ class UbicacionEntity {
         serie: json['container_number']?.toString(),
         color: json['color']?.toString() ?? 'green',
       );
+
+  factory UbicacionEntity.empty() {
+    return UbicacionEntity(
+      id: "",
+      area: "",
+      espacio: "",
+      nivel: "",
+      estatus: "",
+      serie: "",
+      codigo: '',
+      color: '',
+    );
+  }
 }

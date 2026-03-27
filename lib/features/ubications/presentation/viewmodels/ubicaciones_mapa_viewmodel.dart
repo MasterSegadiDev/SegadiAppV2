@@ -22,80 +22,246 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
   final RegistrarMovimientoUseCase reacomodoUseCase;
   final GetMapaUbicacionesUseCase getMapaUbicacionesUseCase;
 
-  FaseReacomodo get faseReacomodo => _faseReacomodo;
   UbicacionEntity? get containerParaMover => _containerParaMover;
-
-  dynamic movimientoActivo;
-
-  TipoMovimiento? movimientoActaul;
-  Map<String, dynamic>? datosMovimiento;
-
-  FaseReacomodo _faseReacomodo = FaseReacomodo.ninguno;
   UbicacionEntity? _containerParaMover;
 
-  String get serieEnGancho => _containerParaMover?.serie ?? "Sin Serie";
+  TipoMovimiento? movimientoActual;
+  dynamic movimientoActivo;
+  Map<String, dynamic>? datosMovimiento;
+  Movimiento? movimientoEnProceso;
+
+  //NUEVO bloque
+  UbicacionesMapEntity? ubicacionesMapEntity;
+  bool isLoading = false;
+  String? errorMessage;
+  String? mensajeValidacion;
+
+  // Control de Movimiento
+  UbicacionEntity? ubicacionOrigen;
+  UbicacionEntity? ubicacionDestino;
+  FaseReacomodo _faseReacomodo = FaseReacomodo.ninguno;
+
+  // Getters para la UI
+  FaseReacomodo get faseReacomodo => _faseReacomodo;
+  bool get enModoReacomodo => _faseReacomodo != FaseReacomodo.ninguno;
+  String get serieEnGancho => _containerParaMover?.serie ?? '';
 
   UbicacionesMapaViewModel({
     required this.getMapaUbicacionesUseCase,
     required this.reacomodoUseCase,
   });
 
-  void cargarOrden(dynamic orden) {
-    movimientoActivo = orden;
+  //// FUNCION AUXILIAR PARA RESETEAR LOS VALORES /////
 
-    print('movimiento activo ${movimientoActivo}');
-    notifyListeners();
-  }
-
-  bool get enModoReacomodo => _faseReacomodo != FaseReacomodo.ninguno;
-
-  void activarReacomodo(UbicacionEntity contenedor) {
-    // 1. Sincronizamos: El contenedor que la app detectó como bloqueador
-    // se convierte en nuestro ORIGEN para el movimiento.
-    ubicacionOrigen = contenedor;
-    _containerParaMover =
-        contenedor; // Mantén esta si la usas para mostrar la serie en la UI
-
-    // 2. Cambiamos la fase para que el mapa ahora acepte el toque de DESTINO
-    _faseReacomodo = FaseReacomodo.destino;
-
-    // 3. Limpiamos cualquier destino previo por si acaso
+  void limpiarEstado() {
+    // 1. Limpiamos las referencias de ubicación
+    ubicacionOrigen = null;
     ubicacionDestino = null;
 
-    print(
-        "Propagando Origen Inteligente: ${contenedor.serie} en nivel ${contenedor.nivel}");
-    notifyListeners();
-  }
-
-  void cancelarReacomodo() {
-    _faseReacomodo = FaseReacomodo.ninguno; // Apaga la barra naranja
+    // 2. Limpiamos el contenedor que estaba "en el gancho"
     _containerParaMover = null;
-    ubicacionDestino = null;
-    ubicacionOrigen = null; // Suelta el contenedor "virtualmente"
-    notifyListeners(); // Refresca la tableta para quitar la barra
+
+    // 3. Reset de la fase de reacomodo
+    _faseReacomodo = FaseReacomodo.ninguno;
+
+    // 4. Limpiamos mensajes de error o validación previos
+    mensajeValidacion = null;
+    errorMessage = null;
+
+    // 5. Notificamos a la UI para que refresque (ej. quitar bordes azules)
+    notifyListeners();
   }
 
-  /// 3. VALIDACIÓN DE SALIDA DIRECTA (La que ya tenías)
-  bool puedeRealizarSalidaDirecta(
-      UbicacionEntity asignado, List<UbicacionEntity> niveles) {
-    int nivelObj = int.tryParse(asignado.nivel) ?? 0;
-    // Si hay algún nivel superior ocupado, retorna false (bloqueado)
-    return !niveles.any((n) =>
-        (int.tryParse(n.nivel) ?? 0) > nivelObj &&
+  /// FUNCION PARA CAMBIAR LA FASE QUE ES EL TIPO DE MOVIMIENTO //////////
+
+  //FUNCION PARA EXTRAER EL CONTENEDOR DEL //PRIMERA FUNCION AUXILIAR PARA EL MOVIMIENTO DE CONTENEDORES
+
+  bool puedeExtraer(
+      UbicacionEntity nivelTocado, List<UbicacionEntity> nivelesDelEspacio) {
+    int nTocado = int.tryParse(nivelTocado.nivel) ?? 0;
+
+    // Un contenedor está bloqueado si existe algún nivel ARRIBA (> nTocado)
+    // que tenga estatus 'Used'.
+    bool tieneAlgoEncima = nivelesDelEspacio.any((n) =>
+        (int.tryParse(n.nivel) ?? 0) > nTocado &&
+        n.estatus.toLowerCase() == 'used');
+
+    return !tieneAlgoEncima;
+  }
+
+  //FUNCION PARA DEPOSITAR EL CONTENEDOR EN PISO // SEGUNADA FUNCION AUXILIAR PARA EL MOVIMIENTO DE CONTENEDORES
+
+  // REGLA: ¿Puedo poner un contenedor aquí?
+  bool puedeDepositar(
+      UbicacionEntity nivelTocado, List<UbicacionEntity> nivelesDelEspacio) {
+    if (nivelTocado.estatus.toLowerCase() != 'free') return false;
+
+    int nDeseado = int.tryParse(nivelTocado.nivel) ?? 0;
+    if (nDeseado == 1) return true; // El piso siempre recibe
+
+    // Para niveles 2 o 3, el nivel de justo abajo (nDeseado - 1) DEBE estar ocupado
+    return nivelesDelEspacio.any((n) =>
+        (int.tryParse(n.nivel) ?? 0) == (nDeseado - 1) &&
         n.estatus.toLowerCase() == 'used');
   }
 
-  UbicacionesMapEntity? ubicacionesMapEntity;
-  bool isLoading = false;
-  String? errorMessage;
+  void cargarOrden(dynamic orden) {
+    movimientoActivo = orden;
 
-  Movimiento? movimientoEnProceso;
-  UbicacionEntity? ubicacionOrigen;
-  UbicacionEntity? ubicacionDestino;
+    notifyListeners();
+  }
 
-  String? mensajeValidacion;
+  ///////FUNCION PARA ENVIAR DATOS AL SERVIDOR DEPENDIENDO EL TIPO DE MOVIMIENTO ///////////////
 
-// paleta de colores para mostrar los espacios
+  Future<void> _registrarTipoDeMovimiento({
+    required String tipo,
+    String? origenId,
+    String? destinoId,
+    int? movementId,
+  }) async {
+    final user = UserSession();
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('token') ?? '';
+
+    final movimiento = MovimientoRegistro(
+      crane_movement_id:
+          movementId, // id del movimiento, este viene del listado
+      movement_type: tipo,
+      crane_operator_id: user.id.toString(),
+      container_location_id: int.parse(origenId!),
+      new_container_location_id: destinoId, // Solo para Reacomodo/Camion-Piso
+      container_number: _containerParaMover?.serie,
+      token: token,
+      site_id: user.siteId ?? '',
+      weight: '',
+      document_name: '',
+      document: '',
+      status: null,
+    );
+
+    try {
+      await reacomodoUseCase.execute(movimiento);
+      await cargarMapa(); // Refresca el mapa automáticamente
+    } catch (e) {
+      errorMessage = "Error al registrar: $e";
+      notifyListeners();
+    }
+  }
+
+  ///FUNCION PARA REGISTRAR EL REACOMODO ///////////////////
+
+  void finalizarReacomodo(UbicacionEntity destino) async {
+    if (ubicacionOrigen == null) return;
+
+    isLoading = true;
+    notifyListeners();
+
+    try {
+      await _registrarTipoDeMovimiento(
+        tipo: 'Reacomodo',
+        origenId: ubicacionOrigen!.id,
+        destinoId: destino.id,
+      );
+
+      limpiarEstado();
+    } catch (e) {
+      errorMessage = "No se pudo completar el reacomodo";
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+////// FUNCION PARA REGISTRAR EL MOVIMIENTO PISO CAMION /////////////
+  ///
+
+  Future<bool> registrarMovimientoPisoCamion(UbicacionEntity ubi) async {
+    // 1. Validamos que tengamos el ID del movimiento necesario
+    final idMovimientoProceso = movimientoEnProceso?.id;
+
+    if (idMovimientoProceso == null) {
+      errorMessage =
+          "Error: No hay un ID de movimiento activo para este despacho.";
+      notifyListeners();
+      return false;
+    }
+
+    // 2. Iniciamos estado de carga para bloquear la UI (importante en ZTE para evitar doble clic)
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      // 3. Llamamos a la función centralizada que ya creamos
+      await _registrarTipoDeMovimiento(
+        tipo: 'Piso-Camion',
+        origenId: ubi.id,
+        movementId: idMovimientoProceso, // Aseguramos que sea String
+      );
+
+      // 4. Si el servidor respondió OK, limpiamos todo para el siguiente contenedor
+      limpiarEstado();
+
+      // Opcional: Puedes guardar un mensaje de éxito temporal
+      mensajeValidacion = "Despacho de serie ${ubi.serie} exitoso";
+      return true;
+    } catch (e) {
+      // 5. Manejo de errores
+      errorMessage = "Error al despachar: $e";
+      return false;
+    } finally {
+      // 6. Pase lo que pase, quitamos el loader
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  //////////////////// FUNCION PARA REGISTRAR MOVIMIENTO CAMION - PISO ///////////
+  ///
+
+  Future<bool> registrarMovimientoCamionPiso(UbicacionEntity ubi) async {
+    // 1. Validamos que tengamos el ID del movimiento necesario
+    final idMovimientoProceso = movimientoEnProceso?.id;
+
+    if (idMovimientoProceso == null) {
+      errorMessage =
+          "Error: No hay un ID de movimiento activo para este despacho.";
+      notifyListeners();
+      return false;
+    }
+
+    // 2. Iniciamos estado de carga para bloquear la UI (importante en ZTE para evitar doble clic)
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      // 3. Llamamos a la función centralizada que ya creamos
+      await _registrarTipoDeMovimiento(
+        tipo: 'Camion-Piso',
+        destinoId: ubi.id,
+        movementId: idMovimientoProceso, // Aseguramos que sea String
+      );
+
+      // 4. Si el servidor respondió OK, limpiamos todo para el siguiente contenedor
+      limpiarEstado();
+
+      // Opcional: Puedes guardar un mensaje de éxito temporal
+      mensajeValidacion = "Despacho de serie ${ubi.serie} exitoso";
+      return true;
+    } catch (e) {
+      // 5. Manejo de errores
+      errorMessage = "Error al despachar: $e";
+    } finally {
+      // 6. Pase lo que pase, quitamos el loader
+      isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
+
+  ///////////////////////FUNCION PARA PINTAR LOS ESPACIOS /////////////////////////
+
   Color getEspacioColor(List<UbicacionEntity> niveles) {
     int libres = niveles.where((n) => n.estatus.toLowerCase() == "free").length;
 
@@ -113,25 +279,132 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
     }
   }
 
+  /////////////////FUNCION PARA CENTRALIZA, FILTRAR Y EVITAR EL ERROR EN EL ORDENAMIENTO DE LOS ESPACIOS //////////////
+  ///
+
+  List<UbicacionEntity> getNivelesDelEspacio(
+      String areaNombre, String numEspacio) {
+    if (ubicacionesMapEntity == null) return [];
+
+    // Filtramos que coincida el área y el número de espacio
+    final lista = ubicacionesMapEntity!.ubicaciones
+        .where((u) => u.area == areaNombre && u.espacio == numEspacio)
+        .toList();
+
+    // Ordenamos por nivel (del 1 al 3) usando matemáticas, no Strings
+    lista.sort((a, b) =>
+        (int.tryParse(a.nivel) ?? 0).compareTo(int.tryParse(b.nivel) ?? 0));
+
+    return lista;
+  }
+
+  ///// FUNCION PARA OBTENER LOS NUMEROS DE ESPACIOS, ESTA LIGADA LA FUNCION _buildAreaColumn //////////
+  ///
+  List<String> getEspaciosNumericos(String areaNombre) {
+    if (ubicacionesMapEntity == null) return [];
+
+    return ubicacionesMapEntity!.ubicaciones
+        .where((u) => u.area == areaNombre)
+        .map((u) => u.espacio)
+        .where((e) => int.tryParse(e) != null) // Limpieza de datos basura
+        .toSet()
+        .toList()
+      ..sort((a, b) => int.parse(a).compareTo(int.parse(b)));
+  }
+
+  //// FUNCION PARA GESTIONAR EL ESPACIO ////////////
+  ///
+
+  //////////FUNCION PARA CARGAR EL MAPA ///////////////////////
+  ///
+
+  Future<void> cargarMapa() async {
+    isLoading = true;
+    errorMessage = null;
+    notifyListeners();
+
+    try {
+      final resultado = await getMapaUbicacionesUseCase.execute();
+
+      if (resultado != null) {
+        ubicacionesMapEntity = resultado;
+      } else {
+        errorMessage = "El servidor devolvió un mapa vacío.";
+      }
+    } catch (e) {
+      errorMessage = "Error al procesar datos del mapa: $e";
+    } finally {
+      isLoading = false;
+      _faseReacomodo = FaseReacomodo.ninguno;
+      _containerParaMover = null;
+      notifyListeners();
+    }
+  }
+
+  void activarReacomodo(UbicacionEntity contenedor) {
+    // 1. Sincronizamos: El contenedor que la app detectó como bloqueador
+    // se convierte en nuestro ORIGEN para el movimiento.
+    ubicacionOrigen = contenedor;
+    _containerParaMover =
+        contenedor; // Mantén esta si la usas para mostrar la serie en la UI
+
+    // 2. Cambiamos la fase para que el mapa ahora acepte el toque de DESTINO
+    _faseReacomodo = FaseReacomodo.destino;
+
+    // 3. Limpiamos cualquier destino previo por si acaso
+    ubicacionDestino = null;
+
+    notifyListeners();
+  }
+
+  void cancelarReacomodo() {
+    // 1. Regresamos la fase a ninguno o inicio
+    _faseReacomodo = FaseReacomodo.ninguno;
+
+    // 2. Limpiamos las variables de control
+    _containerParaMover = null;
+    ubicacionOrigen = null;
+    ubicacionDestino = null;
+
+    // 3. Si tienes un booleano 'enModoReacomodo', ponlo en false
+    // enModoReacomodo = false;
+
+    notifyListeners(); // Esto le avisa al mapa que ya no debe pedir destino
+  }
+
+  /// 3. VALIDACIÓN DE SALIDA DIRECTA (La que ya tenías)
+  bool puedeRealizarSalidaDirecta(
+      UbicacionEntity asignado, List<UbicacionEntity> niveles) {
+    int nivelObj = int.tryParse(asignado.nivel) ?? 0;
+    // Si hay algún nivel superior ocupado, retorna false (bloqueado)
+    return !niveles.any((n) =>
+        (int.tryParse(n.nivel) ?? 0) > nivelObj &&
+        n.estatus.toLowerCase() == 'used');
+  }
+
 //recibe el tipo de movimiento y lo filtra
   void prepararMovimiento([Movimiento? mov]) {
-    // Los corchetes [] lo hacen opcional
+    // 1. Limpiamos estados previos
     ubicacionDestino = null;
     ubicacionOrigen = null;
     mensajeValidacion = null;
 
     if (mov != null) {
+      // ✅ Ahora es seguro imprimir porque ya comprobamos que NO es nulo
+      print(
+          'Nuevo movimiento: ${mov.tipoMovimiento} en ${mov.area}-${mov.espacio}');
+
       // CASO: VIENE DE LA LISTA (Piso-Camion o Camion-Piso)
       movimientoEnProceso = mov;
       final tipoStr = mov.tipoMovimiento.toLowerCase();
 
       if (tipoStr.contains('piso-camion')) {
-        movimientoActaul = TipoMovimiento.pisoCamion;
+        movimientoActual = TipoMovimiento.pisoCamion;
       } else if (tipoStr.contains('camion-piso')) {
-        movimientoActaul = TipoMovimiento.camionPiso;
+        movimientoActual = TipoMovimiento.camionPiso;
       }
 
-      // Buscamos el origen automáticamente por la serie que viene en el movimiento
+      // Búsqueda automática de ubicación en el mapa
       if (ubicacionesMapEntity != null && mov.serieReal.isNotEmpty) {
         try {
           ubicacionOrigen = ubicacionesMapEntity!.ubicaciones.firstWhere(
@@ -142,10 +415,10 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
         }
       }
     } else {
-      // CASO: REACOMODO MANUAL (Botón flotante)
+      // ✅ CASO: REACOMODO MANUAL (Sin movimiento previo)
+      print('Iniciando modo Reacomodo Manual');
       movimientoEnProceso = null;
-      movimientoActaul = TipoMovimiento.reacomodo;
-      print("REACOMODO");
+      movimientoActual = TipoMovimiento.reacomodo;
     }
 
     notifyListeners();
@@ -155,7 +428,7 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
       UbicacionEntity ubi, List<UbicacionEntity> nivelesDelEspacio) {
     mensajeValidacion = null;
 
-    switch (movimientoActaul) {
+    switch (movimientoActual) {
       case TipoMovimiento.pisoCamion:
         _manejarPisoCamion(ubi, nivelesDelEspacio);
         break;
@@ -261,37 +534,6 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
     }
   }
 
-  Future<void> cargarMapa() async {
-    isLoading = true;
-    errorMessage = null;
-    notifyListeners();
-
-    try {
-      final resultado = await getMapaUbicacionesUseCase.execute();
-
-      if (resultado != null) {
-        // DEBUG: Verifica que las listas no lleguen vacías
-        print("✅ Áreas: ${resultado.areas.length}");
-        print("✅ Ubicaciones: ${resultado.ubicaciones.length}");
-
-        ubicacionesMapEntity = resultado;
-      } else {
-        errorMessage = "El servidor devolvió un mapa vacío.";
-      }
-    } catch (e, stacktrace) {
-      // CRÍTICO: Imprime el stacktrace para ver si el error es en el Factory fromJson
-      print("❌ ERROR FATAL AL CARGAR MAPA: $e");
-      print("DEBUG STACKTRACE: $stacktrace");
-
-      errorMessage = "Error al procesar datos del mapa: $e";
-    } finally {
-      isLoading = false;
-      _faseReacomodo = FaseReacomodo.ninguno;
-      _containerParaMover = null;
-      notifyListeners();
-    }
-  }
-
   void seleccionarOrigen(UbicacionEntity ubi) {
     // 1. Validamos que la ubicación NO esté libre (debe haber algo que mover)
     if (ubi.estatus.toLowerCase() != 'free') {
@@ -302,7 +544,6 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
       ubicacionDestino = null;
       errorMessage = null; // Limpiamos errores previos
 
-      print("Origen fijado: ${ubi.serie} en ${ubi.codigo}");
       notifyListeners();
     } else {
       // 3. Error: No puedes mover un espacio vacío
@@ -328,108 +569,6 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
   void limpiarSeleccion() {
     ubicacionOrigen = null;
     ubicacionDestino = null;
-    notifyListeners();
-  }
-
-  /// funcion para poner Piso - Camion
-  bool puedeExtraer(
-      UbicacionEntity nivelTocado, List<UbicacionEntity> nivelesDelEspacio) {
-    // Si toco el Nivel 1, reviso si el 2 o 3 están ocupados (Used)
-    if (nivelTocado.nivel == "1") {
-      return !nivelesDelEspacio.any(
-          (n) => (n.nivel == "2" || n.nivel == "3") && n.estatus == "Used");
-    }
-    // Si toco el Nivel 2, reviso si el 3 está ocupado
-    if (nivelTocado.nivel == "2") {
-      return !nivelesDelEspacio
-          .any((n) => n.nivel == "3" && n.estatus == "Used");
-    }
-    // El Nivel 3 siempre se puede extraer si está ocupado
-    return true;
-  }
-
-  bool puedeDepositar(
-      UbicacionEntity nivelTocado, List<UbicacionEntity> nivelesDelEspacio) {
-    // 1. El espacio debe estar libre
-    if (nivelTocado.estatus.toLowerCase() != 'free') return false;
-
-    int nivelDeseado = int.parse(nivelTocado.nivel);
-
-    // Si es Nivel 1, siempre se puede (si está free)
-    if (nivelDeseado == 1) return true;
-
-    // Si es Nivel 2 o 3, verificamos que el nivel inmediatamente inferior esté ocupado
-    int nivelInferior = nivelDeseado - 1;
-    return nivelesDelEspacio.any((n) =>
-        int.parse(n.nivel) == nivelInferior &&
-        n.estatus.toLowerCase() == 'used');
-  }
-
-  void finalizarReacomodo(UbicacionEntity destino) async {
-    final user = UserSession();
-    final siteId = user.siteId;
-
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-
-    final movimiento = MovimientoRegistro(
-      crane_movement_id: null,
-      movement_type: 'Reacomodo',
-      crane_operator_id: user.id.toString(),
-      container_location_id: int.parse(ubicacionOrigen!.id),
-      new_container_location_id: ubicacionDestino!.id,
-      container_number: _containerParaMover?.serie,
-      status: null,
-      token: token,
-      weight: '',
-      document_name: '',
-      document: '',
-      site_id: siteId ?? '',
-    );
-
-    await reacomodoUseCase.execute(movimiento);
-
-    // 2. Limpiamos el modo reacomodo
-    _faseReacomodo = FaseReacomodo.ninguno;
-    _containerParaMover = null;
-
-    // 3. Refrescamos el mapa para que el contenedor aparezca en su nuevo lugar
-    await cargarMapa();
-
-    // 4. Avisamos a la UI para que quite la barra naranja
-    notifyListeners();
-  }
-
-  Future<void> ejecutarDespachoPisoCamion(UbicacionEntity ubi) async {
-    print('ejecutando movimiento PISO-CAMION');
-    final user = UserSession();
-    final siteId = user.siteId;
-
-    final prefs = await SharedPreferences.getInstance();
-    final token = prefs.getString('token') ?? '';
-
-    final movimiento = MovimientoRegistro(
-      crane_movement_id: movimientoEnProceso!.id,
-      movement_type: 'Piso-Camion',
-      crane_operator_id: user.id.toString(),
-      container_location_id: int.parse(ubi.id),
-      new_container_location_id: null,
-      container_number: _containerParaMover?.serie,
-      status: null,
-      token: token,
-      weight: '',
-      document_name: '',
-      document: '',
-      site_id: siteId ?? '',
-    );
-
-    debugPrint('crane_movement_id ${movimiento.crane_movement_id}');
-
-    //await reacomodoUseCase.execute(movimiento);
-
-    //await cargarMapa();
-
-    // 4. Avisamos a la UI para que quite la barra naranja
     notifyListeners();
   }
 }
