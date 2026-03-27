@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/widgets.dart';
 import 'package:segadi/core/theme/app_colors.dart';
 import 'package:segadi/features/ubications/domain/entities/movimiento_registro.dart';
 import 'package:segadi/features/ubications/domain/entities/movimientos_list_entity.dart';
@@ -8,7 +9,7 @@ import 'package:segadi/features/ubications/domain/usecases/registrar_movimiento_
 import 'package:segadi/utils/user_session.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-enum TipoMovimiento { pisoCamion, camionPiso, reacomodo }
+enum TipoMovimiento { pisoCamion, camionPiso, reacomodo, ninguno }
 
 enum FaseReacomodo { ninguno, origen, destino, none }
 
@@ -89,6 +90,32 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
     return !tieneAlgoEncima;
   }
 
+  //////////////////FUNCION PARA VALIDAR CUAL CONTENEDOR MOVER ////////////////////////
+  ///
+
+  String get serieActiva {
+    // PRIORIDAD 1: Si hay algo que el usuario tocó en el mapa (Piso-Camión o Reacomodo)
+    if (_containerParaMover != null && _containerParaMover!.serie != null) {
+      return _containerParaMover!.serie!;
+    }
+
+    // PRIORIDAD 2: Si venimos del listado y la orden dice qué contenedor mover (A o B)
+    if (movimientoEnProceso != null) {
+      final mov = movimientoEnProceso!;
+
+      // Si la orden especifica el B, intentamos usar el B
+      if (mov.contenedorAMover.contains("Contenedor B") &&
+          mov.contenedorB.isNotEmpty) {
+        return mov.contenedorB;
+      }
+
+      // Por defecto o si es el A, usamos la serie A
+      return mov.contenedorA.isNotEmpty ? mov.contenedorA : mov.serieReal;
+    }
+
+    return "Sin Serie";
+  }
+
   //FUNCION PARA DEPOSITAR EL CONTENEDOR EN PISO // SEGUNADA FUNCION AUXILIAR PARA EL MOVIMIENTO DE CONTENEDORES
 
   // REGLA: ¿Puedo poner un contenedor aquí?
@@ -128,9 +155,9 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
           movementId, // id del movimiento, este viene del listado
       movement_type: tipo,
       crane_operator_id: user.id.toString(),
-      container_location_id: int.parse(origenId!),
+      container_location_id: origenId != null ? int.tryParse(origenId) : null,
       new_container_location_id: destinoId, // Solo para Reacomodo/Camion-Piso
-      container_number: _containerParaMover?.serie,
+      container_number: serieActiva,
       token: token,
       site_id: user.siteId ?? '',
       weight: '',
@@ -220,44 +247,50 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
   ///
 
   Future<bool> registrarMovimientoCamionPiso(UbicacionEntity ubi) async {
-    // 1. Validamos que tengamos el ID del movimiento necesario
     final idMovimientoProceso = movimientoEnProceso?.id;
+    final numeroSerie = serieActiva;
 
-    if (idMovimientoProceso == null) {
-      errorMessage =
-          "Error: No hay un ID de movimiento activo para este despacho.";
+    if (idMovimientoProceso == null || numeroSerie == "Sin Serie") {
+      errorMessage = "Error: Datos de la orden incompletos.";
       notifyListeners();
       return false;
     }
 
-    // 2. Iniciamos estado de carga para bloquear la UI (importante en ZTE para evitar doble clic)
+    debugPrint(
+        'se insertara movimiento tipo PISO - CAMION, destino id: ${ubi.id} movimiento id: ${idMovimientoProceso} numero de serie: ${numeroSerie}');
+
     isLoading = true;
     errorMessage = null;
     notifyListeners();
 
     try {
-      // 3. Llamamos a la función centralizada que ya creamos
       await _registrarTipoDeMovimiento(
         tipo: 'Camion-Piso',
         destinoId: ubi.id,
-        movementId: idMovimientoProceso, // Aseguramos que sea String
+        movementId: idMovimientoProceso,
       );
 
-      // 4. Si el servidor respondió OK, limpiamos todo para el siguiente contenedor
+      // GUARDAMOS LOS DATOS ANTES DE LIMPIAR (Para el mensaje de éxito)
+      // Usamos el operador ?? para evitar el Null Check Error
+      final serieFinalizada = ubi.serie ?? 'Desconocida';
+
+      // 4. Limpiamos estado DESPUÉS de asegurar los datos
       limpiarEstado();
 
-      // Opcional: Puedes guardar un mensaje de éxito temporal
-      mensajeValidacion = "Despacho de serie ${ubi.serie} exitoso";
+      mensajeValidacion = "Entrada de serie $serieFinalizada exitosa";
+
+      // IMPORTANTE: Quitamos el loader aquí antes del return true
+      isLoading = false;
+      notifyListeners();
       return true;
     } catch (e) {
-      // 5. Manejo de errores
+      debugPrint('Error en camion - piso: $e');
       errorMessage = "Error al despachar: $e";
-    } finally {
-      // 6. Pase lo que pase, quitamos el loader
-      isLoading = false;
+      isLoading = false; // Quitamos loader en caso de error
       notifyListeners();
       return false;
     }
+    // ELIMINAMOS EL FINALLY CON RETURN PARA EVITAR SOBREESCRITURA
   }
 
   ///////////////////////FUNCION PARA PINTAR LOS ESPACIOS /////////////////////////
@@ -357,19 +390,31 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  void cancelarReacomodo() {
+  void cancelarReacomodo({bool resetearTipoMovimiento = false}) {
     // 1. Regresamos la fase a ninguno o inicio
     _faseReacomodo = FaseReacomodo.ninguno;
-
-    // 2. Limpiamos las variables de control
     _containerParaMover = null;
     ubicacionOrigen = null;
     ubicacionDestino = null;
+    _containerParaMover?.serie;
 
-    // 3. Si tienes un booleano 'enModoReacomodo', ponlo en false
-    // enModoReacomodo = false;
+    if (resetearTipoMovimiento) {
+      movimientoActual = TipoMovimiento.ninguno;
+    }
 
-    notifyListeners(); // Esto le avisa al mapa que ya no debe pedir destino
+    debugPrint(
+        'fase reacomodo: ${_faseReacomodo} contenedor a mover: ${_containerParaMover} ubicacion origen: ${ubicacionOrigen} ubicacion destino: ${ubicacionDestino}');
+    if (TipoMovimiento.ninguno == true) {
+      debugPrint('movimiento actual: ${movimientoActual}');
+    }
+    notifyListeners();
+  }
+
+  void prepararReacomodoManual() {
+    movimientoActual = TipoMovimiento.reacomodo;
+    _faseReacomodo = FaseReacomodo.origen;
+    ubicacionOrigen = null;
+    notifyListeners();
   }
 
   /// 3. VALIDACIÓN DE SALIDA DIRECTA (La que ya tenías)

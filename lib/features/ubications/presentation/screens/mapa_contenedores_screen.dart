@@ -51,6 +51,43 @@ class _GestionInventarioPageState extends State<GestionInventarioPage> {
           : vm.ubicacionesMapEntity == null
               ? const Center(child: Text("Error al cargar el mapa"))
               : _MapaHorizontalView(vm: vm),
+      floatingActionButton: FloatingActionButton.extended(
+        backgroundColor: vm.faseReacomodo == FaseReacomodo.destino
+            ? Colors.redAccent // Color para cancelar
+            : Colors.orange[800], // Color para iniciar
+        icon: Icon(
+          vm.faseReacomodo == FaseReacomodo.destino
+              ? Icons.close
+              : Icons.sync_alt,
+          color: Colors.white,
+        ),
+        label: Text(
+          vm.faseReacomodo == FaseReacomodo.destino
+              ? "Cancelar Movimiento"
+              : "Reacomodoar Contenedor",
+          style:
+              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        ),
+        onPressed: () {
+          if (vm.faseReacomodo == FaseReacomodo.destino) {
+            // Si ya tenía algo en el "gancho", lo soltamos (cancelamos)
+            vm.cancelarReacomodo(resetearTipoMovimiento: true);
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                      "Reacomodo cancelado. El contenedor vuelve a su sitio.")),
+            );
+          } else {
+            // Iniciamos el modo reacomodo
+            vm.prepararReacomodoManual();
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                  content: Text(
+                      "Modo Reacomodo: Seleccione el contenedor a mover.")),
+            );
+          }
+        },
+      ),
     );
   }
 }
@@ -67,7 +104,9 @@ class _MapaHorizontalView extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Leyenda superior
-        if (vm.enModoReacomodo) _buildBarraReacomodo(context),
+        // if (vm.faseReacomodo == FaseReacomodo.destino)
+        if (vm.movimientoActual != TipoMovimiento.ninguno)
+          _buildBarraReacomodo(context),
 
         // Leyenda superior
         Container(
@@ -98,37 +137,133 @@ class _MapaHorizontalView extends StatelessWidget {
   }
 
   Widget _buildBarraReacomodo(BuildContext context) {
+    Color colorBarra = Colors.blue[900]!; // Default
+    String titulo = "";
+    String instruccion = "";
+    IconData icono = Icons.info;
+
+    switch (vm.movimientoActual) {
+      case TipoMovimiento.pisoCamion:
+        colorBarra = const Color(0xFF2C522A); // Verde oscuro (Despacho)
+        titulo = "ORDEN DE DESPACHO (PISO - CAMIÓN)";
+        icono = Icons.local_shipping;
+        instruccion = vm.faseReacomodo == FaseReacomodo.destino
+            ? "Contenedor en gancho. Toque el camión o destino."
+            : "Seleccione el contenedor: ${vm.movimientoEnProceso?.serieReal}";
+        break;
+
+      case TipoMovimiento.camionPiso:
+        colorBarra = Colors.teal[700]!; // Azul verdoso (Descarga)
+        titulo = "ORDEN DE ENTRADA (CAMIÓN - PISO)";
+        icono = Icons.download;
+        instruccion = "Seleccione un espacio LIBRE (Verde) para aterrizar.";
+        break;
+
+      case TipoMovimiento.reacomodo:
+        colorBarra = Colors.orange[900]!; // Naranja (Reacomodo)
+        titulo = "MODO REACOMODO MANUAL";
+        icono = Icons.sync_alt;
+        instruccion = vm.faseReacomodo == FaseReacomodo.destino
+            ? "Moviendo: ${vm.serieEnGancho}. Toque el destino."
+            : "Seleccione el contenedor que desea mover.";
+        break;
+
+      default:
+        return const SizedBox.shrink();
+    }
+
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
-      color: Colors.orange[900],
+      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+      color: colorBarra,
       child: Row(
         children: [
-          const Icon(Icons.sync_alt, color: Colors.white, size: 30),
+          Icon(icono, color: Colors.white, size: 28),
           const SizedBox(width: 15),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                const Text("MODO REACOMODO",
-                    style: TextStyle(
-                        color: Colors.white, fontWeight: FontWeight.bold)),
-                Text(
-                  "Moviendo: ${vm.serieEnGancho}. Toque el espacio de destino en el mapa.",
-                  style: const TextStyle(color: Colors.white, fontSize: 16),
-                ),
+                Text(titulo,
+                    style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13)),
+                Text(instruccion,
+                    style: const TextStyle(color: Colors.white, fontSize: 15)),
               ],
             ),
           ),
-          ElevatedButton(
+          // Botón de Cancelar solo para Reacomodo o si quieres permitir abortar despacho
+          TextButton(
+            style: TextButton.styleFrom(foregroundColor: Colors.white),
             onPressed: () {
-              vm.cancelarReacomodo();
+              // 1. Guardamos el tipo de movimiento ACTUAL antes de borrarlo
+              final tipoAntesDeCancelar = vm.movimientoActual;
+
+              // 2. Ahora sí limpiamos el ViewModel
+              vm.cancelarReacomodo(resetearTipoMovimiento: true);
+
+              // 3. Evaluamos usando la variable que guardamos
+              if (tipoAntesDeCancelar == TipoMovimiento.pisoCamion ||
+                  tipoAntesDeCancelar == TipoMovimiento.camionPiso) {
+                // Regresamos al listado de órdenes
+                Navigator.pop(context);
+              } else {
+                // Si era reacomodo manual, solo mostramos el aviso y nos quedamos en el mapa
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                    content: Text("Se ha cancelado el reacomodo manual")));
+              }
             },
-            child: const Text("CANCELAR"),
+            child: const Text("CANCELAR",
+                style: TextStyle(fontWeight: FontWeight.bold)),
           ),
         ],
       ),
     );
+    // return Container(
+    //   width: double.infinity,
+    //   padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 20),
+    //   color: Colors.orange[900],
+    //   child: Row(
+    //     children: [
+    //       const Icon(Icons.sync_alt, color: Colors.white, size: 30),
+    //       const SizedBox(width: 15),
+    //       Expanded(
+    //         child: Column(
+    //           crossAxisAlignment: CrossAxisAlignment.start,
+    //           children: [
+    //             const Text("MODO REACOMODO ACTIVO",
+    //                 style: TextStyle(
+    //                     color: Colors.white,
+    //                     fontWeight: FontWeight.bold,
+    //                     fontSize: 14)),
+    //             Text(
+    //               // Si tienes la serie en 'serieEnGancho' úsala, si no, usa la de ubicacionOrigen
+    //               "Moviendo: ${vm.serieEnGancho} "
+    //               "(Nivel ${vm.ubicacionOrigen?.nivel ?? 'No hay nivel'})",
+    //               style: const TextStyle(color: Colors.white, fontSize: 14),
+    //             ),
+    //             Text(
+    //               "Seleccione un espacio con nivel libre para aterrizar.",
+    //               style: TextStyle(
+    //                   color: Colors.orange[100],
+    //                   fontSize: 12,
+    //                   fontWeight: FontWeight.w500),
+    //             ),
+    //           ],
+    //         ),
+    //       ),
+    //       ElevatedButton(
+    //         onPressed: () {
+    //           vm.cancelarReacomodo();
+    //         },
+    //         child: const Text("CANCELAR"),
+    //       ),
+    //     ],
+    //   ),
+    // );
   }
 
   Widget _buildAreaColumn(

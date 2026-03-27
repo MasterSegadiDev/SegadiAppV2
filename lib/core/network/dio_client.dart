@@ -17,7 +17,7 @@ class DioClient {
 
     dio.interceptors.add(PrettyDioLogger(
       requestBody: true, // Ver qué mandas (útil para errores)
-      responseBody: true, // <--- ESTO QUITA EL LISTADO GIGANTE
+      // responseBody: true, // <--- ESTO QUITA EL LISTADO GIGANTE
       error: true, // Ver si algo truena
       compact: true,
     ));

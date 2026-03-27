@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:segadi/features/firebase_cloud_messaging.dart/domain/usecases/listen_service_update.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
