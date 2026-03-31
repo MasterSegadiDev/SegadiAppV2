@@ -52,6 +52,25 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
     required this.reacomodoUseCase,
   });
 
+  ///////////////////FUNCION PARA MOSTRAR BOTON REACOMODO EN EL MAPA SOLO CUANDO VENGA DE LA LISTA DE MOVIMIENTOS //////////
+  ///
+
+  bool showButtonReacomodo(UbicacionesMapaViewModel vm) {
+    if (vm.movimientoActual == TipoMovimiento.reacomodo) {
+      return false;
+    }
+
+    if (vm.movimientoActual == TipoMovimiento.camionPiso) {
+      return false;
+    }
+
+    if (vm.movimientoActual == TipoMovimiento.pisoCamion) {
+      return false;
+    }
+
+    return true;
+  }
+
   //// FUNCION AUXILIAR PARA RESETEAR LOS VALORES /////
 
   void limpiarEstado() {
@@ -139,9 +158,8 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
   }
 
   ///////FUNCION PARA ENVIAR DATOS AL SERVIDOR DEPENDIENDO EL TIPO DE MOVIMIENTO ///////////////
-
   Future<void> _registrarTipoDeMovimiento({
-    required String tipo,
+    required String tipo, // 'Reacomodo', 'Piso-Camion', 'Camion-Piso'
     String? origenId,
     String? destinoId,
     int? movementId,
@@ -150,13 +168,32 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
     final prefs = await SharedPreferences.getInstance();
     final token = prefs.getString('token') ?? '';
 
+    // --- PASO PREVIO: Lógica Inteligente de IDs ---
+    int? finalOrigen;
+    String? finalDestino;
+
+    if (tipo == 'Camion-Piso') {
+      // 🚩 CORRECCIÓN CRÍTICA:
+      // Si el servidor rechaza el null en origen, mandamos el ID de la celda aquí.
+      finalOrigen = int.tryParse(destinoId ?? '');
+      finalDestino = null; // O puedes repetir destinoId si el API pide ambos
+    } else if (tipo == 'Piso-Camion') {
+      finalOrigen = int.tryParse(origenId ?? '');
+      finalDestino = null;
+    } else {
+      // Reacomodo
+      finalOrigen = int.tryParse(origenId ?? '');
+      finalDestino = destinoId;
+    }
     final movimiento = MovimientoRegistro(
-      crane_movement_id:
-          movementId, // id del movimiento, este viene del listado
+      crane_movement_id: movementId,
       movement_type: tipo,
       crane_operator_id: user.id.toString(),
-      container_location_id: origenId != null ? int.tryParse(origenId) : null,
-      new_container_location_id: destinoId, // Solo para Reacomodo/Camion-Piso
+
+      // Ahora enviamos el ID donde el servidor lo espera
+      container_location_id: finalOrigen,
+      new_container_location_id: finalDestino,
+
       container_number: serieActiva,
       token: token,
       site_id: user.siteId ?? '',
@@ -166,12 +203,17 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
       status: null,
     );
 
+    print(movimiento.toJson());
+
     try {
       await reacomodoUseCase.execute(movimiento);
-      await cargarMapa(); // Refresca el mapa automáticamente
+
+      // Si todo salió bien, refrescamos el mapa
+      await cargarMapa();
     } catch (e) {
-      errorMessage = "Error al registrar: $e";
+      errorMessage = "Error al registrar $tipo: $e";
       notifyListeners();
+      rethrow; // Lanzamos el error para que la función que llamó a esta sepa que falló
     }
   }
 
@@ -272,12 +314,12 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
 
       // GUARDAMOS LOS DATOS ANTES DE LIMPIAR (Para el mensaje de éxito)
       // Usamos el operador ?? para evitar el Null Check Error
-      final serieFinalizada = ubi.serie ?? 'Desconocida';
+      //final serieFinalizada = ubi.serie ?? 'Desconocida';
 
       // 4. Limpiamos estado DESPUÉS de asegurar los datos
       limpiarEstado();
 
-      mensajeValidacion = "Entrada de serie $serieFinalizada exitosa";
+      //mensajeValidacion = "Entrada de serie $serieFinalizada exitosa";
 
       // IMPORTANTE: Quitamos el loader aquí antes del return true
       isLoading = false;
@@ -391,22 +433,22 @@ class UbicacionesMapaViewModel extends ChangeNotifier {
   }
 
   void cancelarReacomodo({bool resetearTipoMovimiento = false}) {
-    // 1. Regresamos la fase a ninguno o inicio
+    // 1. Siempre regresamos a la fase inicial para poder elegir un nuevo origen
     _faseReacomodo = FaseReacomodo.ninguno;
+
+    // 2. Limpiamos los contenedores y ubicaciones "en el gancho"
     _containerParaMover = null;
     ubicacionOrigen = null;
     ubicacionDestino = null;
-    _containerParaMover?.serie;
 
+    // 3. Lógica de resetear el tipo de movimiento
     if (resetearTipoMovimiento) {
+      // Solo lo ponemos en ninguno si realmente queremos salir del modo mapa/reacomodo
       movimientoActual = TipoMovimiento.ninguno;
     }
 
     debugPrint(
-        'fase reacomodo: ${_faseReacomodo} contenedor a mover: ${_containerParaMover} ubicacion origen: ${ubicacionOrigen} ubicacion destino: ${ubicacionDestino}');
-    if (TipoMovimiento.ninguno == true) {
-      debugPrint('movimiento actual: ${movimientoActual}');
-    }
+        'Estado tras cancelar: Fase: $_faseReacomodo | Mov: $movimientoActual');
     notifyListeners();
   }
 

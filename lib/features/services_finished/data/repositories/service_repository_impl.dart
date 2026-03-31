@@ -42,9 +42,23 @@ class ServiceRepositoryImpl implements ServiceRepository {
             ServerFailure('Error del servidor: ${response.statusCode}'));
       }
     } on DioException catch (e) {
-      if (e.type == DioExceptionType.connectionTimeout) {
+      // 1. Verificamos si el servidor envió una respuesta con datos (como el 404 con JSON)
+      if (e.response != null && e.response?.data != null) {
+        final data = e.response?.data;
+
+        // Extraemos el "error_message" del JSON
+        if (data is Map && data.containsKey('error_message')) {
+          return Left(ServerFailure(data['error_message']));
+        }
+      }
+
+      // 2. Manejo de timeouts
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
         return Left(ServerFailure('Tiempo de espera agotado'));
       }
+
+      // 3. Error genérico si no hay "error_message"
       return Left(ServerFailure(e.message ?? 'Error inesperado de red'));
     } catch (e) {
       return Left(ServerFailure('Error al procesar datos'));

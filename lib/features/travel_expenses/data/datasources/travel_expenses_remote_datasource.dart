@@ -114,20 +114,40 @@ class TravelExpensesRemoteDataSource {
     final response = await _dio.get('index.php', queryParameters: {
       'r': 'esegadi/getcomprobacionevidencia',
       'id_user': prefs.getInt('id'),
-      'money_check_id':
-          conceptId, // Este ID debe ser el ID del gasto registrado
+      'money_check_id': conceptId,
       'token': prefs.getString('token'),
     });
 
-    // 2. Extraemos la URL (asumiendo la estructura que me pasaste)
+    // 🚩 VALIDACIÓN CRÍTICA: Revisamos si 'evidencia' o 'url' vienen nulos
+    if (response.data == null ||
+        response.data['evidencia'] == null ||
+        response.data['evidencia']['url'] == null ||
+        response.data['evidencia']['url'].toString().isEmpty) {
+      // Lanzamos una excepción personalizada que el Repository atrapará
+      throw Exception("No hay evidencia registrada para este concepto");
+    }
+
+    // 2. Extraemos la URL de forma segura
     final String imageUrl = response.data['evidencia']['url'];
 
-    // 3. Descargamos los bytes de esa URL
-    final imageRes = await _dio.get(
-      imageUrl,
-      options: Options(responseType: ResponseType.bytes),
-    );
+    // 3. Descargamos los bytes con un manejo de errores extra
+    try {
+      final imageRes = await _dio.get(
+        imageUrl,
+        options: Options(
+          responseType: ResponseType.bytes,
+          // Agregamos un tiempo de espera para que no se quede colgado en el ZTE
+          receiveTimeout: const Duration(seconds: 10),
+        ),
+      );
 
-    return Uint8List.fromList(imageRes.data);
+      if (imageRes.data == null || (imageRes.data as List).isEmpty) {
+        throw Exception("La imagen del servidor está vacía (0 bytes)");
+      }
+
+      return Uint8List.fromList(imageRes.data);
+    } catch (e) {
+      throw Exception("Error al conectar con el servidor de imágenes: $e");
+    }
   }
 }

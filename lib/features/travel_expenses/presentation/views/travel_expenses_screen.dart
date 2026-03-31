@@ -127,43 +127,107 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
       BuildContext context, int id, TravelExpensesViewModel vm) {
     showDialog(
       context: context,
+      barrierDismissible: true,
       builder: (context) {
         return FutureBuilder<Uint8List?>(
+          // Convertimos el id a String si tu UseCase lo requiere así
           future: vm.viewEvidence(id),
           builder: (context, snapshot) {
+            // 1. ESTADO: CARGANDO
             if (snapshot.connectionState == ConnectionState.waiting) {
-              return const Center(child: CircularProgressIndicator());
-            }
-
-            if (snapshot.hasData && snapshot.data != null) {
-              return AlertDialog(
-                contentPadding: EdgeInsets.all(8),
-                content: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.memory(snapshot.data!, fit: BoxFit.contain),
-                    TextButton(
-                      onPressed: () => Navigator.pop(context),
-                      child: const Text("Cerrar"),
-                    ),
-                  ],
+              return const Center(
+                child: CircularProgressIndicator(
+                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
                 ),
               );
             }
 
+            // 2. VALIDACIÓN DE BYTES REALES
+            // Verificamos que no sea nulo Y que no tenga 0 bytes (evita el error de codec)
+            final bool tieneImagenValida = snapshot.hasData &&
+                snapshot.data != null &&
+                snapshot.data!.isNotEmpty;
+
             return AlertDialog(
-              title: const Text("Sin Evidencia"),
-              content: const Text(
-                  "Por el momento no tienes una imagen de evidencia para este gasto, necesitas subir una imagen para poder visualizarla aquí."),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: const Text("Cerrar")),
-              ],
+              shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(20)),
+              title: Text(
+                tieneImagenValida ? "Comprobante Fiscal" : "Sin Evidencia",
+                textAlign: TextAlign.center,
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              content: Column(
+                mainAxisSize: MainAxisSize.min, // Ajuste dinámico al contenido
+                children: [
+                  if (tieneImagenValida)
+                    // ✅ CASO: IMAGEN RECUPERADA CON ÉXITO
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.memory(
+                        snapshot.data!,
+                        fit: BoxFit.contain,
+                        // Manejo de error por si los bytes vienen corruptos de todos modos
+                        errorBuilder: (context, error, stackTrace) =>
+                            _buildNoImagePlaceholder(),
+                      ),
+                    )
+                  else
+                    // ❌ CASO: NO HAY IMAGEN O VIENE VACÍA (0 bytes)
+                    _buildNoImagePlaceholder(),
+
+                  const SizedBox(height: 25),
+
+                  // Botón de acción principal
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange.shade700,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50),
+                        ),
+                      ),
+                      onPressed: () => Navigator.pop(context),
+                      child: const Text(
+                        "Cerrar",
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             );
           },
         );
       },
+    );
+  }
+
+// Widget auxiliar para no repetir código del placeholder
+  Widget _buildNoImagePlaceholder() {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        const SizedBox(height: 10),
+        Image.asset(
+          'assets/images/no_ticket.png',
+          width: 160,
+          height: 160,
+          fit: BoxFit.contain,
+          // Seguro por si el asset no está bien configurado en pubspec
+          errorBuilder: (context, error, stackTrace) => const Icon(
+              Icons.broken_image_outlined,
+              size: 100,
+              color: Colors.grey),
+        ),
+        const SizedBox(height: 20),
+        const Text(
+          "No se registro una evidencia para este concepto.",
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Colors.black54, fontSize: 14),
+        ),
+      ],
     );
   }
 

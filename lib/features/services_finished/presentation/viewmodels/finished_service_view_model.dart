@@ -27,6 +27,9 @@ class FinishedServicesViewModel extends ChangeNotifier {
       (data) => _services = data,
     );
 
+    print(
+        'error al cargar el listado de servicios finalizados: $_errorMessage');
+
     _isLoading = false;
     notifyListeners();
   }

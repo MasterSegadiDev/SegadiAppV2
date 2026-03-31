@@ -82,6 +82,7 @@ class TravelExpensesRepositoryImpl implements TravelExpensesRepository {
     } on ApiException catch (e) {
       return Left(ServerFailure(e.message));
     } catch (e) {
+      print("Error no controlado en Repo: $e");
       return Left(ServerFailure("Error en el repositorio al obtener imagen"));
     }
   }

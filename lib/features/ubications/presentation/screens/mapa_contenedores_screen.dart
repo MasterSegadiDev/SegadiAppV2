@@ -51,43 +51,45 @@ class _GestionInventarioPageState extends State<GestionInventarioPage> {
           : vm.ubicacionesMapEntity == null
               ? const Center(child: Text("Error al cargar el mapa"))
               : _MapaHorizontalView(vm: vm),
-      floatingActionButton: FloatingActionButton.extended(
-        backgroundColor: vm.faseReacomodo == FaseReacomodo.destino
-            ? Colors.redAccent // Color para cancelar
-            : Colors.orange[800], // Color para iniciar
-        icon: Icon(
-          vm.faseReacomodo == FaseReacomodo.destino
-              ? Icons.close
-              : Icons.sync_alt,
-          color: Colors.white,
-        ),
-        label: Text(
-          vm.faseReacomodo == FaseReacomodo.destino
-              ? "Cancelar Movimiento"
-              : "Reacomodoar Contenedor",
-          style:
-              const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
-        ),
-        onPressed: () {
-          if (vm.faseReacomodo == FaseReacomodo.destino) {
-            // Si ya tenía algo en el "gancho", lo soltamos (cancelamos)
-            vm.cancelarReacomodo(resetearTipoMovimiento: true);
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text(
-                      "Reacomodo cancelado. El contenedor vuelve a su sitio.")),
-            );
-          } else {
-            // Iniciamos el modo reacomodo
-            vm.prepararReacomodoManual();
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                  content: Text(
-                      "Modo Reacomodo: Seleccione el contenedor a mover.")),
-            );
-          }
-        },
-      ),
+      floatingActionButton: vm.showButtonReacomodo(vm)
+          ? FloatingActionButton.extended(
+              backgroundColor: vm.faseReacomodo == FaseReacomodo.destino
+                  ? Colors.redAccent // Color para cancelar
+                  : Colors.orange[800], // Color para iniciar
+              icon: Icon(
+                vm.faseReacomodo == FaseReacomodo.destino
+                    ? Icons.close
+                    : Icons.sync_alt,
+                color: Colors.white,
+              ),
+              label: Text(
+                vm.faseReacomodo == FaseReacomodo.destino
+                    ? "Cancelar Movimiento"
+                    : "Reacomodar Contenedor",
+                style: const TextStyle(
+                    color: Colors.white, fontWeight: FontWeight.bold),
+              ),
+              onPressed: () {
+                if (vm.faseReacomodo == FaseReacomodo.destino) {
+                  // Si ya tenía algo en el "gancho", lo soltamos (cancelamos)
+                  vm.cancelarReacomodo(resetearTipoMovimiento: true);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            "Reacomodo cancelado. El contenedor vuelve a su sitio.")),
+                  );
+                } else {
+                  // Iniciamos el modo reacomodo
+                  vm.prepararReacomodoManual();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                        content: Text(
+                            "Modo Reacomodo: Seleccione el contenedor a mover.")),
+                  );
+                }
+              },
+            )
+          : null,
     );
   }
 }
@@ -199,21 +201,20 @@ class _MapaHorizontalView extends StatelessWidget {
           TextButton(
             style: TextButton.styleFrom(foregroundColor: Colors.white),
             onPressed: () {
-              // 1. Guardamos el tipo de movimiento ACTUAL antes de borrarlo
               final tipoAntesDeCancelar = vm.movimientoActual;
 
-              // 2. Ahora sí limpiamos el ViewModel
-              vm.cancelarReacomodo(resetearTipoMovimiento: true);
-
-              // 3. Evaluamos usando la variable que guardamos
               if (tipoAntesDeCancelar == TipoMovimiento.pisoCamion ||
                   tipoAntesDeCancelar == TipoMovimiento.camionPiso) {
-                // Regresamos al listado de órdenes
+                // Si es orden del listado, SÍ reseteamos todo y nos vamos
+                vm.cancelarReacomodo(resetearTipoMovimiento: true);
                 Navigator.pop(context);
               } else {
-                // Si era reacomodo manual, solo mostramos el aviso y nos quedamos en el mapa
+                // Si es REACOMODO MANUAL, NO reseteamos el tipo de movimiento.
+                // Solo reseteamos la fase para que el operador pueda elegir OTRO contenedor.
+                vm.cancelarReacomodo(resetearTipoMovimiento: false);
+
                 ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                    content: Text("Se ha cancelado el reacomodo manual")));
+                    content: Text("Seleccione una nueva ubicación de origen")));
               }
             },
             child: const Text("CANCELAR",
