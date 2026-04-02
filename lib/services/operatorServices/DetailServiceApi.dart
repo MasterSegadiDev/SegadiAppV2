@@ -90,7 +90,7 @@ class DetailServiceApi {
     return 'Error de red. Intenta más tarde.';
   }
 
-  Future<ApiResult> cloaseService({
+  Future<ApiResult> closeService({
     required int id,
   }) async {
     try {
@@ -106,16 +106,23 @@ class DetailServiceApi {
         options: Options(contentType: Headers.formUrlEncodedContentType),
       );
 
-      final json = response.data;
-      print('json data en closeService: $json');
-      if (json != null) {
-        return ApiResult.success(json);
+      final data = response.data;
+
+      // 💡 Limpiamos el log: Si data es "2", lo tratamos como éxito manual
+      print('Respuesta del servidor en closeService: $data');
+
+      // Validamos: Si el status es 200 y el body no está vacío, es éxito.
+      // El backend manda un "2", así que verificamos que contenga algo.
+      if (response.statusCode == 200 && data != null) {
+        // Retornamos éxito aunque sea un simple número
+        return ApiResult.success(data);
       }
+
       return ApiResult.failure('Respuesta inválida del servidor');
     } on DioException catch (e) {
       return ApiResult.failure(_mapDioErrorToString(e));
     } catch (e) {
-      return ApiResult.failure('Error inesperado al cambiar estatus');
+      return ApiResult.failure('Error inesperado al cerrar viaje');
     }
   }
 }

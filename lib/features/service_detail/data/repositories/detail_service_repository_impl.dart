@@ -76,7 +76,13 @@ class DetailServiceRepositoryImpl {
         return Left(NetworkFailure("Revisa tu conexión a internet."));
       }
 
-      final result = await api.cloaseService(id: id);
+      final result = await api.closeService(id: id);
+      if (result.success) {
+        debugPrint('✅ Servicio cerrado con éxito: ${result.message}');
+      } else {
+        debugPrint(
+            '⚠️ El servidor respondió error al cerrar: ${result.message}');
+      }
       return Right(result);
     } on DioException catch (e) {
       return Left(ServerFailure(DioExceptions.fromDioError(e).toString()));

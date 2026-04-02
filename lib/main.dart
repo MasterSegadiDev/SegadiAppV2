@@ -158,7 +158,6 @@ class MyApp extends StatelessWidget {
         // ==========================================
         // 2. DATA SOURCES (Fuentes de Datos)
         // ==========================================
-        // --- Clean DataSources ---
         ProxyProvider<DioClient, UbicacionesRemoteDataSource>(
           update: (_, dc, __) => UbicacionesRemoteDataSourceImpl(dc.dio),
         ),
@@ -168,8 +167,6 @@ class MyApp extends StatelessWidget {
         ProxyProvider<DioClient, RegistroMovimientoRemoteDataSource>(
           update: (_, dc, __) => RegistroMovimientoRemoteDataSource(dc.dio),
         ),
-
-        // --- Legacy Services (Tus servicios originales) ---
         Provider<MovimientoService>(
             create: (context) =>
                 MovimientoService(context.read<DioClient>().dio)),
@@ -182,6 +179,8 @@ class MyApp extends StatelessWidget {
         Provider<MovimientosService>(
             create: (context) =>
                 MovimientosService(context.read<DioClient>().dio)),
+
+        // APIs de Detalle y Viáticos
         Provider<DetailServiceApi>(
             create: (context) =>
                 DetailServiceApi(context.read<DioClient>().dio)),
@@ -193,24 +192,19 @@ class MyApp extends StatelessWidget {
         // ==========================================
         // 3. REPOSITORIOS (Implementaciones)
         // ==========================================
-        // Repositorio para Listado de Movimientos
         ProxyProvider<MovimientoRemoteDataSource, MovimientoRepository>(
           update: (_, ds, __) =>
               MovimientosListRepositoryImpl(remoteDataSource: ds),
         ),
-        // Repositorio para Registro de Movimientos (Reacomodo)
         ProxyProvider<RegistroMovimientoRemoteDataSource,
             RegistroMovimientoRepository>(
           update: (_, ds, __) =>
               RegistroMovimientoRepositoryImpl(remoteDataSource: ds),
         ),
-        // Repositorio para Ubicaciones/Mapa
         ProxyProvider<UbicacionesRemoteDataSource, UbicacionesRepository>(
           update: (_, ds, __) =>
               UbicacionesRepositoryImpl(remoteDataSource: ds),
         ),
-
-        // Otros Repositorios
         ProxyProvider<DioClient, ServiceRepository>(
           update: (_, dc, __) => ServiceRepositoryImpl(dc.dio),
         ),
@@ -220,6 +214,14 @@ class MyApp extends StatelessWidget {
         Provider<TripClosureRepository>(
           create: (context) => TripClosureRepositoryImpl(
             TripClosureRemoteDataSource(context.read<DioClient>().dio),
+          ),
+        ),
+
+        // 🎯 POSICIÓN CLAVE: Repositorio de Detalle (Antes de los ViewModels)
+        Provider<DetailServiceRepositoryImpl>(
+          create: (context) => DetailServiceRepositoryImpl(
+            api: context.read<DetailServiceApi>(),
+            networkInfo: context.read<NetworkInfo>(),
           ),
         ),
 
@@ -237,10 +239,8 @@ class MyApp extends StatelessWidget {
         ),
 
         // ==========================================
-        // 5. VIEW MODELS (Capa de Presentación)
+        // 5. VIEW MODELS
         // ==========================================
-
-        // --- ViewModels con ProxyProvider (Nueva Arquitectura) ---
         ChangeNotifierProxyProvider<GetMovimientosUseCase,
             MovimientoListViewModel>(
           create: (context) => MovimientoListViewModel(
@@ -264,10 +264,10 @@ class MyApp extends StatelessWidget {
               ),
         ),
 
-        // --- ViewModels Directos (Tus originales) ---
         ChangeNotifierProvider(
             create: (context) => LoginViewModel(context.read<AuthService>())),
         ChangeNotifierProvider(create: (_) => HomeViewModel()),
+
         ChangeNotifierProvider(
             create: (context) => ServicesViewModel(
                   getAssignedServicesUseCase: GetAssignedServices(
@@ -278,6 +278,7 @@ class MyApp extends StatelessWidget {
                     ),
                   ),
                 )..loadServices()),
+
         ChangeNotifierProvider(
             create: (context) => ContainerMovementListViewModel(
                 context.read<MovimientoService>())),
@@ -299,11 +300,14 @@ class MyApp extends StatelessWidget {
         ChangeNotifierProvider(
             create: (context) => DetailFinishedViewModel(
                 repository: context.read<ServiceRepository>())),
+
         ChangeNotifierProvider(
             create: (context) => TripClosureViewModel(
                   repository: context.read<TripClosureRepository>(),
                   scanner: MobileDocumentScanner(),
                 )),
+
+        // 🚀 EL VIEWMODEL DE VIÁTICOS (Ahora con acceso a todo lo anterior)
         ChangeNotifierProvider(create: (context) {
           final repo = context.read<TravelExpensesRepository>();
           return TravelExpensesViewModel(
@@ -311,6 +315,7 @@ class MyApp extends StatelessWidget {
             getRegisteredUseCase: GetRegisteredExpensesUseCase(repo),
             insertUseCase: InsertExpenseUseCase(repo),
             getEvidenceUseCase: GetEvidenceImageUseCase(repo),
+            detailRepository: context.read<DetailServiceRepositoryImpl>(),
           );
         }),
       ],

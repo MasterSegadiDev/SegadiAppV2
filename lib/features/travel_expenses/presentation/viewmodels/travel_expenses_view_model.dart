@@ -1,134 +1,3 @@
-// import 'dart:convert';
-// import 'dart:io';
-
-// import 'package:flutter/material.dart';
-// import 'package:image_picker/image_picker.dart';
-// import 'package:segadi/features/travel_expenses/domain/entities/table_expense_entity.dart';
-// import 'package:segadi/features/travel_expenses/domain/entities/travel_expense_entity.dart';
-// import 'package:segadi/features/travel_expenses/domain/usecases/travel_expenses_usecases.dart';
-
-// import '../../../../core/errors/failures.dart';
-
-// enum TravelExpensesStatus { initial, loading, loaded, error, success }
-
-// class TravelExpensesViewModel extends ChangeNotifier {
-//   final GetAvailableConceptsUseCase getConceptsUseCase;
-//   final GetRegisteredExpensesUseCase getRegisteredUseCase;
-//   final InsertExpenseUseCase insertUseCase;
-
-//   TravelExpensesViewModel({
-//     required this.getConceptsUseCase,
-//     required this.getRegisteredUseCase,
-//     required this.insertUseCase,
-//   });
-
-//   TravelExpensesStatus status = TravelExpensesStatus.initial;
-//   List<TableExpenseEntity> registeredExpenses = [];
-//   List<TravelExpenseEntity> availableConcepts = [];
-//   String? errorMessage;
-
-//   double get totalImport =>
-//       registeredExpenses.fold(0, (sum, item) => sum + item.amount);
-
-//   File? _selectedImage;
-//   File? get selectedImage => _selectedImage; // Esto corrige el error de getter
-
-//   final ImagePicker _picker = ImagePicker();
-
-//   Future<void> loadAllData(int serviceId) async {
-//     status = TravelExpensesStatus.loading;
-//     notifyListeners();
-
-//     // Cargamos ambos en paralelo para mayor velocidad
-//     final results = await Future.wait([
-//       getConceptsUseCase(serviceId),
-//       getRegisteredUseCase(serviceId),
-//     ]);
-
-//     results[0].fold(
-//       (f) => _handleError(f),
-//       (concepts) => availableConcepts = concepts as List<TravelExpenseEntity>,
-//     );
-
-//     results[1].fold(
-//       (f) => _handleError(f),
-//       (expenses) {
-//         registeredExpenses = expenses as List<TableExpenseEntity>;
-//         status = TravelExpensesStatus.loaded;
-//       },
-//     );
-//     notifyListeners();
-//   }
-
-//   Future<void> pickImage() async {
-//     try {
-//       final XFile? photo = await _picker.pickImage(
-//         source: ImageSource.camera,
-//         imageQuality: 50, // Comprimimos para que el Base64 no sea gigante
-//       );
-
-//       if (photo != null) {
-//         _selectedImage = File(photo.path);
-//         notifyListeners();
-//       }
-//     } catch (e) {
-//       errorMessage = "Error al abrir la cámara: $e";
-//       notifyListeners();
-//     }
-//   }
-
-//   Future<bool> saveExpense({
-//     required int serviceId,
-//     required int conceptId,
-//     required double amount,
-//     required String comments,
-//   }) async {
-//     if (_selectedImage == null) return false;
-
-//     status = TravelExpensesStatus.loading;
-//     notifyListeners();
-
-//     try {
-//       // 1. Convertir imagen a Base64
-//       final bytes = await _selectedImage!.readAsBytes();
-//       final String base64Image = base64Encode(bytes);
-
-//       // 2. Llamar al UseCase
-//       final result = await insertUseCase(
-//         serviceId: serviceId,
-//         conceptId: conceptId,
-//         amount: amount,
-//         comments: comments,
-//         base64Image: base64Image,
-//       );
-
-//       return result.fold(
-//         (failure) {
-//           errorMessage = failure.message;
-//           status = TravelExpensesStatus.error;
-//           notifyListeners();
-//           return false;
-//         },
-//         (success) async {
-//           _selectedImage = null; // Limpiamos la foto para el siguiente registro
-//           await loadAllData(serviceId); // Recargamos la lista automáticamente
-//           return true;
-//         },
-//       );
-//     } catch (e) {
-//       errorMessage = "Error en la carga: $e";
-//       status = TravelExpensesStatus.error;
-//       notifyListeners();
-//       return false;
-//     }
-//   }
-
-//   void _handleError(Failure f) {
-//     status = TravelExpensesStatus.error;
-//     errorMessage = f.message;
-//   }
-// }
-
 import 'dart:typed_data';
 import 'dart:io';
 import 'dart:convert';
@@ -136,10 +5,13 @@ import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart'; // Requiere esta lib
 import 'package:path_provider/path_provider.dart';
+import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
 import 'package:segadi/features/travel_expenses/domain/entities/table_expense_entity.dart';
 import 'package:segadi/features/travel_expenses/domain/entities/travel_expense_entity.dart';
 import 'package:segadi/features/travel_expenses/domain/usecases/get_evidence_image_use_case.dart';
 import 'package:segadi/features/travel_expenses/domain/usecases/travel_expenses_usecases.dart';
+
+//enum TravelExpensesStatus { initial, loading, loaded, error }
 
 enum TravelExpensesStatus { initial, loading, loaded, error }
 
@@ -149,17 +21,27 @@ class TravelExpensesViewModel extends ChangeNotifier {
   final InsertExpenseUseCase insertUseCase;
   final GetEvidenceImageUseCase getEvidenceUseCase;
 
+  final DetailServiceRepositoryImpl detailRepository;
+
   TravelExpensesViewModel({
     required this.getConceptsUseCase,
     required this.getRegisteredUseCase,
     required this.insertUseCase,
     required this.getEvidenceUseCase,
+    required this.detailRepository,
   });
 
-  TravelExpensesStatus status = TravelExpensesStatus.initial;
+  TravelExpensesStatus _status = TravelExpensesStatus.initial;
+  String _errorMessage = '';
+  bool _serviceWasClosedSuccessfully = false;
+
+  TravelExpensesStatus get status => _status;
+  String get errorMessage => _errorMessage;
+  bool get serviceWasClosedSuccessfully => _serviceWasClosedSuccessfully;
+
   List<TravelExpenseEntity> availableConcepts = [];
   List<TableExpenseEntity> registeredExpenses = [];
-  String? errorMessage;
+
   File? _selectedImage;
   File? get selectedImage => _selectedImage;
 
@@ -199,7 +81,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
     // 1. Eliminamos el "if (_selectedImage == null) return false;"
     // porque ahora la imagen puede ser opcional según el concepto.
 
-    status = TravelExpensesStatus.loading;
+    _status = TravelExpensesStatus.loading;
     notifyListeners();
 
     try {
@@ -227,8 +109,8 @@ class TravelExpensesViewModel extends ChangeNotifier {
 
       return result.fold(
         (failure) {
-          errorMessage = failure.message;
-          status = TravelExpensesStatus.error;
+          _errorMessage = failure.message;
+          _status = TravelExpensesStatus.error;
           notifyListeners();
           return false;
         },
@@ -237,22 +119,22 @@ class TravelExpensesViewModel extends ChangeNotifier {
           debugPrint('Datos recibidos del servidor: $success');
 
           clearSelectedImage();
-          errorMessage = null; // Limpiamos errores previos
+          _errorMessage = ''; // Limpiamos errores previos
           await loadAllData(serviceId);
           return true;
         },
       );
     } catch (e) {
-      errorMessage = e.toString();
-      status = TravelExpensesStatus.error;
+      _errorMessage = e.toString();
+      _status = TravelExpensesStatus.error;
       notifyListeners();
       return false;
     }
   }
 
   Future<void> loadAllData(int serviceId) async {
-    status = TravelExpensesStatus.loading;
-    errorMessage = null;
+    _status = TravelExpensesStatus.loading;
+    _errorMessage = '';
     notifyListeners();
 
     try {
@@ -269,7 +151,7 @@ class TravelExpensesViewModel extends ChangeNotifier {
       conceptsResult.fold(
         (failure) {
           debugPrint("Error al cargar conceptos: ${failure.message}");
-          errorMessage = failure
+          _errorMessage = failure
               .message; // Aquí llegará "El servicio no tiene viaticos..."
           hasError = true;
         },
@@ -279,29 +161,29 @@ class TravelExpensesViewModel extends ChangeNotifier {
       expensesResult.fold(
         (failure) {
           debugPrint("Expenses Error: ${failure.message}");
-          errorMessage ??= failure.message;
+          _errorMessage ??= failure.message;
           hasError = true;
         },
         (data) => registeredExpenses = List<TableExpenseEntity>.from(data),
       );
 
-      status =
+      _status =
           hasError ? TravelExpensesStatus.error : TravelExpensesStatus.loaded;
     } catch (e) {
       debugPrint("Error en catch: ${e.toString()}");
       // Si entramos aquí, es un error de código, no del servidor
-      errorMessage = e.toString().contains("ApiException")
+      _errorMessage = e.toString().contains("ApiException")
           ? e.toString().replaceAll("ApiException: ", "")
           : "Error de conexión o de datos";
-      status = TravelExpensesStatus.error;
+      _status = TravelExpensesStatus.error;
     } finally {
       notifyListeners();
     }
   }
 
   void clearError() {
-    if (errorMessage != null) {
-      errorMessage = null;
+    if (_errorMessage.isNotEmpty) {
+      _errorMessage = '';
       notifyListeners(); // Esto quita el banner rojo de la vista automáticamente
     }
   }
@@ -353,5 +235,66 @@ class TravelExpensesViewModel extends ChangeNotifier {
       },
       (data) => data,
     );
+  }
+
+  Future<void> verificarYFinalizarDesdeViaticos(int serviceId) async {
+    try {
+      _status = TravelExpensesStatus.loading;
+      _serviceWasClosedSuccessfully = false;
+      notifyListeners();
+
+      debugPrint("--- 🧐 Verificando Cierre desde Viáticos ---");
+
+      // 1. Consultamos los gastos registrados
+      final registeredResult = await getRegisteredUseCase(serviceId);
+
+      bool shouldClose = false;
+
+      // Usamos FOLD para manejar el Either de la lista de gastos
+      registeredResult.fold(
+        (failure) {
+          debugPrint("❌ Error al verificar viáticos: ${failure.message}");
+          shouldClose = false;
+        },
+        (expenses) {
+          // Aquí tu lógica de validación (si ya no hay pendientes)
+          shouldClose = true;
+        },
+      );
+
+      if (shouldClose) {
+        debugPrint("🎯 Condiciones cumplidas. Llamando a closeService...");
+
+        // 2. Llamamos al repositorio para cerrar el viaje
+        final closeResult = await detailRepository.closeService(id: serviceId);
+
+        // 🔥 CORRECCIÓN AQUÍ: Usamos .fold() en lugar de .when()
+        closeResult.fold(
+          (failure) {
+            debugPrint(
+                "⚠️ El servidor no pudo cerrar el viaje: ${failure.message}");
+            _serviceWasClosedSuccessfully = false;
+            _status = TravelExpensesStatus.loaded;
+            notifyListeners();
+          },
+          (success) {
+            // success aquí es el valor que retorna tu ApiResult (el "2" o el json)
+            debugPrint("✅ Servidor respondió éxito");
+            _serviceWasClosedSuccessfully = true;
+            _status = TravelExpensesStatus.loaded;
+            notifyListeners();
+          },
+        );
+      } else {
+        _status = TravelExpensesStatus.loaded;
+        notifyListeners();
+      }
+    } catch (e) {
+      debugPrint("🚨 Error inesperado: $e");
+      _status = TravelExpensesStatus.error;
+      _errorMessage = e.toString();
+      _serviceWasClosedSuccessfully = false;
+      notifyListeners();
+    }
   }
 }

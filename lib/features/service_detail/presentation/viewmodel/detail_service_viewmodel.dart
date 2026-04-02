@@ -138,51 +138,6 @@ class DetailServiceViewModel extends ChangeNotifier {
     notifyListeners();
   }
 
-  ///////////////////////////////////////
-  ///////// 🔄 CHANGE STATUS ////////////
-  ///////////////////////////////////////
-
-  // Future<void> changeMandatoryStatus(BuildContext context) async {
-  //   if (entity == null) return;
-  //   final statusId = entity!.nextMandatoryStatusId;
-
-  //   debugPrint('estatus a enviar: $statusId');
-  //   _setLoading();
-
-  //   final result = await repository.changeStatus(
-  //     serviceId: entity!.id,
-  //     statusId: statusId,
-  //   );
-
-  //   print('🔄 Change status result: $result');
-
-  //   // ✅ Usamos fold como único flujo de decisión
-  //   await result.fold(
-  //     (failure) async {
-  //       final msg = failure.message;
-  //       _setError(msg);
-  //       if (context.mounted) _showSnackBar(context, msg, isError: true);
-  //     },
-  //     (apiResult) async {
-  //       // 1. Verificamos si el API respondió success: true
-  //       if (!apiResult.success) {
-  //         final msg = apiResult.message ?? 'No se pudo cambiar el estatus';
-  //         _setError(msg);
-  //         if (context.mounted) _showSnackBar(context, msg, isError: true);
-  //         return; // Salimos si falló el backend
-  //       }
-
-  //       // 2. Si todo fue bien, recargamos el detalle para reflejar cambios
-  //       await loadDetail(entity!.id);
-
-  //       if (context.mounted) {
-  //         _showSnackBar(context, "Estatus actualizado correctamente",
-  //             isError: false);
-  //       }
-  //     },
-  //   );
-  // }
-
   bool _isChangingStatus = false;
 
   Future<void> changeMandatoryStatus(BuildContext context) async {

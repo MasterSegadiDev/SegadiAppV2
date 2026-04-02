@@ -211,7 +211,7 @@ class _TravelExpensesScreenState extends State<TravelExpensesScreen> {
       children: [
         const SizedBox(height: 10),
         Image.asset(
-          'assets/images/no_ticket.png',
+          'assets/images/no_image.png',
           width: 160,
           height: 160,
           fit: BoxFit.contain,
