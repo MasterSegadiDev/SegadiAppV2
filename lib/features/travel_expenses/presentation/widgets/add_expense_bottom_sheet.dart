@@ -54,12 +54,35 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
     final vm = context.watch<TravelExpensesViewModel>();
 
     // 1. ESTADO DE CARGA: Si el VM no tiene datos, no renderizamos el form para evitar errores.
-    if (vm.availableConcepts.isEmpty &&
-        vm.status == TravelExpensesStatus.loading) {
+    if (vm.status == TravelExpensesStatus.loading) {
       return const SizedBox(
         height: 300,
         child:
             Center(child: CircularProgressIndicator(color: Color(0xFF2C522A))),
+      );
+    }
+
+    if (vm.availableConcepts.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        height: 250,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.info_outline, size: 48, color: Colors.orange),
+            const SizedBox(height: 15),
+            Text(
+              vm.errorMessage,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(context),
+              child: const Text('Cerrar'),
+            )
+          ],
+        ),
       );
     }
 
@@ -89,7 +112,8 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                       color: Color(0xFF2C522A))),
               const SizedBox(height: 20),
 
-              if (vm.errorMessage != null) _buildErrorBanner(vm.errorMessage!),
+              if (vm.errorMessage.isNotEmpty)
+                _buildErrorBanner(vm.errorMessage),
 
               // 1. Dropdown de Conceptos (Seguro)
               DropdownButtonFormField<int>(
@@ -261,6 +285,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
         backgroundColor: const Color(0xFF2C522A),
         minimumSize: const Size.fromHeight(55),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
+        elevation: 2,
       ),
       onPressed: isLoading
           ? null
@@ -278,22 +303,32 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                 comments: _commentController.text,
               );
 
-              if (success) {
+              if (!success) {
+                _showErrorSnackBar(context, "No se pudo guardar el viático");
+                return;
+              }
+
+              // 2. ¿Es el último viático? (Lógica de finalización)
+              // Usamos <= 0 si el saveExpense ya lo removió de la lista local,
+              // o <= 1 si todavía no se actualiza la lista.
+              if (vm.availableConcepts.isEmpty) {
                 await vm.verificarYFinalizarDesdeViaticos(widget.serviceId);
 
                 if (!mounted) return;
 
-                // 3. Revisas si el viaje se cerró exitosamente
+                // Si se cerró con éxito, mostramos el diálogo final
                 if (vm.serviceWasClosedSuccessfully) {
-                  // Muestras el diálogo verde de éxito total
+                  // Primero cerramos la modal de registro para que no estorbe
+                  Navigator.pop(context);
+                  // Luego mostramos el éxito sobre la pantalla de detalle
                   _showSuccessDialog(context);
                 } else {
-                  // Solo cierras la modal de agregar y refrescas la lista
+                  // Si falló el cierre pero se guardó el viático, solo refrescamos
                   Navigator.pop(context, true);
                 }
               } else {
-                debugPrint("❌ No se pudo guardar el viático");
-                // Opcional: mostrar un SnackBar de error aquí
+                // Aún quedan viáticos, solo cerramos el formulario y refrescamos lista
+                Navigator.pop(context, true);
               }
             },
       child: isLoading
@@ -303,55 +338,72 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
               child: CircularProgressIndicator(
                   color: Colors.white, strokeWidth: 2))
           : const Text('Enviar Comprobación',
-              style:
-                  TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16)),
+    );
+  }
+
+// Helper para errores rápidos
+  void _showErrorSnackBar(BuildContext context, String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.red),
     );
   }
 
   void _showSuccessDialog(BuildContext context) {
     showDialog(
       context: context,
-      barrierDismissible: false, // Obliga al usuario a interactuar con el botón
-      builder: (dialogContext) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(Icons.check_circle, color: Colors.green, size: 80),
-            const SizedBox(height: 20),
-            const Text(
-              "Servicio Finalizado",
-              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 10),
-            const Text(
-              "La remisión se ha cerrado con éxito.",
-              textAlign: TextAlign.center,
-            ),
+      barrierDismissible: false,
+      builder: (dialogContext) => PopScope(
+        canPop:
+            false, // Evita que cierren el diálogo con el botón atrás del cel
+        child: AlertDialog(
+          shape:
+              RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          contentPadding: const EdgeInsets.fromLTRB(24, 20, 24, 0),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.check_circle_outline,
+                  color: Colors.green, size: 70),
+              const SizedBox(height: 15),
+              const Text(
+                "¡Servicio Finalizado!",
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 12),
+              const Text(
+                "Todos los viáticos han sido registrados y la remisión se ha cerrado correctamente.",
+                textAlign: TextAlign.center,
+                style: TextStyle(color: Colors.grey, fontSize: 14),
+              ),
+              const SizedBox(height: 20),
+            ],
+          ),
+          actions: [
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF2C522A),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12)),
+                ),
+                onPressed: () {
+                  Navigator.of(dialogContext).pop(); // Cierra el Alert
+                  // Aquí podrías hacer un Navigator.pop(context) adicional
+                  // si quieres sacar al usuario del detalle del servicio.
+                },
+                child: const Text("ENTENDIDO",
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold)),
+              ),
+            )
           ],
         ),
-        actions: [
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF2C522A),
-                shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(10)),
-              ),
-              onPressed: () {
-                // 1. Cerramos el diálogo
-                Navigator.of(dialogContext).pop();
-                // 2. Cerramos el BottomSheet (el de viáticos)
-                Navigator.of(context).pop(true);
-                // 3. Opcional: Si quieres sacar al usuario del detalle y mandarlo al inicio:
-                // Navigator.of(context).popUntil((route) => route.isFirst);
-              },
-              child:
-                  const Text("ACEPTAR", style: TextStyle(color: Colors.white)),
-            ),
-          )
-        ],
       ),
     );
   }

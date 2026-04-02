@@ -85,6 +85,7 @@ dependencies:
   connectivity_plus: ^6.0.3
   flutter_local_notifications: ^17.0.0
   get_it: ^7.7.0
+  animate_do: ^4.2.0
   
 
 

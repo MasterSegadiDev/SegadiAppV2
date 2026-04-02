@@ -78,54 +78,52 @@ class TravelExpensesViewModel extends ChangeNotifier {
     required double amount,
     String? comments,
   }) async {
-    // 1. Eliminamos el "if (_selectedImage == null) return false;"
-    // porque ahora la imagen puede ser opcional según el concepto.
-
     _status = TravelExpensesStatus.loading;
+    // IMPORTANTE: Reseteamos esta bandera para que no se quede pegada de un registro anterior
+    _serviceWasClosedSuccessfully = false;
     notifyListeners();
 
     try {
-      // 2. Procesar la imagen solo si existe, de lo contrario enviar null
       String? base64Image;
       if (_selectedImage != null) {
         final bytes = await _selectedImage!.readAsBytes();
         base64Image = base64Encode(bytes);
       }
 
-      debugPrint(
-          'Enviando datos: serviceId=$serviceId, conceptId=$conceptId, amount=$amount, comments="$comments", base64Image=$base64Image');
-
       final result = await insertUseCase(
         serviceId: serviceId,
         conceptId: conceptId,
         amount: amount,
         comments: comments,
-        base64Image: base64Image, // Enviará el String o null
+        base64Image: base64Image,
       );
 
-      // 3. Imprimir el array result (usando inspección de dartz)
-      // Esto imprimirá Right([datos...]) o Left(Failure)
-      debugPrint('Resultado de la inserción: ${result.toString()}');
-
-      return result.fold(
-        (failure) {
+      return await result.fold(
+        (failure) async {
           _errorMessage = failure.message;
           _status = TravelExpensesStatus.error;
           notifyListeners();
           return false;
         },
         (success) async {
-          // success aquí representa el contenido del "Right" (tu array/objeto de éxito)
-          debugPrint('Datos recibidos del servidor: $success');
+          debugPrint('✅ Gasto insertado correctamente: $success');
 
+          // 1. Limpiamos la imagen seleccionada inmediatamente
           clearSelectedImage();
-          _errorMessage = ''; // Limpiamos errores previos
+          _errorMessage = '';
+
+          // 2. Refrescamos TODA la data (Conceptos y Registrados)
+          // Esto actualizará 'availableConcepts'. Si la lista queda vacía,
+          // la UI sabrá que debe disparar el cierre en el siguiente paso.
           await loadAllData(serviceId);
+
+          // No ponemos _status = loaded aquí porque loadAllData ya lo hace al final
           return true;
         },
       );
     } catch (e) {
-      _errorMessage = e.toString();
+      debugPrint('❌ Error en saveExpense: $e');
+      _errorMessage = "Error al procesar el envío";
       _status = TravelExpensesStatus.error;
       notifyListeners();
       return false;
@@ -245,30 +243,40 @@ class TravelExpensesViewModel extends ChangeNotifier {
 
       debugPrint("--- 🧐 Verificando Cierre desde Viáticos ---");
 
-      // 1. Consultamos los gastos registrados
+      // 1. Consultamos los gastos registrados (para asegurar que tenemos la data fresca)
       final registeredResult = await getRegisteredUseCase(serviceId);
 
       bool shouldClose = false;
 
-      // Usamos FOLD para manejar el Either de la lista de gastos
       registeredResult.fold(
         (failure) {
           debugPrint("❌ Error al verificar viáticos: ${failure.message}");
           shouldClose = false;
         },
         (expenses) {
-          // Aquí tu lógica de validación (si ya no hay pendientes)
-          shouldClose = true;
+          // 💡 LÓGICA DE ACTUALIZACIÓN:
+          // Solo cerramos si la lista de conceptos disponibles está vacía.
+          // Si 'availableConcepts' todavía tiene items, significa que el usuario
+          // tiene más viáticos que reportar.
+
+          if (availableConcepts.isEmpty) {
+            debugPrint(
+                "✅ No quedan conceptos disponibles. Se procederá al cierre.");
+            shouldClose = true;
+          } else {
+            debugPrint(
+                "⏳ Aún quedan ${availableConcepts.length} conceptos por registrar.");
+            shouldClose = false;
+          }
         },
       );
 
+      // Solo si se cumplió la condición de arriba entramos al proceso de cierre
       if (shouldClose) {
         debugPrint("🎯 Condiciones cumplidas. Llamando a closeService...");
 
-        // 2. Llamamos al repositorio para cerrar el viaje
         final closeResult = await detailRepository.closeService(id: serviceId);
 
-        // 🔥 CORRECCIÓN AQUÍ: Usamos .fold() en lugar de .when()
         closeResult.fold(
           (failure) {
             debugPrint(
@@ -278,14 +286,16 @@ class TravelExpensesViewModel extends ChangeNotifier {
             notifyListeners();
           },
           (success) {
-            // success aquí es el valor que retorna tu ApiResult (el "2" o el json)
-            debugPrint("✅ Servidor respondió éxito");
+            debugPrint("✅ Servidor respondió éxito (Cierre Total)");
             _serviceWasClosedSuccessfully = true;
             _status = TravelExpensesStatus.loaded;
             notifyListeners();
           },
         );
       } else {
+        // Si no debe cerrar, simplemente regresamos al estado cargado
+        // para que el usuario pueda ver sus cambios.
+        debugPrint("ℹ️ Operación finalizada sin cerrar remisión.");
         _status = TravelExpensesStatus.loaded;
         notifyListeners();
       }
