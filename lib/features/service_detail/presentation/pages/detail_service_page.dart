@@ -38,16 +38,19 @@ class _DetailServicePageState extends State<DetailServicePage> {
         settings: const RouteSettings(name: '/flow_evidencias'),
         builder: (context) => EvidenceFlowPage(serviceId: vm.entity!.id),
       ),
-    ).then((_) async {
-      // 1. Verificamos si la pantalla de detalle sigue ahí
+    ).then((result) async {
       if (!mounted) return;
 
-      // 2. CARGAMOS LOS DATOS (El "load" que necesitas)
-      // Esto refresca el detalle con la info nueva del servidor
-      await context.read<DetailServiceViewModel>().loadDetail(widget.serviceId);
+      if (result == true) {
+        // 1. Ponemos el candado PRIMERO que nada
+        context.read<DetailServiceViewModel>().markEvidenceAsUploaded();
 
-      debugPrint(
-          "Refresco de detalle completado. Permaneciendo en la pantalla.");
+        // 2. Esperamos un mini-delay de 500ms para que el backend "respire"
+        await Future.delayed(const Duration(milliseconds: 500));
+      }
+
+      // 3. Ahora sí cargamos el detalle
+      await context.read<DetailServiceViewModel>().loadDetail(widget.serviceId);
     });
   }
 

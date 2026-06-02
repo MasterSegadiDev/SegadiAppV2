@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import 'package:provider/provider.dart';
+import 'package:segadi/features/ubications/enums/etapa_movimiento.dart';
 import 'package:segadi/features/ubications/presentation/screens/mapa_contenedores_screen.dart';
+import 'package:segadi/features/ubications/presentation/screens/pesaje_screen.dart';
 import 'package:segadi/features/ubications/presentation/viewmodels/movimiento_list_viewmodel.dart';
 import 'package:segadi/features/ubications/presentation/viewmodels/ubicaciones_mapa_viewmodel.dart';
 
 // Importaciones de tu proyecto
-import 'package:segadi/models/user/UserSession.dart';
-import 'package:segadi/viewmodels/container_movement/container_movement_view_model.dart';
-import 'package:segadi/views/home/sidebar.dart';
 
 class MovimientoView extends StatefulWidget {
   const MovimientoView({super.key});
@@ -32,10 +31,13 @@ class _MovimientoViewState extends State<MovimientoView> {
 
   void _initData() async {
     WidgetsBinding.instance.addPostFrameCallback((_) async {
-      final session = UserSession();
-      await session.loadFromPrefs();
+      // final session = UserSession();
+      final session = '1234445566';
+      // await session.loadFromPrefs();
 
-      if (session.siteId == null || session.siteId.isEmpty) {
+      // Debug: Verificar site_id
+
+      if (session == '' || session == null) {
         if (mounted) {
           setState(() {
             _error =
@@ -46,10 +48,10 @@ class _MovimientoViewState extends State<MovimientoView> {
         return;
       }
 
-      if (mounted) setState(() => _currentSiteId = session.siteId);
+      if (mounted) setState(() => _currentSiteId = session);
 
       final viewModel = context.read<MovimientoListViewModel>();
-      await viewModel.loadMovimientos('2');
+      await viewModel.loadMovimientos(session);
 
       if (mounted) setState(() => _isLoading = false);
     });
@@ -57,13 +59,14 @@ class _MovimientoViewState extends State<MovimientoView> {
 
   Future<void> _handleRefresh() async {
     if (_currentSiteId == null) return;
-    await context.read<MovimientoListViewModel>().loadMovimientos('2');
+    await context
+        .read<MovimientoListViewModel>()
+        .loadMovimientos(_currentSiteId!);
   }
 
   @override
   Widget build(BuildContext context) {
     final viewModel = Provider.of<MovimientoListViewModel>(context);
-    final ubicacionesvM = Provider.of<UbicacionesViewModel>(context);
 
     if (_isLoading)
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
@@ -78,7 +81,7 @@ class _MovimientoViewState extends State<MovimientoView> {
       ),
       backgroundColor: const Color(
           0xFFF5F7F5), // Un gris muy ligero para que resalten las tarjetas
-      drawer: const DrawerScreen(),
+      // drawer: const DrawerScreen(),
       body: SafeArea(
         child: RefreshIndicator(
           onRefresh: _handleRefresh,
@@ -123,37 +126,6 @@ class _MovimientoViewState extends State<MovimientoView> {
                           ),
                         ),
                         const SizedBox(width: 10),
-
-                        // BOTÓN REACOMODO (Icono circular)
-                        _actionIconBtn(
-                          icon: Icons.swap_horiz,
-                          color: Colors.teal.shade400,
-                          onTap: () {
-                            context
-                                .read<UbicacionesMapaViewModel>()
-                                .prepararMovimiento();
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        const GestionInventarioPage()));
-                          },
-                        ),
-                        const SizedBox(width: 8),
-
-                        // BOTÓN PESAJE (Icono circular)
-                        _actionIconBtn(
-                          icon: Icons.scale,
-                          color: Colors.orange.shade700,
-                          onTap: () {
-                            // Tu lógica de pesaje
-                            Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                    builder: (_) =>
-                                        const GestionInventarioPage()));
-                          },
-                        ),
                       ],
                     ),
                   ],
@@ -162,40 +134,66 @@ class _MovimientoViewState extends State<MovimientoView> {
 
               // --- LISTADO ---
               Expanded(
-                child: _buildListContent(viewModel, ubicacionesvM),
+                child: _buildListContent(viewModel),
               ),
             ],
           ),
         ),
       ),
+      floatingActionButton: _buildFloatingButtons(),
     );
   }
 
-  Widget _actionIconBtn(
-      {required IconData icon,
-      required Color color,
-      required VoidCallback onTap}) {
-    return InkWell(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 4,
-                offset: const Offset(0, 2))
-          ],
+  Widget _buildFloatingButtons() {
+    final vm = context.read<UbicacionesMapaViewModel>();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        // 🔵 BOTÓN REACOMODO MANUAL
+        FloatingActionButton.extended(
+          heroTag: 'reacomodo',
+          onPressed: () {
+            vm.iniciarReacomodoManual();
+
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const GestionInventarioPage(),
+              ),
+            );
+          },
+          icon: const Icon(Icons.swap_horiz, color: Colors.white),
+          label: const Text('Reacomodo', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.teal,
         ),
-        child: Icon(icon, color: color, size: 24),
-      ),
+
+        const SizedBox(height: 12),
+
+        // 🟠 BOTÓN PESAJE MANUAL
+        FloatingActionButton.extended(
+          heroTag: 'pesaje',
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (_) => const PesajeFormScreen(
+                  origen: PesajeOrigen.manual,
+                ),
+              ),
+            );
+          },
+          icon: const Icon(Icons.scale, color: Colors.white),
+          label: const Text('Pesaje', style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.deepOrange,
+        ),
+      ],
     );
   }
 
   Widget _buildListContent(
-      MovimientoListViewModel viewModel, UbicacionesViewModel ubicacionesvM) {
+    MovimientoListViewModel viewModel,
+  ) {
     if (viewModel.isLoading)
       return const Center(child: CircularProgressIndicator());
     if (viewModel.movimientos.isEmpty) {
@@ -208,10 +206,10 @@ class _MovimientoViewState extends State<MovimientoView> {
     final query = _searchQuery.toLowerCase();
     final filtrados = viewModel.movimientos.where((m) {
       if (query.isEmpty) return true;
-      return (m.contenedorA).toLowerCase().contains(query) ||
-          (m.contenedorB).toLowerCase().contains(query) ||
-          (m.tipoMovimiento).toLowerCase().contains(query) ||
-          (m.folioMovimiento).toLowerCase().contains(query) ||
+      return (m.serieObjetivo).toLowerCase().contains(query) ||
+          (m.contenedorB ?? '').toLowerCase().contains(query) ||
+          (m.tipo.name).toLowerCase().contains(query) ||
+          (m.folio).toLowerCase().contains(query) ||
           (m.servicio).toLowerCase().contains(query);
     }).toList();
 
@@ -222,23 +220,30 @@ class _MovimientoViewState extends State<MovimientoView> {
       itemBuilder: (context, index) {
         final m = filtrados[index];
 
-        // Identificar qué contenedor se va a mover
-        String? containerToMoveStr = m.contenedorAMover.toLowerCase();
-        String? contenedorMover =
-            (containerToMoveStr.contains('a')) ? m.contenedorA : m.contenedorB;
-
         return GestureDetector(
           onTap: () {
-            final vm = context.read<UbicacionesMapaViewModel>();
+            switch (m.tipo.name) {
+              case 'pesaje':
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => PesajeFormScreen(
+                      movimiento: m,
+                    ),
+                  ),
+                );
+                break;
 
-            vm.prepararMovimiento(m);
-
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => const GestionInventarioPage(),
-              ),
-            );
+              default:
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => GestionInventarioPage(
+                      movimiento: m,
+                    ),
+                  ),
+                );
+            }
           },
           child: Container(
             margin: const EdgeInsets.only(bottom: 16),
@@ -262,7 +267,7 @@ class _MovimientoViewState extends State<MovimientoView> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "MOV ${m.folioMovimiento}",
+                      "MOV ${m.folio}",
                       style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -275,7 +280,7 @@ class _MovimientoViewState extends State<MovimientoView> {
                           color: Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(8)),
                       child: Text(
-                        'Numero de contenedor: ${m.contenedorAMover}',
+                        'Numero de contenedor: ${m.serieObjetivo}',
                         style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.bold,
@@ -290,7 +295,8 @@ class _MovimientoViewState extends State<MovimientoView> {
                 Wrap(
                   spacing: 8,
                   children: [
-                    _chipPremium(m.tipoMovimiento, Colors.green),
+                    _chipPremium(
+                        obtenerNombreFormateado(m.tipo.name), Colors.green),
                     _chipPremium("Remisión: ${m.servicio}", Colors.blueGrey),
                   ],
                 ),
@@ -302,23 +308,23 @@ class _MovimientoViewState extends State<MovimientoView> {
 
                 // FILAS DE INFORMACIÓN (TU DISEÑO CON RICH TEXT)
                 _buildInfoRow(
-                    icon: LucideIcons.user,
-                    label: "Operador",
-                    value: m.operador),
+                    icon: LucideIcons.user, label: "Operador", value: m.folio),
                 _buildInfoRow(
                     icon: LucideIcons.truck, label: "Unidad", value: m.unidad),
                 _buildInfoRow(
-                    icon: LucideIcons.navigation,
-                    label: "Unidad Local",
-                    value: m.unidadLocal),
+                  icon: LucideIcons.navigation,
+                  label: "Unidad Local",
+                  value: m.localUnidad,
+                ),
                 _buildInfoRow(
                     icon: LucideIcons.container,
                     label: "Estado Cont.",
-                    value: m.estatus),
+                    value: m.estadoContenedor),
                 _buildInfoRow(
-                    icon: LucideIcons.hash,
-                    label: "Contenedor",
-                    value: contenedorMover),
+                  icon: LucideIcons.hash,
+                  label: "Contenedor",
+                  value: m.serieObjetivo,
+                ),
               ],
             ),
           ),
@@ -369,5 +375,16 @@ class _MovimientoViewState extends State<MovimientoView> {
         ],
       ),
     );
+  }
+
+  String obtenerNombreFormateado(String tipo) {
+    switch (tipo) {
+      case 'pisoCamion':
+        return 'Piso - Camion';
+      case 'camionPiso':
+        return 'Camion - Piso';
+      default:
+        return tipo; // Por si llega un valor que no esperabas
+    }
   }
 }

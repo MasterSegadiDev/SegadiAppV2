@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:typed_data';
-
 import 'package:segadi/features/evidence/data/datasources/evidence_remote_datasource.dart';
 import 'package:segadi/features/evidence/domain/repositories/evidence_repository.dart';
-import 'package:segadi/viewmodels/login/user_login.dart';
+
+import 'package:flutter/foundation.dart';
 
 class EvidenceRepositoryImpl implements EvidenceRepository {
   final EvidenceRemoteDataSource remote;
@@ -17,7 +17,8 @@ class EvidenceRepositoryImpl implements EvidenceRepository {
     required String receiverName,
     required DateTime receiverDate,
   }) async {
-    final token = await LoginViewModel.getSavedToken();
+    // final token = await LoginViewModel.getSavedToken();
+    final token = '1234567890';
     if (token == null || token.isEmpty) {
       throw Exception('Token no encontrado');
     }
@@ -42,7 +43,8 @@ class EvidenceRepositoryImpl implements EvidenceRepository {
     required String receiverName,
     required DateTime receiverDate,
   }) async {
-    final token = await LoginViewModel.getSavedToken();
+    //final token = await LoginViewModel.getSavedToken();
+    final token = '1234567890';
     if (token == null || token.isEmpty) {
       throw Exception('Token no encontrado');
     }

@@ -2,8 +2,9 @@ import 'dart:convert';
 
 import 'package:dio/dio.dart';
 import 'package:dartz/dartz.dart';
-import 'package:segadi/models/services/detail_finished.dart';
-import 'package:segadi/models/services/services_finished.dart';
+import 'package:segadi/features/services_finished/domain/entities/detail_finished_model.dart';
+import 'package:segadi/features/services_finished/domain/entities/service_finished.dart';
+
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../core/error/failures.dart';
 import '../../domain/repositories/service_finished_repository.dart';
@@ -36,6 +37,7 @@ class ServiceRepositoryImpl implements ServiceRepository {
 
         final services =
             data.map((item) => ServicesFinished.fromJson(item)).toList();
+        print('Servicios obtenidos: ${services}');
         return Right(services);
       } else {
         return Left(

@@ -1,0 +1,4 @@
+enum EstadoUbicacion {
+  libre,
+  ocupado,
+}

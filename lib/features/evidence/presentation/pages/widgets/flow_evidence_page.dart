@@ -8,7 +8,6 @@ import 'package:segadi/features/evidence/data/repositories/evidence_repository_i
 import 'package:segadi/features/evidence/presentation/pages/confirm_evidence_page.dart';
 import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
-import 'package:segadi/services/operatorServices/DetailServiceApi.dart';
 
 class EvidenceFlowPage extends StatelessWidget {
   final int serviceId;
@@ -31,7 +30,6 @@ class EvidenceFlowPage extends StatelessWidget {
         ),
         // CORRECCIÓN AQUÍ: Usamos los nombres de los parámetros 'api' y 'networkInfo'
         detailServiceApi: DetailServiceRepositoryImpl(
-          api: DetailServiceApi(dio),
           networkInfo: networkInfo, // <-- Pasamos el networkInfo que faltaba
         ),
       ),

@@ -1,4 +1,3 @@
-import 'package:segadi/features/ubications/data/models/movimiento_model.dart';
 import 'package:segadi/features/ubications/data/models/ubicaciones_mapa_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 

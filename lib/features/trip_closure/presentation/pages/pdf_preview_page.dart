@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/trip_closure/presentation/viewmodels/trip_closure_viewmodel.dart';
-import 'package:segadi/repo/api_status.dart';
 
 class PdfPreviewPage extends StatelessWidget {
   const PdfPreviewPage({super.key});

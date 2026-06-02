@@ -1,8 +1,8 @@
 import 'dart:typed_data';
 import 'dart:io';
 import 'dart:convert';
+import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart'; // Requiere esta lib
 import 'package:path_provider/path_provider.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
@@ -47,13 +47,45 @@ class TravelExpensesViewModel extends ChangeNotifier {
 
   double get totalImport =>
       registeredExpenses.fold(0.0, (sum, item) => sum + item.amount);
-  final ImagePicker _picker = ImagePicker();
+  //final ImagePicker _picker = ImagePicker();
+
+  bool _isScanning = false;
 
   Future<void> pickImage() async {
-    final XFile? photo = await _picker.pickImage(source: ImageSource.camera);
-    if (photo != null) {
-      // Comprimir imagen para no saturar el ancho de banda del chofer
-      _selectedImage = await _compressImage(File(photo.path));
+    if (_isScanning) return;
+
+    try {
+      _isScanning = true;
+      notifyListeners();
+
+      // 1. Captura con el Scanner
+      final List<String>? paths = await CunningDocumentScanner.getPictures(
+        noOfPages: 1,
+        isGalleryImportAllowed: false,
+      );
+
+      if (paths == null || paths.isEmpty) return;
+
+      final File originalFile = File(paths.first);
+
+      // 2. Validación y Compresión
+      if (await originalFile.exists() && await originalFile.length() > 0) {
+        final File? compressedFile = await _compressImage(originalFile);
+
+        if (compressedFile != null) {
+          // Guardamos la versión optimizada en nuestro estado
+          _selectedImage = compressedFile;
+
+          // 3. LIMPIEZA INMEDIATA del original (el que genera el scanner)
+          if (await originalFile.exists()) await originalFile.delete();
+
+          debugPrint("✅ Imagen lista para envío. Original eliminado.");
+        }
+      }
+    } catch (e) {
+      debugPrint("🚨 Error: $e");
+    } finally {
+      _isScanning = false;
       notifyListeners();
     }
   }
@@ -78,18 +110,37 @@ class TravelExpensesViewModel extends ChangeNotifier {
     required double amount,
     String? comments,
   }) async {
+    // 1. Protección de estado inicial
+    if (_status == TravelExpensesStatus.loading) return false;
+
     _status = TravelExpensesStatus.loading;
-    // IMPORTANTE: Reseteamos esta bandera para que no se quede pegada de un registro anterior
     _serviceWasClosedSuccessfully = false;
+    _errorMessage = '';
     notifyListeners();
+
+    // Guardamos referencia local para evitar problemas si el estado global cambia
+    final File? fileToProcess = _selectedImage;
 
     try {
       String? base64Image;
-      if (_selectedImage != null) {
-        final bytes = await _selectedImage!.readAsBytes();
-        base64Image = base64Encode(bytes);
+
+      // 2. Validación robusta del archivo
+      if (fileToProcess != null) {
+        if (await fileToProcess.exists()) {
+          final int fileSize = await fileToProcess.length();
+          if (fileSize > 0) {
+            // Leemos bytes y codificamos
+            final bytes = await fileToProcess.readAsBytes();
+            base64Image = base64Encode(bytes);
+          } else {
+            debugPrint("⚠️ Archivo vacío detectado");
+          }
+        } else {
+          debugPrint("⚠️ El archivo seleccionado ya no existe en disco");
+        }
       }
 
+      // 3. Llamada al caso de uso
       final result = await insertUseCase(
         serviceId: serviceId,
         conceptId: conceptId,
@@ -106,24 +157,36 @@ class TravelExpensesViewModel extends ChangeNotifier {
           return false;
         },
         (success) async {
-          debugPrint('✅ Gasto insertado correctamente: $success');
+          // --- ÉXITO: LIMPIEZA DE RASTRO ---
 
-          // 1. Limpiamos la imagen seleccionada inmediatamente
-          clearSelectedImage();
+          if (fileToProcess != null) {
+            try {
+              // Eliminación física real del dispositivo
+              if (await fileToProcess.exists()) {
+                await fileToProcess.delete();
+                debugPrint(
+                    "🗑️ Rastro físico eliminado: ${fileToProcess.path}");
+              }
+            } catch (e) {
+              // No bloqueamos el éxito de la función si el borrado falla (poco probable)
+              debugPrint(
+                  "Non-critical: No se pudo borrar el archivo físico: $e");
+            }
+          }
+
+          // Limpieza de estados en memoria
+          _selectedImage = null;
           _errorMessage = '';
 
-          // 2. Refrescamos TODA la data (Conceptos y Registrados)
-          // Esto actualizará 'availableConcepts'. Si la lista queda vacía,
-          // la UI sabrá que debe disparar el cierre en el siguiente paso.
+          // Actualización de datos del servicio
           await loadAllData(serviceId);
 
-          // No ponemos _status = loaded aquí porque loadAllData ya lo hace al final
           return true;
         },
       );
     } catch (e) {
-      debugPrint('❌ Error en saveExpense: $e');
-      _errorMessage = "Error al procesar el envío";
+      debugPrint('🚨 Error crítico en producción (saveExpense): $e');
+      _errorMessage = "Error de conexión o procesamiento";
       _status = TravelExpensesStatus.error;
       notifyListeners();
       return false;

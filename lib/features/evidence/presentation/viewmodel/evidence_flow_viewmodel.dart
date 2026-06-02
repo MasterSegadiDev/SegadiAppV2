@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 
 import 'package:flutter/foundation.dart';
 import 'package:cunning_document_scanner/cunning_document_scanner.dart';
+import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import 'package:segadi/features/evidence/domain/repositories/evidence_repository.dart';
 import 'package:segadi/features/evidence/presentation/pages/widgets/evidence_pdf_generator.dart';
@@ -10,7 +11,7 @@ import 'package:segadi/features/service_detail/data/repositories/detail_service_
 import '../../domain/evidence_entity.dart';
 
 /// Estatus del flujo de evidencias
-enum EvidenceFlowStatus { idle, scanning, error, sending, success }
+enum EvidenceFlowStatus { idle, scanning, error, sending, success, processing }
 
 class EvidenceFlowViewModel extends ChangeNotifier {
   int _id;
@@ -132,34 +133,83 @@ class EvidenceFlowViewModel extends ChangeNotifier {
     super.dispose();
   }
 
+  Future<File?> _compressImage(String path) async {
+    try {
+      final String targetPath = path.replaceFirst(
+          ".jpg", "_optimized_${DateTime.now().millisecondsSinceEpoch}.jpg");
+
+      // FlutterImageCompress usa hilos nativos, lo que evita congelar la UI
+      var result = await FlutterImageCompress.compressAndGetFile(
+        path,
+        targetPath,
+        quality:
+            70, // Balance perfecto: reduce ~80% el peso con mínima pérdida visual
+        minWidth: 1280, // Resolución suficiente para leer textos en un PDF
+        minHeight: 1280,
+        format: CompressFormat.jpeg,
+      );
+
+      if (result == null) return null;
+      return File(result.path);
+    } catch (e) {
+      debugPrint("❌ Error en compresión: $e");
+      return null;
+    }
+  }
+
   // =========================================================
   // ACCIONES DEL FLUJO
   // =========================================================
 
   /// Captura de imágenes desde la cámara
   Future<void> scanFromCamera() async {
-    if (_status == EvidenceFlowStatus.scanning) return;
+    if (_status == EvidenceFlowStatus.scanning || !canScanMore) return;
+
     _setStatus(EvidenceFlowStatus.scanning);
+    _errorMessage = null;
 
     try {
-      _clearRamCache(); // Dar aire a la RAM antes de abrir cámara
+      // 1. Limpieza preventiva antes de abrir la cámara
+      _clearRamCache();
 
       final List<String>? paths = await CunningDocumentScanner.getPictures(
         noOfPages: _maxEvidences - _evidences.length,
         isGalleryImportAllowed: false,
       );
 
-      if (paths != null && paths.isNotEmpty) {
-        for (final path in paths) {
+      if (paths == null || paths.isEmpty) {
+        _setStatus(EvidenceFlowStatus.idle);
+        return;
+      }
+
+      // 2. Procesamiento secuencial (Pipeline de validación y compresión)
+      for (final path in paths) {
+        // Validar integridad del archivo original
+        final originalFile = File(path);
+        if (!await originalFile.exists() || await originalFile.length() == 0)
+          continue;
+
+        // COMPRESIÓN: Convertimos la foto pesada en una ligera antes de guardarla
+        final File? compressedFile = await _compressImage(path);
+
+        if (compressedFile != null) {
           _evidences.add(EvidenceEntity(
-            path: path,
-            filename: path.split('/').last,
+            path: compressedFile.path,
+            filename: compressedFile.path.split('/').last,
           ));
+
+          // 3. LIMPIEZA INMEDIATA: Borramos el original de alta resolución
+          // Solo conservamos la versión optimizada para ahorrar espacio en disco
+          if (await originalFile.exists()) await originalFile.delete();
+
+          debugPrint("✅ Imagen optimizada: ${compressedFile.path}");
         }
       }
+
       _setStatus(EvidenceFlowStatus.idle);
     } catch (e) {
-      _errorMessage = 'Fallo en cámara o memoria insuficiente';
+      debugPrint("🚨 Fallo crítico en captura: $e");
+      _handleCaptureError(e);
       _setStatus(EvidenceFlowStatus.error);
     }
   }
@@ -179,24 +229,147 @@ class EvidenceFlowViewModel extends ChangeNotifier {
 
   /// Genera el PDF una sola vez y lo guarda en memoria
   Future<void> buildPdf() async {
-    if (_evidences.isEmpty) return;
-    _setStatus(EvidenceFlowStatus.scanning);
+    if (_evidences.isEmpty) {
+      _errorMessage = "No hay evidencias capturadas para generar el reporte.";
+      _setStatus(EvidenceFlowStatus.error);
+      return;
+    }
+
+    // Cambiamos el estatus a 'sending' o un nuevo 'processing' si lo prefieres,
+    // para bloquear la UI mientras el procesador trabaja.
+    _setStatus(EvidenceFlowStatus.sending);
+    _errorMessage = null;
 
     try {
-      _pdfBytes = await EvidencePdfGenerator.generate(
+      // 1. Verificación de seguridad: ¿Los archivos siguen ahí?
+      for (final ev in _evidences) {
+        if (!await File(ev.path).exists()) {
+          throw Exception(
+              "Archivo no encontrado: ${ev.filename}. Por favor, captura la foto de nuevo.");
+        }
+      }
+
+      // 2. Generación del PDF
+      // Tip: Si EvidencePdfGenerator.generate es muy pesado,
+      // asegúrate de que use internamente el método 'compute' de Flutter.
+      final generatedPdf = await EvidencePdfGenerator.generate(
         serviceId: id,
-        evidences: evidences,
-        receiverName: receiverName,
-        confirmationDate: confirmationDate,
+        evidences: _evidences,
+        receiverName: _receiverName,
+        confirmationDate: _confirmationDate,
       );
+
+      if (generatedPdf.isEmpty) {
+        throw Exception("El documento generado está vacío.");
+      }
+
+      _pdfBytes = generatedPdf;
       _setStatus(EvidenceFlowStatus.idle);
+      debugPrint(
+          "✅ PDF generado con éxito: ${_pdfBytes!.lengthInBytes / 1024} KB");
     } catch (e) {
-      _errorMessage = "No se pudo generar el documento PDF";
+      debugPrint("🚨 Error en buildPdf: $e");
+      // Mensaje amigable pero informativo
+      _errorMessage = e.toString().contains("Exception:")
+          ? e.toString().replaceAll("Exception: ", "")
+          : "Ha ocurrido un error al generar el PDF. Intenta con menos imágenes.";
+
       _setStatus(EvidenceFlowStatus.error);
     }
   }
 
   /// Envío final de evidencias
+  // Future<bool> sendEvidences() async {
+  //   if (_pdfBytes == null || _pdfBytes!.isEmpty) {
+  //     _errorMessage =
+  //         "Hay un problema con el PDF generado. Por favor, intenta generar el PDF de nuevo.";
+  //     _setStatus(EvidenceFlowStatus.error);
+  //     return false;
+  //   }
+
+  //   if (_signatureBytes == null || _signatureBytes!.isEmpty) {
+  //     _errorMessage =
+  //         "Hay un problema con la firma capturada. Por favor, intenta capturar la firma de nuevo.";
+  //     _setStatus(EvidenceFlowStatus.error);
+  //     return false;
+  //   }
+
+  //   debugPrint("BODY DE FIRMA: ${_signatureBytes!.length / 1024} KB");
+
+  //   _setStatus(EvidenceFlowStatus.sending);
+
+  //   try {
+  //     // 1. PDF
+  //     final pdfResult = await repository.sendPdf(
+  //       serviceId: id,
+  //       pdfBytes: _pdfBytes!,
+  //       receiverName: receiverName,
+  //       receiverDate: confirmationDate,
+  //     );
+
+  //     if (pdfResult.isLeft()) {
+  //       return pdfResult.fold((failure) {
+  //         _errorMessage = "Error PDF: ${failure.message}";
+  //         _setStatus(EvidenceFlowStatus.error);
+  //         return false;
+  //       }, (_) => false);
+  //     }
+
+  //     debugPrint("✅ PDF subido correctamente");
+
+  //     // 2. FIRMA
+  //     final signResult = await repository.sendSignature(
+  //       serviceId: id,
+  //       signatureBytes: _signatureBytes!,
+  //       receiverName: receiverName,
+  //       receiverDate: confirmationDate,
+  //     );
+
+  //     if (signResult.isLeft()) {
+  //       return signResult.fold((failure) {
+  //         _errorMessage = "Error en FIRMA: ${failure.message}";
+  //         _setStatus(EvidenceFlowStatus.error);
+  //         debugPrint("❌ Firma falló: ${failure.message}");
+  //         return false;
+  //       }, (_) => false);
+  //     }
+
+  //     debugPrint("✅ Firma subida correctamente");
+
+  //     // 3. STATUS
+  //     final statusResult = await detailServiceApi.changeStatus(
+  //       serviceId: id,
+  //       statusId: 10,
+  //     );
+
+  //     return statusResult.fold(
+  //       (failure) {
+  //         _errorMessage = "Error STATUS: ${failure.message}";
+  //         _setStatus(EvidenceFlowStatus.error);
+  //         return false;
+  //       },
+  //       (response) async {
+  //         if (response.success) {
+  //           debugPrint("✅ Status actualizado correctamente");
+  //           await reset();
+  //           _setStatus(EvidenceFlowStatus.success);
+  //           return true;
+  //         }
+
+  //         _errorMessage =
+  //             "Ha ocurrido un error al actualizar la remisión despues de subir las evidencias. Por favor, contacta al equipo de soporte.";
+  //         _setStatus(EvidenceFlowStatus.error);
+  //         return false;
+  //       },
+  //     );
+  //   } catch (e) {
+  //     _errorMessage = "Ha ocurrido un error inesperado: $e";
+  //     _setStatus(EvidenceFlowStatus.error);
+  //     debugPrint("❌ EXCEPCIÓN: $e");
+  //     return false;
+  //   }
+  // }
+
   Future<bool> sendEvidences() async {
     print("DEBUG: Iniciando envío de evidencias");
     print("DEBUG: ID actual: $_id");
@@ -298,5 +471,19 @@ class EvidenceFlowViewModel extends ChangeNotifier {
     _errorMessage = null;
     _status = EvidenceFlowStatus.idle;
     if (notify) notifyListeners();
+  }
+
+  void _handleCaptureError(dynamic e) {
+    if (e.toString().contains('permission')) {
+      _errorMessage =
+          "No hay permisos activos para hacer uso de la cámara. Activalos en la configuración de tu teléfono e intenta de nuevo.";
+    } else if (e.toString().contains('Memory')) {
+      _errorMessage =
+          "Tu teléfono tiene poca memoria RAM. Cierra otras apps e intenta de nuevo.";
+    } else {
+      _errorMessage =
+          "El escaneo se interrumpió. Por favor, intenta capturar la imagen otra vez.";
+    }
+    _setStatus(EvidenceFlowStatus.error);
   }
 }

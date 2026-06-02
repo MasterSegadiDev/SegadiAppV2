@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:segadi/features/services_finished/domain/entities/service_finished.dart';
 import 'package:segadi/features/services_finished/domain/repositories/service_finished_repository.dart';
-import 'package:segadi/models/services/services_finished.dart';
 
 class FinishedServicesViewModel extends ChangeNotifier {
   final ServiceRepository repository;
@@ -14,6 +14,26 @@ class FinishedServicesViewModel extends ChangeNotifier {
   String? get errorMessage => _errorMessage;
 
   FinishedServicesViewModel({required this.repository});
+
+  String _searchQuery = "";
+
+// Getter para obtener solo los servicios que coinciden con el filtro
+  List<ServicesFinished> get filteredServices {
+    if (_searchQuery.isEmpty) return services;
+
+    return services.where((s) {
+      final query = _searchQuery.toLowerCase();
+      // Filtramos por los 3 criterios
+      return (s.service.toLowerCase().contains(query)) ||
+          (s.client.toLowerCase().contains(query)) ||
+          (s.status.toLowerCase().contains(query));
+    }).toList();
+  }
+
+  void updateSearchQuery(String query) {
+    _searchQuery = query;
+    notifyListeners(); // Esto redibujará la lista automáticamente
+  }
 
   Future<void> fetchServices() async {
     _isLoading = true;

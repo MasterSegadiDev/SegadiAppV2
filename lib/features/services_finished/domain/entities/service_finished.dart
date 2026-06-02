@@ -1,5 +1,3 @@
-import 'dart:convert';
-
 class ServicesFinished {
   final int id;
   final String service;
@@ -9,6 +7,7 @@ class ServicesFinished {
   final String loadDate;
   final String unloadDate;
   final String documenter;
+  final String status;
 
   ServicesFinished({
     required this.id,
@@ -19,6 +18,7 @@ class ServicesFinished {
     required this.loadDate,
     required this.unloadDate,
     required this.documenter,
+    required this.status,
   });
 
   factory ServicesFinished.fromJson(Map<String, dynamic> json) =>
@@ -31,6 +31,7 @@ class ServicesFinished {
         loadDate: json["load_date"] ?? '',
         unloadDate: json["unload_date"] ?? '',
         documenter: json["documenter"] ?? '',
+        status: json["lq_estatus"] ?? '',
       );
 
   Map<String, dynamic> toJson() => {
@@ -42,5 +43,6 @@ class ServicesFinished {
         "load_date": loadDate,
         "unload_date": unloadDate,
         "documenter": documenter,
+        "lq_estatus": status,
       };
 }

@@ -1,12 +1,11 @@
 class ServerException implements Exception {
   final String message;
-  final int? statusCode;
 
-  // Usamos campos no nulos obligatorios para el mensaje
-  ServerException({required this.message, this.statusCode});
+  ServerException(this.message);
 }
 
-class UnauthorizedException implements Exception {
-  final String message;
-  UnauthorizedException({this.message = "Sesión expirada"});
-}
+class UnauthorizedException implements Exception {}
+
+class NetworkException implements Exception {}
+
+class ParsingException implements Exception {}

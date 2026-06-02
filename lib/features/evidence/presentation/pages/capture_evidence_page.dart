@@ -239,7 +239,7 @@ class _ActionButton extends StatelessWidget {
         foregroundColor: Colors.white,
         disabledBackgroundColor: Colors.grey[300],
         padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
       ),
     );
   }

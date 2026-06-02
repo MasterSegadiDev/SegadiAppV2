@@ -2,14 +2,15 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
+import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:segadi/core/network/dio_client.dart';
 import 'package:segadi/core/network/network_info.dart';
 import 'package:segadi/features/check_list/data/datasources/checklist_remote_dataosurce.dart';
 import 'package:segadi/features/check_list/data/repositories/checklist_repository_impl.dart';
 import 'package:segadi/features/check_list/presentation/pages/checklist_page.dart';
 import 'package:segadi/features/check_list/presentation/viewmodels/checklist_viewmodel.dart';
-import 'package:segadi/features/evidence/presentation/pages/capture_evidence_page.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_entity.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_permissions.dart';
 import 'package:segadi/features/service_detail/presentation/viewmodel/detail_service_viewmodel.dart';
@@ -20,6 +21,7 @@ import 'package:segadi/features/support_status/presentation/viewmodel/support_st
 import 'package:segadi/features/trip_closure/presentation/pages/capture_trip_evidence_page.dart';
 
 import 'package:segadi/features/trip_closure/presentation/viewmodels/trip_closure_viewmodel.dart';
+import 'package:flutter_file_downloader/flutter_file_downloader.dart';
 
 class ActionsCard extends StatelessWidget {
   final DetailServiceEntity ui;
@@ -186,10 +188,54 @@ class ActionsCard extends StatelessWidget {
       ),
       ActionButton(
         icon: FontAwesomeIcons.solidFilePdf,
-        label: 'Carta Porte',
+        label: 'Descargar CCP',
         color: Colors.red,
         enabled: true,
-        onPressed: null,
+        onPressed: () async {
+          try {
+            // 1. Pedir permisos
+            await [Permission.storage, Permission.notification].request();
+
+            final dioClient = context.read<DioClient>();
+            // final res = await PdfService(dioClient.dio).getPdf(state.id);
+            final res = 'xyz';
+
+            if (res != null) {
+              // 2. Nombre de archivo seguro
+              String safeName = "CFDI_Remision_${state.service}"
+                  .replaceAll(RegExp(r'[^\w\s]+'), '_')
+                  .replaceAll(' ', '_');
+
+              if (!safeName.toLowerCase().endsWith('.pdf')) {
+                safeName += '.pdf';
+              }
+
+              // 3. Descarga silenciosa (Sin spam en consola)
+              await FileDownloader.downloadFile(
+                url: res,
+                name: safeName,
+                notificationType: NotificationType.all,
+                // Dejamos los callbacks vacíos o con logs mínimos
+                // para que la librería no use sus logs por defecto
+                onProgress: null,
+                onDownloadCompleted: (String path) {
+                  // Solo imprimimos una vez al finalizar
+                  debugPrint('✅ Descarga completada: $path');
+                },
+                onDownloadError: (String error) {
+                  debugPrint('❌ Error en descarga: $error');
+                },
+              );
+            }
+          } on ApiException catch (e) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(e.message), backgroundColor: Colors.red),
+            );
+          } catch (e) {
+            // Usar debugPrint en lugar de print es mejor práctica en Flutter
+            debugPrint("Error detalle: $e");
+          }
+        },
       ),
     ];
 

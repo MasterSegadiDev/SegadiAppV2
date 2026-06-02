@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:segadi/features/services_assigned/core/errors/exceptions.dart';
+import 'package:segadi/core/errors/exceptions.dart';
+
 import 'package:segadi/features/services_assigned/data/datasources/services_remote_data_source.dart';
 import 'package:segadi/features/services_assigned/domain/entities/services_result.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -35,16 +36,22 @@ class ServicesRemoteDataSourceImpl implements ServicesRemoteDataSource {
           message: data['message'] ?? 'Consulta exitosa',
         );
       } else {
-        throw ServerException(message: data['message'] ?? 'Error');
+        return ServicesResult(
+          items: [],
+          message: data['message'] ?? 'Error en la consulta',
+        );
       }
     } on DioException catch (e) {
-      throw ServerException(message: 'Ha ocurrido inesperado: ${e.message} ');
-    } on TypeError {
-      // Esto detecta si el JSON no coincide con tu ServiceModel
-      throw ServerException(
-          message: 'Error de formato: Los datos del servicio cambiaron.');
-    } catch (e) {
-      throw ServerException(message: 'Error inesperado: $e');
+      if (e.response?.statusCode == 401) {
+        throw UnauthorizedException();
+      }
+
+      if (e.type == DioExceptionType.connectionTimeout ||
+          e.type == DioExceptionType.receiveTimeout) {
+        throw NetworkException();
+      }
+
+      throw ServerException('Error del servidor: ${e.message}');
     }
   }
 }

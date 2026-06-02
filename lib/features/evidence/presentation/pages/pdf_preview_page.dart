@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
-import 'package:segadi/repo/api_status.dart';
 
 class PdfPreviewPage extends StatefulWidget {
   const PdfPreviewPage({super.key});
@@ -19,24 +18,16 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
   void initState() {
     super.initState();
     _viewModel = context.read<EvidenceFlowViewModel>();
-
-    // 🚩 Senior Tip: Escuchar errores de forma centralizada
     _viewModel.addListener(_errorListener);
 
-    // Disparamos la generación del PDF solo si no existe uno previo
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (_viewModel.pdfBytes == null) {
-        _viewModel.buildPdf();
-      }
+      if (_viewModel.pdfBytes == null) _viewModel.buildPdf();
     });
   }
 
   void _errorListener() {
-    if (_viewModel.status == EvidenceFlowStatus.error &&
-        _viewModel.errorMessage != null &&
-        mounted) {
-      _showErrorDialog(_viewModel.errorMessage!);
-      _viewModel.clearError();
+    if (_viewModel.status == EvidenceFlowStatus.error && mounted) {
+      _showErrorDialog(_viewModel.errorMessage ?? "Error desconocido");
     }
   }
 
@@ -46,73 +37,73 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
     super.dispose();
   }
 
-  void _showErrorDialog(String message) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Atención'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    // Usamos watch para reaccionar a los cambios de pdfBytes y status
     final vm = context.watch<EvidenceFlowViewModel>();
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: Colors.white,
       appBar: AppBar(
-        title: const Text('Vista previa',
-            style: TextStyle(color: Colors.white, fontSize: 18)),
-        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('Confirmar Envío',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: primaryGreen,
-        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: _buildBody(vm),
     );
   }
 
   Widget _buildBody(EvidenceFlowViewModel vm) {
-    // 1. Estado de carga (Mientras se genera el PDF)
-    if (vm.pdfBytes == null && vm.status == EvidenceFlowStatus.scanning) {
-      return const Center(child: CircularProgressIndicator());
-    }
-
-    // 2. Si no hay PDF y no está cargando, algo falló
-    if (vm.pdfBytes == null) {
+    if (vm.status == EvidenceFlowStatus.processing) {
       return const Center(
-          child: Text(
-              "No se pudo generar el PDF. Intenta capturar las fotos de nuevo."));
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(height: 16),
+            Text("Procesando documento..."),
+          ],
+        ),
+      );
     }
 
-    // 3. Contenido Principal
-    return SafeArea(
-      child: Column(
-        children: [
-          Expanded(
-            child: PdfPreview(
-              // Usamos directamente los bytes del VM
-              build: (format) async => vm.pdfBytes!,
-              canChangePageFormat: false,
-              canChangeOrientation: false,
-              allowPrinting: false,
-              allowSharing: false,
-              // Optimización: No mostrar controles innecesarios
-              maxPageWidth: 700,
+    if (vm.pdfBytes == null) {
+      return Center(
+        child: ElevatedButton(
+          onPressed: () => vm.buildPdf(),
+          child: const Text("Reintentar generar PDF"),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        if (vm.pdfBytes!.lengthInBytes > 1024 * 1024 * 3)
+          Container(
+            color: Colors.amber[100],
+            padding: const EdgeInsets.all(8),
+            child: const Row(
+              children: [
+                Icon(Icons.warning, color: Colors.orange),
+                SizedBox(width: 8),
+                Expanded(
+                    child: Text(
+                        "El archivo es un poco grande. Asegúrate de tener buena conexión.")),
+              ],
             ),
           ),
-          _buildActionFooter(vm),
-        ],
-      ),
+        Expanded(
+          child: PdfPreview(
+            build: (format) async => vm.pdfBytes!,
+            canChangePageFormat: false,
+            allowPrinting: false,
+            allowSharing: false,
+            canDebug: false,
+            canChangeOrientation: false,
+          ),
+        ),
+        _buildActionFooter(vm),
+      ],
     );
   }
 
@@ -121,24 +112,18 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
       padding: const EdgeInsets.all(20),
       child: SizedBox(
         width: double.infinity,
-        height: 50,
+        //height: ,
         child: ElevatedButton(
           onPressed: vm.isSending ? null : () => _handleSend(vm),
           style: ElevatedButton.styleFrom(
             backgroundColor: primaryGreen,
-            shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(100)),
+            shape:
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
           ),
           child: vm.isSending
-              ? const SizedBox(
-                  height: 20,
-                  width: 20,
-                  child: CircularProgressIndicator(
-                      color: Colors.white, strokeWidth: 2),
-                )
-              : const Text('Enviar reporte final',
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold)),
+              ? const CircularProgressIndicator(color: Colors.white)
+              : const Text('Enviar Reporte PDF',
+                  style: TextStyle(color: Colors.white)),
         ),
       ),
     );
@@ -147,15 +132,57 @@ class _PdfPreviewPageState extends State<PdfPreviewPage> {
   Future<void> _handleSend(EvidenceFlowViewModel vm) async {
     final success = await vm.sendEvidences();
 
-    if (success && mounted) {
+    if (!mounted) return;
+
+    if (success) {
+      await showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (c) => AlertDialog(
+          title: const Text("¡Éxito!"),
+          content: const Text("Las evidencias se subieron correctamente."),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c),
+              child: const Text("Aceptar"),
+            ),
+          ],
+        ),
+      );
+
       Navigator.of(context)
         ..pop()
         ..pop()
         ..pop(true);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("✅ Evidencias enviadas con éxito")),
+    } else {
+      // 🔴 AQUÍ ESTABA TU FALTA
+      await showDialog(
+        context: context,
+        builder: (c) => AlertDialog(
+          title: const Text("Error"),
+          content: Text(vm.errorMessage ?? "Ocurrió un error inesperado"),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(c),
+              child: const Text("Aceptar"),
+            ),
+          ],
+        ),
       );
     }
+  }
+
+  void _showErrorDialog(String m) {
+    showDialog(
+      context: context,
+      builder: (c) => AlertDialog(
+        title: const Text("Ha ocurrido un error"),
+        content: Text(m),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(c), child: const Text("Cerrar"))
+        ],
+      ),
+    );
   }
 }

@@ -44,7 +44,7 @@ android {
     defaultConfig {
         applicationId "com.segadi.app"
         minSdkVersion 26 // Correcto para soportar canales de notificación (Android 8.0+)
-        targetSdkVersion 34 // Recomendado 34 para evitar problemas con permisos de fotos/media en 35
+        targetSdkVersion 35 // Recomendado 34 para evitar problemas con permisos de fotos/media en 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         

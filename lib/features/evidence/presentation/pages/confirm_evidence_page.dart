@@ -133,17 +133,19 @@ class _ConfirmEvidencePageState extends State<ConfirmEvidencePage> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('PROCESO DE CIERRE',
+              Text('PROCESO DE ENTREGA',
                   style: TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.bold,
                       color: primaryGreen,
                       letterSpacing: 1.1)),
-              Text('Remisión #${vm.id}',
-                  style: const TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.black87)),
+              Text(
+                'Remisión - ${vm.id}',
+                style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.black87),
+              ),
             ],
           ),
         ],

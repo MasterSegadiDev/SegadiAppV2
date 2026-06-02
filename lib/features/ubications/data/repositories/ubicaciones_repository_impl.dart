@@ -3,6 +3,8 @@ import 'package:segadi/features/ubications/data/models/ubicaciones_mapa_model.da
 import 'package:segadi/features/ubications/domain/entities/ubicaciones_mapa_entity.dart';
 import 'package:segadi/features/ubications/domain/repositories/ubicaciones_repository.dart';
 
+import 'package:segadi/utils/user_session.dart';
+
 class UbicacionesRepositoryImpl implements UbicacionesRepository {
   final UbicacionesRemoteDataSource remoteDataSource;
 
@@ -11,8 +13,14 @@ class UbicacionesRepositoryImpl implements UbicacionesRepository {
   @override
   Future<List<UbicacionesMapEntity>> getMapaUbicaciones() async {
     try {
-      final InventarioMapaModel mapaModel =
-          await remoteDataSource.fetchMapaUbicaciones('2');
+      final session = UserSession();
+      await session.loadFromPrefs();
+
+      print(
+          "🔍 Repository: Obteniendo mapa de ubicaciones para site_id: ${session.siteId}");
+
+      final InventarioMapaModel mapaModel = await remoteDataSource
+          .fetchMapaUbicaciones(session.siteId.toString());
 
       print("✅ Repo: Mapa obtenido con ${mapaModel.areas.length} áreas");
       return [mapaModel];

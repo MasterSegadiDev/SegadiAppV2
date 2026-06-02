@@ -266,7 +266,10 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
                       Icon(Icons.camera_alt,
                           size: 40,
                           color: showError ? Colors.red : Colors.grey),
-                      Text(isRequired ? 'Foto Obligatoria' : 'Tomar Foto',
+                      Text(
+                          isRequired
+                              ? 'Scannear Comprobante (Requerido)'
+                              : 'Scannear Comprobante',
                           style: TextStyle(
                               color: showError ? Colors.red : Colors.grey)),
                     ],
@@ -338,10 +341,7 @@ class _AddExpenseBottomSheetState extends State<AddExpenseBottomSheet> {
               child: CircularProgressIndicator(
                   color: Colors.white, strokeWidth: 2))
           : const Text('Enviar Comprobación',
-              style: TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 16)),
+              style: TextStyle(color: Colors.white, fontSize: 16)),
     );
   }
 

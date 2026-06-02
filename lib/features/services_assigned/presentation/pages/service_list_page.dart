@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:segadi/features/services_assigned/presentation/viewmodels/service_state.dart';
 import 'package:segadi/features/services_assigned/presentation/viewmodels/services_viewmodel.dart';
 import 'package:segadi/features/services_assigned/presentation/widgets/service_card.dart';
-import 'package:segadi/views/home/sidebar.dart';
 
 class ServicesAssignedPage extends StatefulWidget {
   const ServicesAssignedPage({super.key});
@@ -25,7 +24,7 @@ class _ServiceListViewState extends State<ServicesAssignedPage> {
       // DISEÑO ORIGINAL: Fondo gris claro para que resalten las cards blancas
       backgroundColor: Colors.grey[200],
       appBar: _buildAppBar(),
-      drawer: DrawerScreen(),
+      //drawer: DrawerScreen(),
       body: RefreshIndicator(
         onRefresh: vm.refresh,
         child: _buildBody(vm),

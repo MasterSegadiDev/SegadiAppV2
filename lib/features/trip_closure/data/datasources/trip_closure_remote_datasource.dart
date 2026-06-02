@@ -2,7 +2,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:dio/dio.dart';
 import 'package:segadi/core/network/api_exceptions.dart';
-import 'package:segadi/viewmodels/login/user_login.dart';
 
 class TripClosureRemoteDataSource {
   final Dio _dio;
@@ -12,7 +11,8 @@ class TripClosureRemoteDataSource {
   Future<void> send(int serviceId, Uint8List pdfBytes) async {
     try {
       // 1. Obtenemos el token (mantenemos tu lógica de ViewModel por ahora)
-      final token = await LoginViewModel.getSavedToken();
+      //final token = await LoginViewModel.getSavedToken();
+      final token = '1234567890';
 
       // 2. Construimos el cuerpo del mensaje
       // Dio convertirá esto a JSON automáticamente

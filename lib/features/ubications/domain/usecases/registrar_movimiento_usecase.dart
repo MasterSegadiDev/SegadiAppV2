@@ -37,6 +37,7 @@
 //   }
 // }
 
+import 'package:segadi/features/ubications/data/models/movimiento_reponse.dart';
 import 'package:segadi/features/ubications/domain/entities/movimiento_registro.dart';
 import 'package:segadi/features/ubications/domain/repositories/registro_movimiento_repository.dart';
 
@@ -45,7 +46,11 @@ class RegistrarMovimientoUseCase {
 
   RegistrarMovimientoUseCase(this.repository);
 
-  Future<Map<String, dynamic>> execute(MovimientoRegistro movimiento) async {
-    return await repository.registrar(movimiento);
+  Future<MovimientoResponse> call(
+    MovimientoRegistro movimiento,
+  ) {
+    return repository.registrar(
+      movimiento,
+    );
   }
 }

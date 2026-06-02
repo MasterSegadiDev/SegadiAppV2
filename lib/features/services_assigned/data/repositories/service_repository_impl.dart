@@ -24,7 +24,7 @@ class ServicesRepositoryImpl implements ServicesRepository {
         final result = await remoteDataSource.getAssignedServices();
         return Right(result);
       } on UnauthorizedException catch (e) {
-        return Left(UnauthorizedFailure(message: e.message));
+        return Left(UnauthorizedFailure(message: e.toString()));
       } on ServerException catch (e) {
         return Left(ServerFailure(e.message));
       } catch (e) {

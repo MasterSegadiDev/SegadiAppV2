@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:segadi/models/services/detail_finished.dart';
+import 'package:segadi/features/services_finished/domain/entities/detail_finished_model.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../domain/repositories/service_finished_repository.dart';
@@ -24,23 +24,31 @@ class DetailFinishedViewModel extends ChangeNotifier {
     _errorMessage = null;
     notifyListeners();
 
-    // 1. Verificar rol del usuario localmente para seguridad
-    final prefs = await SharedPreferences.getInstance();
-    final roll = prefs.getString('user_roll') ?? 'No';
-    _canShowCommissions = (roll == 'Si');
+    try {
+      // 1. Obtener preferencia de SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      // Usamos 'Si' como default por seguridad (si no se sabe, mejor no mostrar datos sensibles)
+      final String permiso = prefs.getString('empleado_permisionario') ?? 'Si';
 
-    // 2. Llamar al repositorio (que usa Either para errores)
-    final result = await repository.getServiceDetail(serviceId);
+      // Normalizamos a minúsculas para evitar errores de tipado en el string
+      _canShowCommissions = (permiso.toLowerCase() == 'no');
 
-    result.fold(
-      (failure) => _errorMessage = failure.message,
-      (data) {
-        _detail = data;
-        _detail?.userRoll = _canShowCommissions;
-      },
-    );
+      // 2. Llamada al repositorio
+      final result = await repository.getServiceDetail(serviceId);
 
-    _isLoading = false;
-    notifyListeners();
+      result.fold(
+        (failure) => _errorMessage = failure.message,
+        (data) {
+          _detail = data;
+          // Opcional: Si tu modelo de detalle tiene el campo, lo asignamos
+          _detail?.userRoll = _canShowCommissions;
+        },
+      );
+    } catch (e) {
+      _errorMessage = "Error inesperado al cargar el detalle";
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 }

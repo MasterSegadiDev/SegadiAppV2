@@ -1,0 +1,4 @@
+enum ContenedorObjetivo {
+  a,
+  b,
+}
