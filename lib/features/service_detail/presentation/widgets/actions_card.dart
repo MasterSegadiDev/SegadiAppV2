@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
@@ -49,8 +50,8 @@ class ActionsCard extends StatelessWidget {
         enabled: state.ui.enableCheckList,
         onPressed: () async {
           // 1. Instanciamos dependencias
-          final dioClient = DioClient();
-          final remoteDS = ChecklistRemoteDataSource(dioClient);
+
+          final remoteDS = ChecklistRemoteDataSource();
 
           // Agregamos Connectivity() aquí para que NetworkInfo pueda trabajar
           final networkInfo = NetworkInfoImpl(Connectivity());
@@ -84,9 +85,6 @@ class ActionsCard extends StatelessWidget {
         color: Colors.red,
         enabled: state.ui.enableSupport,
         onPressed: () async {
-          // Supongamos que tu instancia de Dio se llama 'myDioClient' o similar
-          final dio = DioClient();
-
           final updated = await showModalBottomSheet<bool>(
             context: context,
             isScrollControlled: true,
@@ -95,7 +93,7 @@ class ActionsCard extends StatelessWidget {
             builder: (_) => ChangeNotifierProvider(
               create: (_) => SupportStatusViewModel(
                 repo: SupportStatusRepositoryImpl(
-                  SupportStatusApi(dio), // <--- AQUÍ PASAS EL DIO
+                  SupportStatusApi(), // <--- AQUÍ PASAS EL DIO
                 ),
                 serviceId: state.id,
                 statusId: state.statusId,

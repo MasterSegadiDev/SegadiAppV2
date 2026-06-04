@@ -1,25 +1,27 @@
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
-import 'api_config.dart';
+import 'package:segadi/core/constants/app_config.dart';
 
 class DioClient {
-  late Dio dio;
+  DioClient._();
 
-  DioClient() {
-    dio = Dio(
-      BaseOptions(
-        baseUrl: ApiConfig.segadiBaseUrl,
-        connectTimeout: ApiConfig.timeout,
-        receiveTimeout: ApiConfig.timeout,
-        headers: ApiConfig.headers,
+  static final Dio instance = Dio(
+    BaseOptions(
+      baseUrl: AppConfig.apiBaseUrl,
+      connectTimeout: const Duration(
+        seconds: 120,
+      ),
+      receiveTimeout: const Duration(
+        seconds: 120,
+      ),
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    ),
+  )..interceptors.add(
+      PrettyDioLogger(
+        requestBody: true,
+        responseBody: true,
       ),
     );
-
-    dio.interceptors.add(PrettyDioLogger(
-      requestBody: true, // Ver qué mandas (útil para errores)
-      // responseBody: true, // <--- ESTO QUITA EL LISTADO GIGANTE
-      error: true, // Ver si algo truena
-      compact: true,
-    ));
-  }
 }

@@ -3,10 +3,10 @@ import 'package:segadi/core/network/dio_client.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class SupportStatusApi {
-  final DioClient _dio;
+  final Dio _dio = DioClient.instance;
 
   // Recibe el dio del DioClient().dio que tienes
-  SupportStatusApi(this._dio);
+  SupportStatusApi();
 
   Future<Response> sendSupportStatus({
     required int serviceId,
@@ -27,7 +27,7 @@ class SupportStatusApi {
 
     // Realizar la petición POST
     // Nota: Si tu baseUrl termina en 'web/', aquí solo pones el endpoint
-    final response = await _dio.dio.post(
+    final response = await _dio.post(
       'index.php?r=esegadi/estatus-soportepost',
       data: data,
     );

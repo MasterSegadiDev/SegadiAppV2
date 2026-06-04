@@ -5,14 +5,14 @@ import 'package:segadi/features/service_detail/core/errors/dio_exceptions.dart';
 import 'package:segadi/features/services_assigned/core/errors/exceptions.dart';
 
 class ChecklistRemoteDataSource {
-  final DioClient _dioClient;
+  final Dio _dio = DioClient.instance;
 
-  ChecklistRemoteDataSource(this._dioClient);
+  ChecklistRemoteDataSource();
 
   /// GET catálogo de puntos de revisión
   Future<List<ChecklistItemModel>> getChecklistCatalog(String token) async {
     try {
-      final response = await _dioClient.dio.get(
+      final response = await _dio.get(
         'index.php',
         queryParameters: {
           'r': 'esegadi/get-puntosrevision',
@@ -49,7 +49,7 @@ class ChecklistRemoteDataSource {
         "token": token,
       };
 
-      final response = await _dioClient.dio.post(
+      final response = await _dio.post(
         'index.php?r=esegadi/checklistpost',
         data: data,
       );

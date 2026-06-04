@@ -8,15 +8,9 @@ class AuthToken {
 class UserEntity {
   final int id;
   final String name;
-  final String employeeNumber;
   final String role; // Recibirá 'OPERADOR_TRAILER' o 'OPERADOR_GRUA'
 
-  UserEntity({
-    required this.id,
-    required this.name,
-    required this.employeeNumber,
-    required this.role,
-  });
+  UserEntity({required this.id, required this.name, required this.role});
 }
 
 class AuthResult {

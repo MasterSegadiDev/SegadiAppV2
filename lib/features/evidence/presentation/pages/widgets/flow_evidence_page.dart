@@ -1,4 +1,5 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/core/network/dio_client.dart';
@@ -17,7 +18,7 @@ class EvidenceFlowPage extends StatelessWidget {
   @override
   @override
   Widget build(BuildContext context) {
-    final dio = DioClient().dio;
+    final Dio _dio = DioClient.instance;
     // Creamos la instancia de networkInfo que nos pide el repositorio
     final networkInfo = NetworkInfoImpl(Connectivity());
 
@@ -26,7 +27,7 @@ class EvidenceFlowPage extends StatelessWidget {
         id: serviceId,
 
         repository: EvidenceRepositoryImpl(
-          EvidenceRemoteDataSource(dio),
+          EvidenceRemoteDataSource(_dio),
         ),
         // CORRECCIÓN AQUÍ: Usamos los nombres de los parámetros 'api' y 'networkInfo'
         detailServiceApi: DetailServiceRepositoryImpl(

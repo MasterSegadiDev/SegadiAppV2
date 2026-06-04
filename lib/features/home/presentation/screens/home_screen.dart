@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
-import 'package:segadi/features/auth/presentation/providers/auth_provider.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -14,9 +12,7 @@ class HomeScreen extends StatelessWidget {
           children: [
             const Text('Bienvenido Chofer'),
             ElevatedButton(
-              onPressed: () async {
-                await context.read<AuthProvider>().logout();
-              },
+              onPressed: null,
               child: const Text('Cerrar Sesión'),
             )
           ],
