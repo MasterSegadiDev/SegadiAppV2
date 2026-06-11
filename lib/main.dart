@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:segadi/core/constants/app_enviroment.dart';
+import 'package:segadi/core/router/app_router.dart';
+import 'package:segadi/features/auth/presentation/screens/splash_screen.dart';
 
 import 'core/constants/app_config.dart';
 
@@ -13,9 +15,8 @@ void main() {
   WidgetsFlutterBinding.ensureInitialized();
 
   runApp(
-    MultiProvider(
-      providers: [],
-      child: const MyApp(),
+    const ProviderScope(
+      child: MyApp(),
     ),
   );
 }
@@ -28,19 +29,13 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp.router(
-      routerConfig: null,
+      routerConfig: AppRouter.router,
       debugShowCheckedModeBanner: false,
       title: 'Segadi Driver App',
       theme: ThemeData(
         useMaterial3: true,
         colorSchemeSeed: const Color(
           0xFF2C522A,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Color(
-            0xFF2C522A,
-          ),
-          foregroundColor: Colors.white,
         ),
       ),
     );

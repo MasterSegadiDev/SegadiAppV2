@@ -6,7 +6,9 @@ class ApiConfig {
   static String get segadiBaseUrl {
     switch (Env.environment) {
       case Environment.dev:
-        return 'http://198.251.68.42/DesarrolloSEGADI/web/';
+        //  return 'http://198.251.68.42/DesarrolloSEGADI/web/';
+
+        return 'http://localhost:3000';
 
       case Environment.qa:
         return '';

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:segadi/core/security/session_manager.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -12,7 +13,9 @@ class HomeScreen extends StatelessWidget {
           children: [
             const Text('Bienvenido Chofer'),
             ElevatedButton(
-              onPressed: null,
+              onPressed: () async {
+                await SessionManager.instance.clearSession();
+              },
               child: const Text('Cerrar Sesión'),
             )
           ],

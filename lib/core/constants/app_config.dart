@@ -12,7 +12,8 @@ class AppConfig {
   static String get apiBaseUrl {
     switch (environment) {
       case Environment.development:
-        return 'http://198.251.68.42/DesarrolloSEGADI/web/index.php?r=esegadi';
+        //return 'http://198.251.68.42/DesarrolloSEGADI/web/index.php?r=esegadi';
+        return 'http://10.0.2.2:3000';
 
       case Environment.production:
         return 'http://198.251.68.42/SEGADI/web/index.php?r=esegadi';
