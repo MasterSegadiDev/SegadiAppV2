@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:segadi/core/constants/app_enviroment.dart';
 import 'package:segadi/core/router/app_router.dart';
-import 'package:segadi/features/auth/presentation/screens/splash_screen.dart';
 
 import 'core/constants/app_config.dart';
 

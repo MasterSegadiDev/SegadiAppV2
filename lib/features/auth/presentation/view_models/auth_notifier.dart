@@ -61,4 +61,11 @@ class AuthNotifier extends StateNotifier<AuthState> {
       );
     }
   }
+
+  Future<void> logout() async {
+    await SessionManager.clearSession();
+    state = state.copyWith(
+      status: AuthStatus.initial,
+    );
+  }
 }

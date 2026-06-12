@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
-import 'package:segadi/core/security/session_manager.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:segadi/features/auth/presentation/providers/auth_provider.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends ConsumerStatefulWidget {
   const HomeScreen({super.key});
 
+  @override
+  ConsumerState<HomeScreen> createState() => HomeScreenState();
+}
+
+class HomeScreenState extends ConsumerState<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,7 +21,9 @@ class HomeScreen extends StatelessWidget {
             const Text('Bienvenido Chofer'),
             ElevatedButton(
               onPressed: () async {
-                await SessionManager.instance.clearSession();
+                await ref.read(authProvider.notifier).logout();
+
+                context.go('/login');
               },
               child: const Text('Cerrar Sesión'),
             )

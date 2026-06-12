@@ -1,6 +1,7 @@
 import 'dart:convert';
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:segadi/features/auth/data/models/user_model.dart';
 
 class SessionManager {
   SessionManager._();
@@ -60,5 +61,21 @@ class SessionManager {
 
   static Future<void> clearSession() async {
     await _storage.deleteAll();
+  }
+
+  static Future<UserModel?> getCurrentUser() async {
+    final userJson = await _storage.read(
+      key: userKey,
+    );
+
+    if (userJson == null) {
+      return null;
+    }
+
+    return UserModel.fromJson(
+      jsonDecode(
+        userJson,
+      ),
+    );
   }
 }

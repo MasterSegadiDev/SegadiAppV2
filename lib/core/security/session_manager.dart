@@ -43,6 +43,7 @@ class SessionManager {
   }
 
   Future<void> clearSession() async {
+    print('Clearing session...');
     await _storage.clear();
   }
 
