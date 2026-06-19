@@ -1,4 +1,4 @@
-import 'package:segadi/security/session_manager.dart';
+import 'package:segadi/core/security/session_manager.dart';
 
 class AuthGuard {
   static Future<bool> isAuthenticated() async {

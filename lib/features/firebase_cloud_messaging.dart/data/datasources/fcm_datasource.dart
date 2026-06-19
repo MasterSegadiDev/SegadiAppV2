@@ -2,7 +2,6 @@ import 'dart:async';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/services/navigation_service.dart';
 import '../models/service_update_model.dart';
 
 class FcmDatasource {
@@ -45,7 +44,7 @@ class FcmDatasource {
     if (token == null || token.isEmpty) {
       debugPrint('🚫 Usuario no logueado. Redirigiendo a Login.');
       // Si no hay sesión, lo mandamos al login para que no vea una pantalla vacía
-      NavigationService.instance.navigateTo('/login');
+      //NavigationService.instance.navigateTo('/login');
       return;
     }
 
@@ -61,10 +60,10 @@ class FcmDatasource {
         debugPrint('🚀 Navegando a: /detail_service_finished con ID: $id');
 
         // IMPORTANTE: El nombre de la ruta debe ser idéntico al del main.dart
-        NavigationService.instance.navigateTo(
-          '/detail_service_finished',
-          arguments: id,
-        );
+        // NavigationService.instance.navigateTo(
+        //   '/detail_service_finished',
+        //   arguments: id,
+        // );
       }
     }
   }

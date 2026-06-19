@@ -3,7 +3,7 @@ import 'package:segadi/features/ubications/data/models/ubicaciones_mapa_model.da
 import 'package:segadi/features/ubications/domain/entities/ubicaciones_mapa_entity.dart';
 import 'package:segadi/features/ubications/domain/repositories/ubicaciones_repository.dart';
 
-import 'package:segadi/utils/user_session.dart';
+import 'package:segadi/core/utils/user_session.dart';
 
 class UbicacionesRepositoryImpl implements UbicacionesRepository {
   final UbicacionesRemoteDataSource remoteDataSource;

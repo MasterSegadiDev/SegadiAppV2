@@ -69,7 +69,7 @@ class ServiceCard extends StatelessWidget {
       color: const Color(0xFF2C522A).withOpacity(0.08),
       child: Row(
         children: [
-          const Icon(FontAwesomeIcons.truckFast,
+          Icon(FontAwesomeIcons.truckFast.data,
               size: 18, color: Color(0xFF2C522A)),
           const SizedBox(width: 10),
           Expanded(

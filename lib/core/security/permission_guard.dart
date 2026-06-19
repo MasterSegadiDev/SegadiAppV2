@@ -1,4 +1,4 @@
-import 'package:segadi/security/session_manager.dart';
+import 'package:segadi/core/security/session_manager.dart';
 
 class PermissionGuard {
   static Future<bool> hasPermission(

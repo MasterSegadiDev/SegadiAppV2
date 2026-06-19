@@ -1,55 +1,81 @@
-import 'package:segadi/core/security/token_keys.dart';
-import 'package:segadi/core/storage/secure_storage_service.dart';
-import 'package:segadi/features/auth/data/models/auth_session_model.dart';
+import 'dart:convert';
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:segadi/features/auth/data/models/user_model.dart';
 
 class SessionManager {
   SessionManager._();
 
-  static final instance = SessionManager._();
+  static const FlutterSecureStorage _storage = FlutterSecureStorage();
 
-  final _storage = SecureStorageService.instance;
+  static const String accessTokenKey = 'access_token';
 
-  Future<void> saveSession(
-    AuthSessionModel session,
-  ) async {
+  static const String refreshTokenKey = 'refresh_token';
+
+  static const String userKey = 'user';
+
+  static Future<void> saveSession({
+    required String accessToken,
+    required String refreshToken,
+    required Map<String, dynamic> user,
+  }) async {
     await _storage.write(
-      TokenKeys.accessToken,
-      session.accessToken,
+      key: accessTokenKey,
+      value: accessToken,
     );
 
     await _storage.write(
-      TokenKeys.refreshToken,
-      session.refreshToken,
+      key: refreshTokenKey,
+      value: refreshToken,
     );
 
-    // await _storage.write(
-    //   TokenKeys.userData,
-    //   jsonEncode(
-    //     session.user,
-    //   ),
-    // );
+    await _storage.write(
+      key: userKey,
+      value: jsonEncode(user),
+    );
   }
 
-  Future<String?> getAccessToken() async {
+  static Future<String?> getAccessToken() async {
     return _storage.read(
-      TokenKeys.accessToken,
+      key: accessTokenKey,
     );
   }
 
-  Future<String?> getRefreshToken() async {
+  static Future<String?> getRefreshToken() async {
     return _storage.read(
-      TokenKeys.refreshToken,
+      key: refreshTokenKey,
     );
   }
 
-  Future<void> clearSession() async {
-    print('Clearing session...');
-    await _storage.clear();
+  static Future<Map<String, dynamic>?> getUser() async {
+    final userJson = await _storage.read(
+      key: userKey,
+    );
+
+    if (userJson == null) {
+      return null;
+    }
+
+    return jsonDecode(userJson);
   }
 
-  Future<bool> isLoggedIn() async {
-    final token = await getAccessToken();
+  static Future<void> clearSession() async {
+    await _storage.deleteAll();
+  }
 
-    return token != null && token.isNotEmpty;
+  static Future<UserModel?> getCurrentUser() async {
+    final userJson = await _storage.read(
+      key: userKey,
+    );
+
+    if (userJson == null) {
+      return null;
+    }
+
+    return UserModel.fromJson(
+      jsonDecode(
+        userJson,
+      ),
+    );
   }
 }

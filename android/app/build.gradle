@@ -1,7 +1,7 @@
 plugins {
     id "com.android.application"
     id 'com.google.gms.google-services' // Esto ya está bien
-    id "kotlin-android"
+    id "org.jetbrains.kotlin.android"
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -25,12 +25,13 @@ if (keystorePropertiesFile.exists()) {
 android {
     // IMPORTANTE: El namespace debe coincidir con tu applicationId
     namespace "com.segadi.app" 
-    compileSdkVersion 34 // Mantener en 34 es más estable para producción actualmente
+    compileSdkVersion 36 // Mantener en 34 es más estable para producción actualmente
     ndkVersion flutter.ndkVersion
 
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
+        coreLibraryDesugaringEnabled true
     }
 
     kotlinOptions {
@@ -43,8 +44,8 @@ android {
 
     defaultConfig {
         applicationId "com.segadi.app"
-        minSdkVersion 26 // Correcto para soportar canales de notificación (Android 8.0+)
-        targetSdkVersion 35 // Recomendado 34 para evitar problemas con permisos de fotos/media en 35
+        minSdkVersion 24 // Correcto para soportar canales de notificación (Android 8.0+)
+        targetSdkVersion 36 // Recomendado 34 para evitar problemas con permisos de fotos/media en 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         
@@ -86,4 +87,6 @@ dependencies {
     // Si minSdkVersion es 21 o mayor, no necesitas multidex:1.0.3 obligatoriamente,
     // pero dejarlo no hace daño.
     implementation "androidx.multidex:multidex:2.0.1" 
+    coreLibraryDesugaring 'com.android.tools:desugar_jdk_libs:2.1.5'
+
 }

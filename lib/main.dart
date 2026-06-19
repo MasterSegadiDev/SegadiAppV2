@@ -1,17 +1,18 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:segadi/app/di/injection_container.dart';
 import 'package:segadi/core/constants/app_enviroment.dart';
-import 'package:segadi/core/router/app_router.dart';
+import 'package:segadi/app/router/app_router.dart';
 
 import 'core/constants/app_config.dart';
 
-void main() {
+Future<void> main() async {
   AppConfig.initialize(
-    Environment
-        .development, // cambiar a produccion cuando se haga el despliegue final
+    Environment.development,
   );
 
   WidgetsFlutterBinding.ensureInitialized();
+  await setupDependencies();
 
   runApp(
     const ProviderScope(

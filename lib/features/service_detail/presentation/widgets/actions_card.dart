@@ -44,7 +44,7 @@ class ActionsCard extends StatelessWidget {
     // Definimos la lista de acciones dinámicamente para el Grid
     final List<Widget> actions = [
       ActionButton(
-        icon: FontAwesomeIcons.clipboardList,
+        icon: FontAwesomeIcons.clipboard.data,
         label: 'Chequeo',
         color: Colors.blue,
         enabled: state.ui.enableCheckList,
@@ -80,7 +80,7 @@ class ActionsCard extends StatelessWidget {
         },
       ),
       ActionButton(
-        icon: FontAwesomeIcons.locationDot,
+        icon: FontAwesomeIcons.locationDot.data,
         label: 'Soporte',
         color: Colors.red,
         enabled: state.ui.enableSupport,
@@ -108,8 +108,8 @@ class ActionsCard extends StatelessWidget {
           }
         },
       ),
-      const ActionButton(
-        icon: FontAwesomeIcons.mapLocationDot,
+      ActionButton(
+        icon: FontAwesomeIcons.mapLocation.data,
         label: 'Geocerca',
         color: Colors.grey,
         enabled: false,
@@ -119,7 +119,7 @@ class ActionsCard extends StatelessWidget {
         Consumer<TripClosureViewModel>(
           builder: (context, tripVm, child) {
             return ActionButton(
-              icon: FontAwesomeIcons.circleCheck,
+              icon: FontAwesomeIcons.circleCheck.data,
               label: 'Subir EIR',
               color: Colors.green,
               enabled: rules.canShowEIR,
@@ -173,7 +173,7 @@ class ActionsCard extends StatelessWidget {
           },
         ),
       ActionButton(
-        icon: FontAwesomeIcons.moneyBillTransfer,
+        icon: FontAwesomeIcons.moneyBillTransfer.data,
         label: 'Viáticos',
         color: Colors.teal,
         enabled: state.ui.hasMoneyChecks,
@@ -185,7 +185,7 @@ class ActionsCard extends StatelessWidget {
             : null,
       ),
       ActionButton(
-        icon: FontAwesomeIcons.solidFilePdf,
+        icon: FontAwesomeIcons.solidFilePdf.data,
         label: 'Descargar CCP',
         color: Colors.red,
         enabled: true,
@@ -312,7 +312,7 @@ class ActionButton extends StatelessWidget {
                     shape: BoxShape.circle,
                   ),
                   child: FaIcon(
-                    icon,
+                    icon as FaIconData?,
                     size: iconSize,
                     color: enabled ? color : Colors.grey,
                   ),
