@@ -16,96 +16,45 @@ class HomeScreen extends ConsumerStatefulWidget {
 
 class HomeScreenState extends ConsumerState<HomeScreen> {
   @override
-  Widget build(
-    BuildContext context,
-  ) {
-    final currentUser = ref.watch(
-      currentUserProvider,
-    );
+  Widget build(BuildContext context) {
+    final user = ref.watch(currentUserProvider);
+
+    if (user == null) {
+      return const Scaffold(
+        body: Center(
+          child: Text('Usuario no encontrado'),
+        ),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text(
-          'Home',
-        ),
+        title: const Text('Home'),
       ),
-      body: currentUser.when(
-        data: (
-          user,
-        ) {
-          if (user == null) {
-            return const Center(
-              child: Text(
-                'Usuario no encontrado',
-              ),
-            );
-          }
-
-          return Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'Bienvenido ${user.name}',
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Text(
-                  'Rol: ${user.roles.join(", ")}',
-                ),
-                const SizedBox(
-                  height: 10,
-                ),
-                Text(
-                  'Permisos:',
-                ),
-                ...user.permissions.map(
-                  (
-                    permission,
-                  ) =>
-                      Text(
-                    permission,
-                  ),
-                ),
-                const SizedBox(
-                  height: 30,
-                ),
-                ElevatedButton(
-                  onPressed: () async {
-                    await ref
-                        .read(
-                          authProvider.notifier,
-                        )
-                        .logout();
-
-                    if (!mounted) {
-                      return;
-                    }
-
-                    context.go(
-                      '/login',
-                    );
-                  },
-                  child: const Text(
-                    'Cerrar Sesión',
-                  ),
-                ),
-              ],
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('Bienvenido ${user.name}'),
+            const SizedBox(height: 10),
+            Text('Rol: ${user.roles.join(", ")}'),
+            const SizedBox(height: 10),
+            const Text('Permisos:'),
+            ...user.permissions.map(
+              (p) => Text(p),
             ),
-          );
-        },
-        loading: () => const Center(
-          child: CircularProgressIndicator(),
-        ),
-        error: (
-          error,
-          stackTrace,
-        ) =>
-            Center(
-          child: Text(
-            error.toString(),
-          ),
+            const SizedBox(height: 30),
+            ElevatedButton(
+              onPressed: () async {
+                await ref.read(authProvider.notifier).logout();
+
+                if (!mounted) return;
+
+                context.go('/login');
+              },
+              child: const Text('Cerrar Sesión'),
+            ),
+          ],
         ),
       ),
     );

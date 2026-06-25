@@ -1,4 +1,7 @@
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:get_it/get_it.dart';
+import 'package:segadi/core/security/session_manager.dart';
+import 'package:segadi/core/storage/secure_storage_service.dart';
 import 'package:segadi/features/auth/data/datasources/auth_remote_datasource.dart';
 import 'package:segadi/features/auth/data/datasources/auth_remote_datasource_impl.dart';
 import 'package:segadi/features/auth/data/repositories/auth_repository_impl.dart';
@@ -28,4 +31,17 @@ Future<void> setupDependencies() async {
       getIt<AuthRepository>(),
     ),
   );
+
+  //=================================  secure storage =============================== //
+  //================================================================================= //
+
+  // getIt.registerLazySingleton(
+  //   () => const FlutterSecureStorage(),
+  // );
+
+  // getIt.registerLazySingleton(
+  //   () => SecureStorageService.instance,
+  // );
+
+  // getIt.registerLazySingleton(() => SessionManager);
 }

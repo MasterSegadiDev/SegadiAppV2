@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:pretty_dio_logger/pretty_dio_logger.dart';
 import 'package:segadi/core/constants/app_config.dart';
+import 'interceptors/auth_interceptor.dart';
 
 class DioClient {
   DioClient._();
@@ -18,7 +19,11 @@ class DioClient {
         'Content-Type': 'application/json',
       },
     ),
-  )..interceptors.add(
+  )
+    ..interceptors.add(
+      AuthInterceptor(),
+    )
+    ..interceptors.add(
       PrettyDioLogger(
         requestBody: true,
         responseBody: true,

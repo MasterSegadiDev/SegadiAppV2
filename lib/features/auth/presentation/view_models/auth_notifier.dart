@@ -1,18 +1,21 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:segadi/core/security/session_manager.dart';
 import 'package:segadi/features/auth/domain/use_cases/login_usecase.dart';
 import 'package:segadi/features/auth/data/models/user_model.dart';
+import 'package:segadi/features/auth/presentation/providers/current_user_provider.dart';
 
 import '../state/auth_state.dart';
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final LoginUseCase loginUseCase;
+  final Ref ref;
 
   AuthNotifier(
     this.loginUseCase,
-  ) : super(
-          AuthState.initial(),
-        );
+    this.ref,
+  ) : super(AuthState.initial());
 
   Future<void> login({
     required String username,
@@ -41,29 +44,32 @@ class AuthNotifier extends StateNotifier<AuthState> {
         ).toJson(),
       );
 
-      print(
-        'Usuario: ${session.user.name}',
-      );
+      ref.read(currentUserProvider.notifier).setUser(session.user);
 
-      final token = await SessionManager.getAccessToken();
-
-      print('TOKEN => $token');
+      await SessionManager.getAccessToken();
 
       state = state.copyWith(
         status: AuthStatus.authenticated,
       );
-
-      print('estado => ${state.status}');
     } catch (e) {
       state = state.copyWith(
         status: AuthStatus.error,
         errorMessage: e.toString(),
       );
+
+      debugPrint('error de login sin mockoon: ${e.toString()}');
     }
   }
 
   Future<void> logout() async {
     await SessionManager.clearSession();
+
+    ref
+        .read(
+          currentUserProvider.notifier,
+        )
+        .clear();
+
     state = state.copyWith(
       status: AuthStatus.initial,
     );

@@ -1,6 +1,9 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:segadi/core/widgets/app_snackbar.dart';
 import 'package:segadi/features/auth/presentation/providers/auth_provider.dart';
 import 'package:segadi/features/auth/presentation/state/auth_state.dart';
 
@@ -20,8 +23,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   bool _isPasswordVisible = false;
 
+  late final ProviderSubscription<AuthState> _authListener;
+
   @override
   void dispose() {
+    _authListener.close();
+
     _usernameController.dispose();
     _passwordController.dispose();
 
@@ -32,11 +39,36 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   void initState() {
     super.initState();
 
-    ref.listenManual(
+    _authListener = ref.listenManual<AuthState>(
       authProvider,
       (previous, next) {
-        if (next.status == AuthStatus.authenticated) {
-          context.go('/home');
+        if (!mounted) return;
+
+        switch (next.status) {
+          case AuthStatus.authenticated:
+            AppSnackbar.success(context, 'Bienvenido a SEGADI');
+
+            Timer(Duration(seconds: 3), () {
+              context.go('/home');
+            });
+            break;
+
+          case AuthStatus.error:
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(
+            //     content: Text(
+            //       next.errorMessage ?? 'Ocurrió un error',
+            //     ),
+            //     backgroundColor: Colors.red,
+            //   ),
+            // );
+            AppSnackbar.error(context,
+                next.errorMessage ?? 'Ocurrió un error al iniciar sesión ');
+
+            break;
+
+          default:
+            break;
         }
       },
     );
@@ -178,9 +210,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     );
   }
 
-  Widget _buildLoginButton(
-    AuthState authState,
-  ) {
+  Widget _buildLoginButton(AuthState authState) {
     return SizedBox(
       width: double.infinity,
       height: 55,
@@ -188,19 +218,26 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
         style: ElevatedButton.styleFrom(
           backgroundColor: const Color(0xFF2C522A),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(
-              12,
-            ),
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-        onPressed: _login,
-        child: const Text(
-          'Iniciar Sesión',
-          style: TextStyle(
-            fontSize: 18,
-            color: Colors.white,
-          ),
-        ),
+        onPressed: authState.status == AuthStatus.loading ? null : _login,
+        child: authState.status == AuthStatus.loading
+            ? const SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: Colors.white,
+                ),
+              )
+            : const Text(
+                'Iniciar Sesión',
+                style: TextStyle(
+                  fontSize: 18,
+                  color: Colors.white,
+                ),
+              ),
       ),
     );
   }
