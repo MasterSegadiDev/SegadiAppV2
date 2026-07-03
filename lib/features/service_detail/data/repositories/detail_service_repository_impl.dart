@@ -5,7 +5,7 @@ import 'package:segadi/features/service_detail/core/errors/failures.dart';
 
 import 'package:dartz/dartz.dart';
 
-import '../../../../core/network/network_info.dart'; // Para usar Either
+import '../../../../core/contracts/network_info.dart'; // Para usar Either
 
 class DetailServiceRepositoryImpl {
   // final DetailServiceApi api;

@@ -1,11 +1,10 @@
-import 'package:flutter/cupertino.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:segadi/core/security/session_manager.dart';
-import 'package:segadi/features/auth/domain/use_cases/login_usecase.dart';
-import 'package:segadi/features/auth/data/models/user_model.dart';
-import 'package:segadi/features/auth/presentation/providers/current_user_provider.dart';
 
+import '../../../../core/security/session_manager.dart';
+import '../../data/models/user_model.dart';
+import '../../domain/use_cases/login_usecase.dart';
+import '../providers/current_user_provider.dart';
 import '../state/auth_state.dart';
 
 class AuthNotifier extends StateNotifier<AuthState> {
@@ -21,11 +20,13 @@ class AuthNotifier extends StateNotifier<AuthState> {
     required String username,
     required String password,
   }) async {
-    try {
-      state = state.copyWith(
-        status: AuthStatus.loading,
-      );
+    if (state.status == AuthStatus.loading) {
+      return;
+    }
 
+    state = AuthState.loading();
+
+    try {
       final session = await loginUseCase(
         username: username,
         password: password,
@@ -44,34 +45,23 @@ class AuthNotifier extends StateNotifier<AuthState> {
         ).toJson(),
       );
 
-      ref.read(currentUserProvider.notifier).setUser(session.user);
+      ref.read(currentUserProvider.notifier).setUser(
+            session.user,
+          );
 
-      await SessionManager.getAccessToken();
-
-      state = state.copyWith(
-        status: AuthStatus.authenticated,
-      );
+      state = AuthState.authenticated();
     } catch (e) {
-      state = state.copyWith(
-        status: AuthStatus.error,
+      state = AuthState.error(
         errorMessage: e.toString(),
       );
-
-      debugPrint('error de login sin mockoon: ${e.toString()}');
     }
   }
 
   Future<void> logout() async {
     await SessionManager.clearSession();
 
-    ref
-        .read(
-          currentUserProvider.notifier,
-        )
-        .clear();
+    ref.read(currentUserProvider.notifier).clear();
 
-    state = state.copyWith(
-      status: AuthStatus.initial,
-    );
+    state = AuthState.initial();
   }
 }

@@ -1,56 +1,26 @@
-enum AuthStatus {
-  initial,
-  loading,
-  authenticated,
-  unauthenticated,
-  error,
-}
+enum AuthStatus { initial, loading, authenticated, unauthenticated, error }
 
 class AuthState {
   final AuthStatus status;
   final String? errorMessage;
 
-  const AuthState({
-    required this.status,
-    this.errorMessage,
-  });
+  const AuthState._({required this.status, this.errorMessage});
 
-  factory AuthState.initial() {
-    return const AuthState(
-      status: AuthStatus.initial,
-    );
-  }
+  const AuthState.initial() : this._(status: AuthStatus.initial);
 
-  factory AuthState.loading() {
-    return const AuthState(
-      status: AuthStatus.loading,
-    );
-  }
+  const AuthState.loading() : this._(status: AuthStatus.loading);
 
-  factory AuthState.authenticated() {
-    return const AuthState(
-      status: AuthStatus.authenticated,
-    );
-  }
-  factory AuthState.unauthenticated() {
-    return const AuthState(
-      status: AuthStatus.unauthenticated,
-    );
-  }
-  factory AuthState.error({required String errorMessage}) {
-    return AuthState(
-      status: AuthStatus.error,
-      errorMessage: errorMessage,
-    );
-  }
+  const AuthState.authenticated() : this._(status: AuthStatus.authenticated);
 
-  AuthState copyWith({
-    AuthStatus? status,
-    String? errorMessage,
-  }) {
-    return AuthState(
-      status: status ?? this.status,
-      errorMessage: errorMessage ?? this.errorMessage,
-    );
-  }
+  const AuthState.unauthenticated()
+      : this._(status: AuthStatus.unauthenticated);
+
+  const AuthState.error({required this.errorMessage})
+      : status = AuthStatus.error;
+
+  bool get isLoading => status == AuthStatus.loading;
+
+  bool get isAuthenticated => status == AuthStatus.authenticated;
+
+  bool get hasError => status == AuthStatus.error;
 }

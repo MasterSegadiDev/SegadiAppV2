@@ -1,50 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../auth/presentation/providers/current_user_provider.dart';
+import '../../../../core/security/session_manager.dart';
 
-class SplashScreen extends ConsumerStatefulWidget {
+class SplashScreen extends StatefulWidget {
   const SplashScreen({
     super.key,
   });
 
   @override
-  ConsumerState<SplashScreen> createState() => _SplashScreenState();
+  State<SplashScreen> createState() => _SplashScreenState();
 }
 
-class _SplashScreenState extends ConsumerState<SplashScreen> {
+class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-
-    _initialize();
+    _loadSession();
   }
 
-  Future<void> _initialize() async {
-    await ref
-        .read(
-          currentUserProvider.notifier,
-        )
-        .loadUser();
-
-    final user = ref.read(
-      currentUserProvider,
-    );
+  Future<void> _loadSession() async {
+    final token = await SessionManager.getAccessToken();
 
     if (!mounted) return;
 
-    if (user != null) {
-      context.go('/home');
-    } else {
+    if (token == null || token.isEmpty) {
       context.go('/login');
+      return;
     }
+
+    context.go('/home');
   }
 
   @override
-  Widget build(
-    BuildContext context,
-  ) {
+  Widget build(BuildContext context) {
     return const Scaffold(
       body: Center(
         child: CircularProgressIndicator(),

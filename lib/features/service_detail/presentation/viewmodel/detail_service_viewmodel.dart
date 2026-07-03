@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:segadi/features/firebase_cloud_messaging.dart/domain/usecases/listen_service_update.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_entity.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_permissions.dart';
@@ -18,14 +17,14 @@ enum DetailServiceStatus {
 
 class DetailServiceViewModel extends ChangeNotifier {
   final DetailServiceRepositoryImpl repository;
-  final ListenServicioUpdates listenServicioUpdates;
+  //final ListenServicioUpdates listenServicioUpdates;
   final ChangeStatusUseCase changeStatusUseCase;
 
   StreamSubscription? _fcmSub;
 
   DetailServiceViewModel({
     required this.repository,
-    required this.listenServicioUpdates,
+    //required this.listenServicioUpdates,
     required this.changeStatusUseCase,
   });
 
@@ -80,24 +79,24 @@ class DetailServiceViewModel extends ChangeNotifier {
   //////////// 🔔 FCM LISTENER ///////////
   ///////////////////////////////////////
 
-  void init(String serviceId) {
-    debugPrint('🧠 DetailServiceVM init (FCM) for serviceId=$serviceId');
+  // void init(String serviceId) {
+  //   debugPrint('🧠 DetailServiceVM init (FCM) for serviceId=$serviceId');
 
-    _fcmSub = listenServicioUpdates().listen((update) async {
-      // 🛡️ SEGURO DE VIDA: Si acabamos de subir evidencias, ignoramos cualquier
-      // actualización externa por unos segundos para evitar el salto a la pantalla de captura.
-      if (_recentEvidenceUploaded) {
-        debugPrint(
-            '🛡️ FCM bloqueado por subida reciente. Ignorando recarga...');
-        return;
-      }
+  //   _fcmSub = listenServicioUpdates().listen((update) async {
+  //     // 🛡️ SEGURO DE VIDA: Si acabamos de subir evidencias, ignoramos cualquier
+  //     // actualización externa por unos segundos para evitar el salto a la pantalla de captura.
+  //     if (_recentEvidenceUploaded) {
+  //       debugPrint(
+  //           '🛡️ FCM bloqueado por subida reciente. Ignorando recarga...');
+  //       return;
+  //     }
 
-      if (update.servicioId == serviceId) {
-        debugPrint('🎯 FCM update matches service. Reloading detail...');
-        await loadDetail(int.parse(serviceId));
-      }
-    });
-  }
+  //     if (update.servicioId == serviceId) {
+  //       debugPrint('🎯 FCM update matches service. Reloading detail...');
+  //       await loadDetail(int.parse(serviceId));
+  //     }
+  //   });
+  // }
 
   @override
   void dispose() {

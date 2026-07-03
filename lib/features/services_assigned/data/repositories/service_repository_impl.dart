@@ -1,7 +1,7 @@
 import 'package:dartz/dartz.dart';
 import 'package:segadi/core/errors/exceptions.dart';
 
-import 'package:segadi/core/network/network_info.dart';
+import 'package:segadi/core/contracts/network_info.dart';
 import 'package:segadi/features/services_assigned/domain/entities/services_result.dart';
 
 import 'package:segadi/features/services_assigned/domain/failures/failure.dart';

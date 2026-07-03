@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/legacy.dart';
-import 'package:segadi/features/auth/domain/entities/user_entity.dart';
-import 'package:segadi/core/security/session_manager.dart';
+
+import '../../../../core/security/session_manager.dart';
+import '../../domain/entities/user_entity.dart';
 
 final currentUserProvider =
     StateNotifierProvider<CurrentUserNotifier, UserEntity?>(
@@ -10,27 +11,25 @@ final currentUserProvider =
 class CurrentUserNotifier extends StateNotifier<UserEntity?> {
   CurrentUserNotifier() : super(null);
 
-  /// Cargar usuario desde storage (app restart)
   Future<void> loadUser() async {
-    final user = await SessionManager.getCurrentUser();
-    state = user;
+    state = await SessionManager.getCurrentUser();
   }
 
-  /// Setear usuario después del login
   void setUser(UserEntity user) {
     state = user;
   }
 
-  /// Logout
   void clear() {
     state = null;
   }
 
   bool get isLoggedIn => state != null;
 
-  List<String> get roles => state?.roles ?? [];
+  bool hasPermission(String permission) {
+    return state?.permissions.contains(permission) ?? false;
+  }
 
-  List<String> get permissions => state?.permissions ?? [];
-
-  bool hasPermission(String p) => permissions.contains(p);
+  bool hasRole(String role) {
+    return state?.roles.contains(role) ?? false;
+  }
 }

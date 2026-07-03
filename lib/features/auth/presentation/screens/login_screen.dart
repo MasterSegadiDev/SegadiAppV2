@@ -43,25 +43,28 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       authProvider,
       (previous, next) {
         if (!mounted) return;
-
+        print('next status en pantalla login screen ${next.status}');
         switch (next.status) {
           case AuthStatus.authenticated:
-            AppSnackbar.success(context, 'Bienvenido a SEGADI');
+            AppSnackbar.success(
+              context,
+              'Bienvenido a SEGADI',
+            );
 
-            Timer(Duration(seconds: 3), () {
-              context.go('/home');
-            });
+            Future.delayed(
+              const Duration(milliseconds: 700),
+              () {
+                if (mounted) {
+                  context.go('/home');
+                }
+              },
+            );
             break;
 
           case AuthStatus.error:
-            // ScaffoldMessenger.of(context).showSnackBar(
-            //   SnackBar(
-            //     content: Text(
-            //       next.errorMessage ?? 'Ocurrió un error',
-            //     ),
-            //     backgroundColor: Colors.red,
-            //   ),
-            // );
+            print(
+              ScaffoldMessenger.maybeOf(context),
+            );
             AppSnackbar.error(context,
                 next.errorMessage ?? 'Ocurrió un error al iniciar sesión ');
 
@@ -80,6 +83,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   ) {
     final authState = ref.watch(authProvider);
     final size = MediaQuery.of(context).size;
+
+    print("BUILD STATUS => ${authState.status}");
 
     return Scaffold(
       body: Container(

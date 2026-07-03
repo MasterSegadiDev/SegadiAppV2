@@ -34,7 +34,6 @@ class LoginViewModel extends ChangeNotifier {
       _state = AuthState.error(
         errorMessage: e.toString(),
       );
-
       notifyListeners();
     }
   }

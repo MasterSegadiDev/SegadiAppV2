@@ -1,5 +1,5 @@
 import 'package:dartz/dartz.dart';
-import 'package:segadi/core/network/network_info.dart';
+import 'package:segadi/core/contracts/network_info.dart';
 import 'package:segadi/features/check_list/data/datasources/checklist_remote_dataosurce.dart';
 import 'package:segadi/features/check_list/domain/entities/checklist_item_entity.dart';
 import 'package:segadi/features/service_detail/core/errors/failures.dart';

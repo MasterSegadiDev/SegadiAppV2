@@ -3,15 +3,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:segadi/app/di/injection_container.dart';
 import 'package:segadi/app/router/app_router.dart';
 import 'package:segadi/core/constants/app_enviroment.dart';
+import 'package:segadi/core/theme/app_theme.dart';
 
 import 'core/constants/app_config.dart';
 
 Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
   AppConfig.initialize(
     Environment.development,
   );
 
-  WidgetsFlutterBinding.ensureInitialized();
   await setupDependencies();
 
   runApp(
@@ -32,10 +34,7 @@ class MyApp extends ConsumerWidget {
       debugShowCheckedModeBanner: false,
       title: 'Segadi Driver App',
       routerConfig: router,
-      theme: ThemeData(
-        useMaterial3: true,
-        colorSchemeSeed: const Color(0xFF2C522A),
-      ),
+      theme: AppTheme.light,
     );
   }
 }

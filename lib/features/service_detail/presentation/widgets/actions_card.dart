@@ -6,7 +6,6 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/core/network/api_exceptions.dart';
 import 'package:segadi/core/network/dio_client.dart';
-import 'package:segadi/core/network/network_info.dart';
 import 'package:segadi/features/check_list/data/datasources/checklist_remote_dataosurce.dart';
 import 'package:segadi/features/check_list/data/repositories/checklist_repository_impl.dart';
 import 'package:segadi/features/check_list/presentation/pages/checklist_page.dart';
@@ -47,36 +46,37 @@ class ActionsCard extends StatelessWidget {
         label: 'Chequeo',
         color: Colors.blue,
         enabled: state.ui.enableCheckList,
-        onPressed: () async {
-          // 1. Instanciamos dependencias
+        onPressed: null,
+        // onPressed: () async {
+        //   // 1. Instanciamos dependencias
 
-          final remoteDS = ChecklistRemoteDataSource();
+        //   final remoteDS = ChecklistRemoteDataSource();
 
-          // Agregamos Connectivity() aquí para que NetworkInfo pueda trabajar
-          final networkInfo = NetworkInfoImpl(Connectivity());
+        //   // Agregamos Connectivity() aquí para que NetworkInfo pueda trabajar
+        //   final networkInfo = NetworkInfoImpl(Connectivity());
 
-          final ok = await showModalBottomSheet<bool>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            builder: (context) => ChangeNotifierProvider(
-              create: (_) => ChecklistViewModel(
-                repo: ChecklistRepositoryImpl(
-                  remoteDataSource: remoteDS,
-                  networkInfo: networkInfo,
-                ),
-                serviceId: state.id,
-              ),
-              child: const _ChecklistModal(),
-            ),
-          );
+        //   final ok = await showModalBottomSheet<bool>(
+        //     context: context,
+        //     isScrollControlled: true,
+        //     backgroundColor: Colors.transparent,
+        //     builder: (context) => ChangeNotifierProvider(
+        //       create: (_) => ChecklistViewModel(
+        //         repo: ChecklistRepositoryImpl(
+        //           remoteDataSource: remoteDS,
+        //           networkInfo: networkInfo,
+        //         ),
+        //         serviceId: state.id,
+        //       ),
+        //       child: const _ChecklistModal(),
+        //     ),
+        //   );
 
-          if (ok == true) {
-            if (context.mounted) {
-              context.read<DetailServiceViewModel>().loadDetail(state.id);
-            }
-          }
-        },
+        //   if (ok == true) {
+        //     if (context.mounted) {
+        //       context.read<DetailServiceViewModel>().loadDetail(state.id);
+        //     }
+        //   }
+        // },
       ),
       ActionButton(
         icon: FontAwesomeIcons.locationDot.data,
