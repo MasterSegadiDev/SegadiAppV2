@@ -35,6 +35,8 @@ class AuthNotifier extends StateNotifier<AuthState> {
       await SessionManager.saveSession(
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
+        expiresIn: session.expiresIn,
+        tokenType: session.tokenType,
         user: UserModel(
           id: session.user.id,
           username: session.user.username,

@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:segadi/core/errors/error_messages.dart';
 
 import 'app_exception.dart';
+import '../network/api_error.dart';
 
 class DioExceptionHandler {
   DioExceptionHandler._();
@@ -54,9 +55,7 @@ class DioExceptionHandler {
     }
   }
 
-  static AppException _handleResponse(
-    Response? response,
-  ) {
+  static AppException _handleResponse(Response? response) {
     if (response == null) {
       return const AppException(
         ErrorMessages.unknown,
@@ -65,15 +64,13 @@ class DioExceptionHandler {
 
     final data = response.data;
 
-    // Prioridad al mensaje enviado por el backend
     if (data is Map<String, dynamic>) {
-      final message = data['message'];
+      final apiError = ApiError.fromJson(data);
 
-      if (message is String && message.trim().isNotEmpty) {
-        return AppException(
-          message,
-        );
-      }
+      return AppException(
+        apiError.message,
+        errorCode: apiError.errorCode,
+      );
     }
 
     switch (response.statusCode) {
@@ -85,51 +82,43 @@ class DioExceptionHandler {
       case 401:
         return const AppException(
           ErrorMessages.unauthorized,
+          errorCode: 'UNAUTHORIZED',
         );
 
       case 403:
         return const AppException(
           ErrorMessages.forbidden,
+          errorCode: 'FORBIDDEN',
         );
 
       case 404:
         return const AppException(
           ErrorMessages.notFound,
+          errorCode: 'NOT_FOUND',
         );
 
       case 409:
         return const AppException(
           ErrorMessages.conflict,
+          errorCode: 'CONFLICT',
         );
 
       case 422:
         return const AppException(
           ErrorMessages.unprocessable,
-        );
-
-      case 429:
-        return const AppException(
-          ErrorMessages.tooManyRequests,
+          errorCode: 'UNPROCESSABLE_ENTITY',
         );
 
       case 500:
         return const AppException(
           ErrorMessages.internalServerError,
-        );
-
-      case 502:
-        return const AppException(
-          ErrorMessages.badGateway,
+          errorCode: 'INTERNAL_SERVER_ERROR',
         );
 
       case 503:
         return const AppException(
           ErrorMessages.serviceUnavailable,
-        );
-
-      case 504:
-        return const AppException(
-          ErrorMessages.gatewayTimeout,
+          errorCode: 'SERVICE_UNAVAILABLE',
         );
 
       default:

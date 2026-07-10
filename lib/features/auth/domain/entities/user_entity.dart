@@ -3,7 +3,6 @@ class UserEntity {
   final String username;
   final String name;
   final String email;
-
   final List<String> roles;
   final List<String> permissions;
 
@@ -15,4 +14,15 @@ class UserEntity {
     required this.roles,
     required this.permissions,
   });
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'username': username,
+      'name': name,
+      'email': email,
+      'roles': roles,
+      'permissions': permissions,
+    };
+  }
 }

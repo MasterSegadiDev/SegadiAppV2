@@ -19,7 +19,7 @@ class AuthSessionModel extends AuthSessionEntity {
       tokenType: json['token_type'] ?? 'Bearer',
       expiresIn: json['expires_in'] ?? 0,
       user: UserModel.fromJson(
-        json['user'],
+        (json['user'] ?? {}) as Map<String, dynamic>,
       ),
     );
   }
