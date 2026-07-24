@@ -13,6 +13,9 @@ import '../../features/auth/domain/repositories/refresh_repository.dart';
 import '../../features/auth/domain/use_cases/login_usecase.dart';
 import '../../features/auth/domain/use_cases/refresh_token_usecase.dart';
 
+import 'package:segadi/core/services/permissions/permission_service.dart';
+import 'package:segadi/core/services/permissions/permission_service_impl.dart';
+
 import 'injection_container.dart';
 
 Future<void> setupAuthDependencies() async {
@@ -58,5 +61,13 @@ Future<void> setupAuthDependencies() async {
     () => RefreshTokenUseCase(
       getIt<RefreshRepository>(),
     ),
+  );
+
+  //========================
+  //PermissionsServices
+  //========================
+
+  getIt.registerLazySingleton<PermissionService>(
+    () => PermissionServiceImpl(),
   );
 }

@@ -6,9 +6,5 @@ abstract class AuthRepository {
     required String password,
   });
 
-  Future<AuthSessionEntity> refreshToken();
-
-  Future<AuthSessionEntity?> getCurrentSession();
-
   Future<void> logout();
 }

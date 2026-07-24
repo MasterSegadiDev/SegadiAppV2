@@ -1,57 +1,46 @@
 import 'package:dio/dio.dart';
-import 'package:segadi/core/errors/exceptions.dart';
-
+import 'package:flutter/foundation.dart';
+import 'package:segadi/core/network/dio_client.dart';
+import 'package:segadi/core/security/session_manager.dart';
 import 'package:segadi/features/services_assigned/data/datasources/services_remote_data_source.dart';
-import 'package:segadi/features/services_assigned/domain/entities/services_result.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:segadi/features/services_assigned/data/models/service_model.dart';
 
-class ServicesRemoteDataSourceImpl implements ServicesRemoteDataSource {
-  final Dio dio;
+import '../dto/assigned_service_dto.dart';
 
-  ServicesRemoteDataSourceImpl(this.dio);
+class ServicesRemoteDatasourceImpl implements ServicesRemoteDatasource {
+  ServicesRemoteDatasourceImpl({
+    Dio? dio,
+  }) : _dio = dio ?? DioClient.instance;
+
+  final Dio _dio;
 
   @override
-  Future<ServicesResult> getAssignedServices() async {
+  Future<List<AssignedServiceDto>> getAssignedServices() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final int id = prefs.getInt('id') ?? 0;
-      final String token = prefs.getString('token') ?? '';
+      /// Obtiene el usuario almacenado en la sesión
+      final user = await SessionManager.getUserId();
 
-      final response = await dio.get('index.php', queryParameters: {
-        'r': 'esegadi/getactivas',
-        'id': id.toString(),
-        'token': token,
-      });
-
-      final data = response.data;
-
-      if (data['success'] == "true") {
-        final List dataList = data['data'] ?? [];
-
-        return ServicesResult(
-          items: dataList
-              .map((json) => ServiceModel.fromJson(json).toEntity())
-              .toList(),
-          message: data['message'] ?? 'Consulta exitosa',
-        );
-      } else {
-        return ServicesResult(
-          items: [],
-          message: data['message'] ?? 'Error en la consulta',
-        );
-      }
-    } on DioException catch (e) {
-      if (e.response?.statusCode == 401) {
-        throw UnauthorizedException();
+      if (user == null) {
+        throw Exception('No existe una sesión activa.');
       }
 
-      if (e.type == DioExceptionType.connectionTimeout ||
-          e.type == DioExceptionType.receiveTimeout) {
-        throw NetworkException();
-      }
+      final response = await _dio.get(
+        '/appUser/referrals/$user',
+      );
 
-      throw ServerException('Error del servidor: ${e.message}');
+      debugPrint(response.data.toString());
+      debugPrint(response.toString());
+
+      final List<dynamic> result = response.data['Result'] ?? [];
+
+      return result
+          .map(
+            (json) => AssignedServiceDto.fromJson(
+              json as Map<String, dynamic>,
+            ),
+          )
+          .toList();
+    } catch (e) {
+      rethrow;
     }
   }
 }

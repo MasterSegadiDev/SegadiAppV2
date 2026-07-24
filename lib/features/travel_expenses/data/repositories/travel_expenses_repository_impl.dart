@@ -9,7 +9,7 @@ import 'dart:typed_data';
 
 import 'package:segadi/features/travel_expenses/domain/repositories/travel_expenses_repository.dart';
 
-import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/failure.dart';
 
 class TravelExpensesRepositoryImpl implements TravelExpensesRepository {
   final TravelExpensesRemoteDataSource remoteDataSource;

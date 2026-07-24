@@ -1,5 +1,7 @@
+import '../models/auth_session_model.dart';
+
 abstract class RefreshRemoteDatasource {
-  Future<Map<String, dynamic>> refreshToken({
+  Future<AuthSessionModel> refreshToken({
     required String refreshToken,
   });
 }

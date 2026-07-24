@@ -4,7 +4,7 @@ import 'package:dartz/dartz.dart';
 import 'package:segadi/features/travel_expenses/domain/entities/table_expense_entity.dart';
 import 'package:segadi/features/travel_expenses/domain/entities/travel_expense_entity.dart';
 
-import '../../../../core/errors/failures.dart';
+import '../../../../core/errors/failure.dart';
 
 abstract class TravelExpensesRepository {
   Future<Either<Failure, List<TravelExpenseEntity>>> getAvailableConcepts(

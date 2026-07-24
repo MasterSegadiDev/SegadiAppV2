@@ -14,8 +14,12 @@ class RefreshDio {
       receiveTimeout: const Duration(
         seconds: 30,
       ),
+      sendTimeout: const Duration(
+        seconds: 30,
+      ),
       headers: {
         'Content-Type': 'application/json',
+        'Accept': 'application/json',
       },
     ),
   );

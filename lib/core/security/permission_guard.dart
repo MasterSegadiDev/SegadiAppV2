@@ -1,16 +1,13 @@
-import 'package:segadi/core/security/session_manager.dart';
+import 'permission_service.dart';
 
-class PermissionGuard {
-  static Future<bool> hasPermission(
+abstract final class PermissionGuard {
+  PermissionGuard._();
+
+  static bool hasAccess(
+    PermissionService permissionService,
     String permission,
-  ) async {
-    final user = await SessionManager.getCurrentUser();
-
-    if (user == null) {
-      return false;
-    }
-
-    return user.permissions.contains(
+  ) {
+    return permissionService.hasPermission(
       permission,
     );
   }

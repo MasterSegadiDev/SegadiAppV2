@@ -1,54 +1,70 @@
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:provider/provider.dart';
-import 'package:segadi/features/services_assigned/domain/entities/service_entity.dart';
-import 'package:segadi/features/services_assigned/presentation/viewmodels/services_viewmodel.dart';
+import 'package:intl/intl.dart';
+import 'package:segadi/features/services_assigned/presentation/widgets/expandable_stops.dart';
+
+import '../../domain/entities/assigned_service.dart';
 
 class ServiceCard extends StatelessWidget {
-  final ServiceEntity item;
+  final AssignedService service;
 
-  const ServiceCard({required this.item, super.key});
+  final VoidCallback onTap;
+
+  const ServiceCard({
+    super.key,
+    required this.service,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () async {
-        final result = await Navigator.pushNamed(
-          context,
-          '/detail_service',
-          arguments: item.id,
-        );
-        if (result == true) {
-          context.read<ServicesViewModel>().refresh();
-        }
-      },
+      onTap: onTap,
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        margin: const EdgeInsets.symmetric(
+          vertical: 10,
+          horizontal: 4,
+        ),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(
+            16,
+          ),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: Colors.black.withOpacity(
+                0.05,
+              ),
               blurRadius: 10,
-              offset: const Offset(0, 4),
+              offset: const Offset(
+                0,
+                4,
+              ),
             ),
           ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(
+            16,
+          ),
           child: Column(
             children: [
-              // Encabezado con color de marca sutil
               _buildHeader(),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(
+                  16,
+                ),
                 child: Column(
                   children: [
                     _buildRouteSection(),
                     const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(height: 1, thickness: 0.5),
+                      padding: EdgeInsets.symmetric(
+                        vertical: 12,
+                      ),
+                      child: Divider(
+                        height: 1,
+                        thickness: .5,
+                      ),
                     ),
                     _buildFooter(),
                   ],
@@ -61,29 +77,43 @@ class ServiceCard extends StatelessWidget {
     );
   }
 
-  // --- WIDGETS INTERNOS ---
-
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: const Color(0xFF2C522A).withOpacity(0.08),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 12,
+      ),
+      color: const Color(
+        0xFF2C522A,
+      ).withOpacity(.08),
       child: Row(
         children: [
-          Icon(FontAwesomeIcons.truckFast.data,
-              size: 18, color: Color(0xFF2C522A)),
-          const SizedBox(width: 10),
+          FaIcon(
+            FontAwesomeIcons.truckFast,
+            size: 18,
+            color: Color(
+              0xFF2C522A,
+            ),
+          ),
+          const SizedBox(
+            width: 10,
+          ),
           Expanded(
             child: Text(
-              'REMISIÓN: ${item.service ?? '-'}',
+              'REMISIÓN: ${service.serviceNumber}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
-                letterSpacing: 0.5,
-                color: Color(0xFF2C522A),
+                letterSpacing: .5,
+                color: Color(
+                  0xFF2C522A,
+                ),
               ),
             ),
           ),
-          _StatusBadge(status: item.status),
+          _StatusBadge(
+            status: service.serviceStatus,
+          ),
         ],
       ),
     );
@@ -93,24 +123,51 @@ class ServiceCard extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Línea de tiempo visual (Punto A a Punto B)
         Column(
           children: [
-            const Icon(Icons.radio_button_checked,
-                size: 18, color: Colors.green),
-            Container(width: 2, height: 40, color: Colors.grey[300]),
-            const Icon(Icons.location_on, size: 18, color: Colors.redAccent),
+            const Icon(
+              Icons.radio_button_checked,
+              size: 18,
+              color: Colors.green,
+            ),
+            Container(
+              width: 2,
+              height: 40,
+              color: Colors.grey.shade300,
+            ),
+            const Icon(
+              Icons.location_on,
+              size: 18,
+              color: Colors.redAccent,
+            ),
           ],
         ),
-        const SizedBox(width: 12),
-        // Información de Origen y Destino
+        const SizedBox(
+          width: 12,
+        ),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _locationInfo('ORIGEN', item.origin, item.loadDate),
-              const SizedBox(height: 22),
-              _locationInfo('DESTINO', item.destination, item.unloadDate),
+              _locationInfo(
+                'ORIGEN',
+                service.origin,
+                service.loadingDate,
+              ),
+              const SizedBox(
+                height: 22,
+              ),
+              _locationInfo(
+                'DESTINO',
+                service.destination,
+                service.unloadingDate,
+              ),
+              if (service.stops.isNotEmpty) ...[
+                const SizedBox(height: 18),
+                ExpandableStops(
+                  stops: service.stops,
+                ),
+              ],
             ],
           ),
         ),
@@ -118,26 +175,41 @@ class ServiceCard extends StatelessWidget {
     );
   }
 
-  Widget _locationInfo(String label, String? city, String? date) {
+  Widget _locationInfo(
+    String label,
+    String city,
+    DateTime date,
+  ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-              fontSize: 10,
-              color: Colors.grey[600],
-              fontWeight: FontWeight.bold),
+            fontSize: 10,
+            color: Colors.grey.shade600,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         Text(
-          city ?? 'No asignado',
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          city,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         Text(
-          date ?? '-',
-          style: TextStyle(fontSize: 12, color: Colors.grey[500]),
+          DateFormat(
+            'dd/MM/yyyy',
+          ).format(
+            date,
+          ),
+          style: TextStyle(
+            fontSize: 12,
+            color: Colors.grey.shade500,
+          ),
         ),
       ],
     );
@@ -145,50 +217,106 @@ class ServiceCard extends StatelessWidget {
 
   Widget _buildFooter() {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text('CLIENTE',
-                  style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.grey)),
+              const Text(
+                'CLIENTE',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
               Text(
-                item.client ?? '-',
-                style:
-                    const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+                service.customer,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              const SizedBox(
+                height: 10,
+              ),
+              const Text(
+                'RESPONSABLE',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.grey,
+                ),
+              ),
+              Text(
+                service.responsible,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                ),
               ),
             ],
           ),
         ),
-        const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.grey),
+        const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: Colors.grey,
+        ),
       ],
     );
   }
 }
 
 class _StatusBadge extends StatelessWidget {
-  final String? status;
-  const _StatusBadge({this.status});
+  final String status;
+
+  const _StatusBadge({
+    required this.status,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(
+        horizontal: 10,
+        vertical: 4,
+      ),
       decoration: BoxDecoration(
-        color: Colors.green[600],
-        borderRadius: BorderRadius.circular(20),
+        color: _statusColor(status),
+        borderRadius: BorderRadius.circular(
+          20,
+        ),
       ),
       child: Text(
-        status?.toUpperCase() ?? 'PENDIENTE',
+        status.toUpperCase(),
         style: const TextStyle(
-            color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
       ),
     );
+  }
+
+  Color _statusColor(String status) {
+    switch (status.toLowerCase()) {
+      case 'inicio':
+        return Colors.blue;
+
+      case 'en ruta':
+        return Colors.orange;
+
+      case 'finalizado':
+        return Colors.green;
+
+      case 'cancelado':
+        return Colors.red;
+
+      default:
+        return Colors.grey;
+    }
   }
 }

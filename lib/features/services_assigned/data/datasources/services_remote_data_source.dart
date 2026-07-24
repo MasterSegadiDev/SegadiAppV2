@@ -1,5 +1,5 @@
-import 'package:segadi/features/services_assigned/domain/entities/services_result.dart';
+import '../dto/assigned_service_dto.dart';
 
-abstract class ServicesRemoteDataSource {
-  Future<ServicesResult> getAssignedServices();
+abstract class ServicesRemoteDatasource {
+  Future<List<AssignedServiceDto>> getAssignedServices();
 }

@@ -1,5 +1,7 @@
+import '../models/auth_session_model.dart';
+
 abstract class AuthRemoteDatasource {
-  Future<Map<String, dynamic>> login({
+  Future<AuthSessionModel> login({
     required String username,
     required String password,
   });

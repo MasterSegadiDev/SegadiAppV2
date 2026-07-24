@@ -1,7 +1,7 @@
 import 'dart:typed_data';
 
 import 'package:dartz/dartz.dart';
-import 'package:segadi/core/errors/failures.dart';
+import 'package:segadi/core/errors/failure.dart';
 import 'package:segadi/features/travel_expenses/domain/repositories/travel_expenses_repository.dart';
 
 class GetEvidenceImageUseCase {

@@ -1,7 +1,6 @@
-import 'package:segadi/features/auth/data/datasources/refresh_remote_datasource.dart';
-import 'package:segadi/features/auth/data/models/auth_session_model.dart';
-import 'package:segadi/features/auth/domain/entities/auth_session_entity.dart';
-import 'package:segadi/features/auth/domain/repositories/refresh_repository.dart';
+import '../../domain/entities/auth_session_entity.dart';
+import '../../domain/repositories/refresh_repository.dart';
+import '../datasources/refresh_remote_datasource.dart';
 
 class RefreshRepositoryImpl implements RefreshRepository {
   final RefreshRemoteDatasource datasource;
@@ -13,13 +12,9 @@ class RefreshRepositoryImpl implements RefreshRepository {
   @override
   Future<AuthSessionEntity> refreshToken({
     required String refreshToken,
-  }) async {
-    final response = await datasource.refreshToken(
+  }) {
+    return datasource.refreshToken(
       refreshToken: refreshToken,
     );
-
-    final session = AuthSessionModel.fromJson(response);
-
-    return session;
   }
 }

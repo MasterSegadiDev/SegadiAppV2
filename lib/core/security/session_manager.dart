@@ -98,6 +98,16 @@ class SessionManager {
     return jsonDecode(userJson);
   }
 
+  static Future<String?> getUserId() async {
+    final user = await getUser();
+
+    if (user == null) {
+      return null;
+    }
+
+    return user['id']?.toString();
+  }
+
   /// ===============================
   /// Usuario Model
   /// ===============================

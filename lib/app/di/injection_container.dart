@@ -1,75 +1,26 @@
-// import 'package:connectivity_plus/connectivity_plus.dart';
-// import 'package:get_it/get_it.dart';
-// import 'package:segadi/core/contracts/network_info.dart';
-// import 'package:segadi/core/network/connectivity_service.dart';
-// import 'package:segadi/features/auth/data/datasources/auth_remote_datasource.dart';
-// import 'package:segadi/features/auth/data/datasources/auth_remote_datasource_impl.dart';
-// import 'package:segadi/features/auth/data/repositories/auth_repository_impl.dart';
-// import 'package:segadi/features/auth/domain/repositories/auth_repository.dart';
-// import 'package:segadi/features/auth/domain/use_cases/login_usecase.dart';
-
-// final getIt = GetIt.instance;
-// Future<void> setupDependencies() async {
-//   getIt.registerLazySingleton<Connectivity>(
-//     () => Connectivity(),
-//   );
-
-//   getIt.registerLazySingleton<NetworkInfo>(
-//     () => ConnectivityService(
-//       getIt<Connectivity>(),
-//     ),
-//   );
-// Datasource
-
-// getIt.registerLazySingleton<AuthRemoteDatasource>(
-//   () => AuthRemoteDatasourceImpl(),
-// );
-
-// Repository
-
-// getIt.registerLazySingleton<AuthRepository>(
-//   () => AuthRepositoryImpl(
-//     getIt<AuthRemoteDatasource>(),
-//   ),
-// );
-
-// UseCase
-
-// getIt.registerLazySingleton<LoginUseCase>(
-//   () => LoginUseCase(
-//     getIt<AuthRepository>(),
-//   ),
-// );
-
-//=================================  secure storage =============================== //
-//================================================================================= //
-
-// getIt.registerLazySingleton(
-//   () => const FlutterSecureStorage(),
-// );
-
-// getIt.registerLazySingleton(
-//   () => SecureStorageService.instance,
-// );
-
-// getIt.registerLazySingleton(() => SessionManager);
-//}
-
 import 'package:get_it/get_it.dart';
+import 'package:segadi/app/di/services_injection.dart';
+
+import 'package:segadi/app/di/user_profile_injection.dart';
 
 import 'auth_injection.dart';
 import 'core_injection.dart';
+import 'scanner_injection.dart';
+import 'image_injection.dart';
+import 'location_injection.dart';
+import 'firebase_injection.dart';
+import 'notification_injection.dart';
 
 final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
   await setupCoreDependencies();
   await setupAuthDependencies();
-
-  // Futuro
-  // await setupLocationDependencies();
-  // await setupFirebaseDependencies();
-  // await setupNotificationDependencies();
-  // await setupCameraDependencies();
-  // await setupFilePickerDependencies();
+  await setupUserProfileDependencies();
+  await setupScannerDependencies();
+  await setupImageDependencies();
+  await setupLocationDependencies();
+  await setupFirebaseDependencies();
+  await setupNotificationDependencies();
+  await setupServicesDependencies();
 }

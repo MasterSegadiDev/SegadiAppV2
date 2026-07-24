@@ -7,6 +7,8 @@
 <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
 <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 <uses-permission android:name="android.permission.DOWNLOAD_WITHOUT_NOTIFICATION" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+<uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
 
     
     <application
@@ -20,10 +22,9 @@
             android:name="com.google.android.geo.API_KEY"
             android:value="AIzaSyAp3-Rm6LLxDVypbnpI6SbeFbNf-b_0F6o"
              />
-        <meta-data 
-             android:name="com.google.firebase.messaging.default_notification_channel_id"
-             android:value="default_channel" 
-             />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="segadi_channel"/>
             
         
         <activity

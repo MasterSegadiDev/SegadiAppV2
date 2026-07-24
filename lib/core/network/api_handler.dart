@@ -1,6 +1,6 @@
 import 'package:dartz/dartz.dart';
 import 'package:dio/dio.dart';
-import 'package:segadi/core/errors/failures.dart';
+import 'package:segadi/core/errors/failure.dart';
 
 class ApiHandler {
   static Future<Either<Failure, T>> handleRequest<T>({

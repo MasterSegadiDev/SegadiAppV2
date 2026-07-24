@@ -43,7 +43,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       authProvider,
       (previous, next) {
         if (!mounted) return;
-        print('next status en pantalla login screen ${next.status}');
         switch (next.status) {
           case AuthStatus.authenticated:
             AppSnackbar.success(
@@ -62,9 +61,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
             break;
 
           case AuthStatus.error:
-            print(
-              ScaffoldMessenger.maybeOf(context),
-            );
             AppSnackbar.error(context,
                 next.errorMessage ?? 'Ocurrió un error al iniciar sesión ');
 
@@ -82,9 +78,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     BuildContext context,
   ) {
     final authState = ref.watch(authProvider);
-    final size = MediaQuery.of(context).size;
-
-    print("BUILD STATUS => ${authState.status}");
+    final size = MediaQuery.sizeOf(context).width;
 
     return Scaffold(
       body: Container(
@@ -126,7 +120,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Image.asset(
                       "assets/images/logo1.png",
-                      width: size.width * 0.4,
+                      width: size * 0.4,
                     ),
                     const SizedBox(
                       height: 30,

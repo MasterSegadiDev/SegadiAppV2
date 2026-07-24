@@ -1,24 +1,34 @@
-import 'package:segadi/features/auth/domain/entities/user_entity.dart';
+import '../../features/auth/domain/entities/user_entity.dart';
+import 'permission_codes.dart';
 
 class PermissionService {
-  static bool hasPermission(UserEntity user, String permission) {
-    return user.permissions.contains(
-      permission,
-    );
+  final UserEntity? currentUser;
+
+  const PermissionService({
+    required this.currentUser,
+  });
+
+  bool hasPermission(String permission) {
+    if (currentUser == null) {
+      return false;
+    }
+
+    return currentUser!.permissions.contains(permission);
   }
 
-  static bool hasAnyPermission(UserEntity user, List<String> permissions) {
-    return permissions.any(
-      (user.permissions.contains),
-    );
-  }
+  //==========================
+  // Módulos
+  //==========================
 
-  static bool hasAllPermissions(
-    UserEntity user,
-    List<String> permissions,
-  ) {
-    return permissions.every(
-      user.permissions.contains,
-    );
-  }
+  bool get canViewServices => hasPermission(PermissionCodes.viewServices);
+
+  bool get canViewContainers => hasPermission(PermissionCodes.viewContainers);
+
+  bool get canViewTrips => hasPermission(PermissionCodes.viewTrips);
+
+  bool get canViewExpenses => hasPermission(PermissionCodes.viewExpenses);
+
+  bool get canViewDashboard => hasPermission(PermissionCodes.viewDashboard);
+
+  bool get canViewUsers => hasPermission(PermissionCodes.viewUsers);
 }

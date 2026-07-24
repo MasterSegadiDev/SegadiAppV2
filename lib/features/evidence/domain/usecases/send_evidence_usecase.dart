@@ -1,6 +1,6 @@
 import 'dart:typed_data';
 import 'package:dartz/dartz.dart';
-import 'package:segadi/core/errors/failures.dart';
+import 'package:segadi/core/errors/failure.dart';
 import 'package:segadi/features/evidence/domain/repositories/evidence_repository.dart';
 
 class SendEvidenceUseCase {
