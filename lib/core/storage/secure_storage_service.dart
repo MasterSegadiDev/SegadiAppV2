@@ -1,32 +1,44 @@
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class SecureStorageService {
-  SecureStorageService._();
+  final FlutterSecureStorage _storage;
 
-  static final instance = SecureStorageService._();
+  SecureStorageService({
+    FlutterSecureStorage? storage,
+  }) : _storage = storage ?? const FlutterSecureStorage();
 
-  final FlutterSecureStorage _storage = const FlutterSecureStorage();
-
-  Future<void> write(
-    String key,
-    String value,
-  ) async {
+  Future<void> write({
+    required String key,
+    required String value,
+  }) async {
     await _storage.write(
       key: key,
       value: value,
     );
   }
 
-  Future<String?> read(
-    String key,
-  ) async {
-    return _storage.read(key: key);
+  Future<String?> read({
+    required String key,
+  }) async {
+    return _storage.read(
+      key: key,
+    );
   }
 
-  Future<void> delete(
-    String key,
-  ) async {
-    await _storage.delete(key: key);
+  Future<void> delete({
+    required String key,
+  }) async {
+    await _storage.delete(
+      key: key,
+    );
+  }
+
+  Future<bool> contains({
+    required String key,
+  }) async {
+    return _storage.containsKey(
+      key: key,
+    );
   }
 
   Future<void> clear() async {

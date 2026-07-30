@@ -2,7 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:segadi/core/network/dio_client.dart';
 import 'package:segadi/features/check_list/domain/entities/checklist_item_model.dart';
 import 'package:segadi/features/service_detail/core/errors/dio_exceptions.dart';
-import 'package:segadi/features/services_assigned/core/errors/exceptions.dart';
+import 'package:segadi/features/services/core/errors/exceptions.dart';
 
 class ChecklistRemoteDataSource {
   final Dio _dio = DioClient.instance;

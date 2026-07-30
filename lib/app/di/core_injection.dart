@@ -1,6 +1,7 @@
 import 'package:connectivity_plus/connectivity_plus.dart';
-import 'package:segadi/core/contracts/network_info.dart';
-import 'package:segadi/core/network/connectivity_service.dart';
+import 'package:segadi/core/connectivity/connectivity_service.dart';
+import 'package:segadi/core/storage/secure_storage_service.dart';
+import '../../core/permissions/permission_service.dart';
 import 'injection_container.dart';
 
 Future<void> setupCoreDependencies() async {
@@ -8,9 +9,15 @@ Future<void> setupCoreDependencies() async {
     () => Connectivity(),
   );
 
-  getIt.registerLazySingleton<NetworkInfo>(
-    () => ConnectivityService(
-      getIt<Connectivity>(),
-    ),
+  getIt.registerLazySingleton<ConnectivityService>(
+    () => ConnectivityService(),
+  );
+
+  getIt.registerLazySingleton<SecureStorageService>(
+    () => SecureStorageService(),
+  );
+
+  getIt.registerLazySingleton<PermissionService>(
+    () => PermissionService(),
   );
 }

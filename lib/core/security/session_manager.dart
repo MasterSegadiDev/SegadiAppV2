@@ -1,12 +1,14 @@
 import 'dart:convert';
 
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:segadi/app/di/injection_container.dart';
+import 'package:segadi/core/storage/secure_storage_service.dart';
 import 'package:segadi/features/auth/data/models/user_model.dart';
 
 class SessionManager {
   SessionManager._();
 
-  static const FlutterSecureStorage _storage = FlutterSecureStorage();
+  //static const FlutterSecureStorage _storage = FlutterSecureStorage();
+  static final SecureStorageService _storage = getIt<SecureStorageService>();
 
   static const String accessTokenKey = 'access_token';
   static const String refreshTokenKey = 'refresh_token';
@@ -201,5 +203,31 @@ class SessionManager {
     await _storage.delete(
       key: userKey,
     );
+  }
+
+  /// ===============================
+  /// Obtener Authorization Header
+  /// ===============================
+  static Future<String?> getAuthorizationHeader() async {
+    final token = await getAccessToken();
+
+    if (token == null || token.isEmpty) {
+      return null;
+    }
+
+    return 'Bearer $token';
+  }
+
+  /// ===============================
+  /// ¿Usuario autenticado?
+  /// ===============================
+  static Future<bool> isAuthenticated() async {
+    final hasToken = await hasSession();
+
+    if (!hasToken) {
+      return false;
+    }
+
+    return !(await isTokenExpired());
   }
 }

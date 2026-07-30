@@ -1,7 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:segadi/features/developer/presentation/screens/developer_screen.dart';
-import 'package:segadi/features/services_assigned/presentation/pages/services_page.dart';
+import 'package:segadi/features/services/presentation/models/service_detail_arguments.dart';
+import 'package:segadi/features/services/presentation/pages/service_detail_page.dart';
+import 'package:segadi/features/services/presentation/pages/services_page.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/layout/main_layout.dart';
@@ -36,6 +38,16 @@ final routerProvider = Provider<GoRouter>(
         GoRoute(
           path: '/screenDevelop',
           builder: (context, state) => const DeveloperScreen(),
+        ),
+        GoRoute(
+          path: '/service-detail/:id',
+          builder: (context, state) {
+            final args = state.extra as ServiceDetailArguments;
+
+            return ServiceDetailPage(
+              arguments: args,
+            );
+          },
         ),
       ],
     );

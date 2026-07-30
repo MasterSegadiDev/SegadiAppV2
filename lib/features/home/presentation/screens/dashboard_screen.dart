@@ -2,8 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-import '../../../../app/di/injection_container.dart';
-import '../../../../core/contracts/network_info.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../auth/presentation/providers/current_user_provider.dart';
 
@@ -20,16 +18,6 @@ class DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-
-    _checkConnection();
-  }
-
-  Future<void> _checkConnection() async {
-    final networkInfo = getIt<NetworkInfo>();
-
-    final connected = await networkInfo.isConnected;
-
-    debugPrint('¿Hay internet?: $connected');
   }
 
   @override
