@@ -29,7 +29,7 @@ class RecipientCard extends StatelessWidget {
       phone: vm.recipient.phone,
       directContact: vm.recipient.directContact,
       address: vm.recipient.address,
-      headerColor: Colors.redAccent,
+      headerColor: const Color(0xFF2C522A),
     );
   }
 }

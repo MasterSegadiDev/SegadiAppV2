@@ -83,7 +83,9 @@ class _ServiceDetailView extends StatelessWidget {
               directContact: '',
               address: '',
             ),
-            ServiceActionsCard(),
+            ServiceActionsCard(
+              actions: vm.actionItems,
+            ),
             ServiceStatusButton(
               status: '',
             ),
