@@ -1,105 +1,146 @@
-import 'package:flutter/cupertino.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'package:segadi/features/check_list/data/repositories/checklist_repository_impl.dart';
-import 'package:segadi/features/check_list/domain/entities/checklist_item_entity.dart';
+import 'package:flutter/material.dart';
+
+import '../../domain/entities/checklist_entity.dart';
+import '../../domain/entities/checklist_checkpoint_entity.dart';
+
+import '../../domain/usecases/get_checklist_usecase.dart';
+import '../../domain/usecases/send_checklist_usecase.dart';
 
 class ChecklistViewModel extends ChangeNotifier {
-  final ChecklistRepositoryImpl repo;
-  final int serviceId;
+  final GetChecklistUseCase getChecklistUseCase;
+  final SendChecklistUseCase sendChecklistUseCase;
 
   ChecklistViewModel({
-    required this.repo,
-    required this.serviceId,
-  }) {
-    // Es mejor llamar al load aquí para que cargue al abrir la modal
-    load();
-  }
+    required this.getChecklistUseCase,
+    required this.sendChecklistUseCase,
+  });
 
-  List<ChecklistItemEntity> items = [];
-  bool loading = false;
-  String? errorMessage;
+  bool isLoading = false;
+  bool isSaving = false;
 
-  /// Obtiene el token de forma segura
-  Future<String> _getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString('token') ?? '';
-  }
+  /// Evita modificaciones después de un guardado exitoso
+  bool submitted = false;
 
-  /// Carga el catálogo de opciones
-  Future<void> load() async {
-    loading = true;
-    errorMessage = null;
-    notifyListeners();
+  String? error;
 
-    final token = await _getToken();
-    final result = await repo.getChecklistCatalog(token);
+  ChecklistEntity? checklist;
 
-    result.fold(
-      (failure) {
-        errorMessage = failure.message;
-        items = [];
-      },
-      (entities) {
-        items = entities;
-      },
-    );
+  List<ChecklistCheckpointEntity> get checkpoints =>
+      checklist?.checkpoints ?? [];
 
-    loading = false;
-    notifyListeners();
-  }
-
-  /// Cambia el estado de selección de un item
-  void toggle(int id) {
+  Future<void> loadChecklist(
+    String referralId,
+  ) async {
     try {
-      final index = items.indexWhere((e) => e.id == id);
-      if (index != -1) {
-        items[index].checked = !items[index].checked;
-        notifyListeners();
-      }
+      isLoading = true;
+      error = null;
+
+      notifyListeners();
+
+      checklist = await getChecklistUseCase(
+        referralId,
+      );
     } catch (e) {
-      debugPrint("Error en toggle: $e");
+      error = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
     }
   }
 
-  /// Getter para habilitar/deshabilitar el botón en la UI
-  bool get isValid => items.any((e) => e.checked);
+  void toggleCheckpoint(
+    String checkpointId,
+    bool value,
+  ) {
+    if (submitted) return;
 
-  /// Guarda los IDs seleccionados
-  Future<bool> save() async {
-    // 1. Obtenemos solo los seleccionados
-    final checkedIds = items.where((e) => e.checked).map((e) => e.id).toList();
+    if (checklist == null) return;
 
-    if (checkedIds.isEmpty) {
-      errorMessage = "Selecciona al menos una opción";
+    final updated = checklist!.checkpoints.map(
+      (item) {
+        if (item.id != checkpointId) {
+          return item;
+        }
+
+        return item.copyWith(
+          result: value,
+        );
+      },
+    ).toList();
+
+    checklist = checklist!.copyWith(
+      checkpoints: updated,
+    );
+
+    notifyListeners();
+  }
+
+  Future<bool> saveChecklist() async {
+    /// Evita doble envío
+    if (isSaving) {
+      return false;
+    }
+
+    /// Limpia error anterior
+    error = null;
+
+    /// Debe existir checklist
+    if (checklist == null) {
+      error = 'No existe información del checklist.';
       notifyListeners();
       return false;
     }
 
-    loading = true;
-    errorMessage = null;
-    notifyListeners();
+    /// Debe contener checkpoints
+    if (checklist!.checkpoints.isEmpty) {
+      error = 'No existen checkpoints para guardar.';
+      notifyListeners();
+      return false;
+    }
 
-    final token = await _getToken();
+    /// Debe existir al menos uno marcado
+    if (!hasCheckedItem) {
+      error = 'Debe seleccionar al menos un checkpoint.';
+      notifyListeners();
+      return false;
+    }
 
-    // 2. Llamada al repositorio
-    final result = await repo.saveChecklist(
-      serviceId: serviceId,
-      ids: checkedIds,
-      token: token,
+    try {
+      isSaving = true;
+
+      notifyListeners();
+
+      final success = await sendChecklistUseCase(
+        checklist!,
+      );
+
+      if (success) {
+        submitted = true;
+      }
+
+      return success;
+    } catch (e) {
+      error = e.toString();
+      return false;
+    } finally {
+      isSaving = false;
+      notifyListeners();
+    }
+  }
+
+  bool get hasCheckedItem {
+    if (checklist == null) return false;
+
+    return checklist!.checkpoints.any(
+      (e) => e.result,
     );
+  }
 
-    return result.fold(
-      (failure) {
-        errorMessage = failure.message;
-        loading = false;
-        notifyListeners();
-        return false;
-      },
-      (success) {
-        loading = false;
-        notifyListeners();
-        return true; // Éxito: La UI cerrará la modal
-      },
+  bool get allChecked {
+    if (checklist == null) return false;
+
+    return checklist!.checkpoints.every(
+      (e) => e.result,
     );
   }
 }

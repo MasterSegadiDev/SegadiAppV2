@@ -1,0 +1,33 @@
+{
+  "_id": "68912ab34cd567ef89012345",
+  "strReferralId": "6a5feafec7d5f47145933844",
+  "intServiceRequestId": 12345,
+  "arrCheckpoints": [
+    {
+      "strId": "1",
+      "strCheckpointName": "Revisar luces delanteras",
+      "blnResult": false
+    },
+    {
+      "strId": "2",
+      "strCheckpointName": "Revisar luces traseras",
+      "blnResult": false
+    },
+    {
+      "strId": "3",
+      "strCheckpointName": "Validar presión de llantas",
+      "blnResult": false
+    },
+    {
+      "strId": "4",
+      "strCheckpointName": "Revisar niveles de aceite",
+      "blnResult": false
+    },
+    {
+      "strId": "5",
+      "strCheckpointName": "Comprobar documentación",
+      "blnResult": false
+    }
+  ],
+  "dteDateTime": "2026-08-04T12:00:00Z"
+}

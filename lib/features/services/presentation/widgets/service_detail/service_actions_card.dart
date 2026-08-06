@@ -1,19 +1,30 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
 import 'package:segadi/features/services/presentation/models/service_action_item.dart';
 
 class ServiceActionsCard extends StatelessWidget {
   final List<ServiceActionItem> actions;
 
+  final Function(ServiceActionItem action)? onActionTap;
+
   const ServiceActionsCard({
     super.key,
     required this.actions,
+    this.onActionTap,
   });
 
   @override
   Widget build(BuildContext context) {
+    final visibleActions = actions
+        .where(
+          (e) => e.show,
+        )
+        .toList();
+
     return Container(
-      margin: const EdgeInsets.only(bottom: 18),
+      margin: const EdgeInsets.only(
+        bottom: 18,
+      ),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(
@@ -23,7 +34,10 @@ class ServiceActionsCard extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(.05),
             blurRadius: 10,
-            offset: const Offset(0, 4),
+            offset: const Offset(
+              0,
+              4,
+            ),
           ),
         ],
       ),
@@ -47,7 +61,9 @@ class ServiceActionsCard extends StatelessWidget {
                   Icons.dashboard_customize,
                   color: Color(0xFF2C522A),
                 ),
-                SizedBox(width: 10),
+                SizedBox(
+                  width: 10,
+                ),
                 Text(
                   'ACCIONES DEL SERVICIO',
                   style: TextStyle(
@@ -64,11 +80,7 @@ class ServiceActionsCard extends StatelessWidget {
             child: GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
-              itemCount: actions
-                  .where(
-                    (e) => e.enabled,
-                  )
-                  .length,
+              itemCount: visibleActions.length,
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 3,
                 mainAxisSpacing: 18,
@@ -76,16 +88,19 @@ class ServiceActionsCard extends StatelessWidget {
                 childAspectRatio: .95,
               ),
               itemBuilder: (context, index) {
-                final item = actions
-                    .where(
-                      (e) => e.enabled,
-                    )
-                    .toList()[index];
+                final item = visibleActions[index];
 
                 return _ActionButton(
                   icon: item.icon,
                   title: item.title,
-                  onTap: item.onTap,
+                  enabled: item.enabled,
+                  onTap: item.enabled
+                      ? () {
+                          onActionTap?.call(
+                            item,
+                          );
+                        }
+                      : null,
                 );
               },
             ),
@@ -97,20 +112,25 @@ class ServiceActionsCard extends StatelessWidget {
 }
 
 class _ActionButton extends StatelessWidget {
-  final FaIconData icon;
+  final IconData icon;
+
   final String title;
+
+  final bool enabled;
+
   final VoidCallback? onTap;
 
   const _ActionButton({
     required this.icon,
     required this.title,
+    required this.enabled,
     this.onTap,
   });
 
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.grey.shade50,
+      color: enabled ? Colors.grey.shade50 : Colors.grey.shade200,
       borderRadius: BorderRadius.circular(
         14,
       ),
@@ -131,9 +151,13 @@ class _ActionButton extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              FaIcon(
+              Icon(
                 icon,
-                color: const Color(0xFF2C522A),
+                color: enabled
+                    ? const Color(
+                        0xFF2C522A,
+                      )
+                    : Colors.grey,
                 size: 24,
               ),
               const SizedBox(
@@ -146,12 +170,24 @@ class _ActionButton extends StatelessWidget {
                 child: Text(
                   title,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
+                    color: enabled ? Colors.black87 : Colors.grey,
                   ),
                 ),
               ),
+              if (!enabled)
+                const Padding(
+                  padding: EdgeInsets.only(
+                    top: 6,
+                  ),
+                  child: Icon(
+                    Icons.lock_outline,
+                    size: 14,
+                    color: Colors.grey,
+                  ),
+                ),
             ],
           ),
         ),

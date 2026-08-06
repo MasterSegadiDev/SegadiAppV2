@@ -1,17 +1,20 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class ServiceActionItem {
-  final String id;
+  final String key;
   final String title;
-  final FaIconData icon;
+  final IconData icon;
+
+  final bool show;
   final bool enabled;
+
   final VoidCallback? onTap;
 
   const ServiceActionItem({
-    required this.id,
+    required this.key,
     required this.title,
     required this.icon,
+    required this.show,
     required this.enabled,
     this.onTap,
   });

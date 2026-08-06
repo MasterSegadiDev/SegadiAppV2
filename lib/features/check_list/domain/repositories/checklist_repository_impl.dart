@@ -1,11 +1,9 @@
-import 'package:flutter/material.dart';
 import 'package:segadi/features/check_list/data/datasources/checklist_remote_dataosurce.dart';
+import 'package:segadi/features/check_list/data/dto/checklist_dto.dart';
+import 'package:segadi/features/check_list/data/models/checklist_checkpoint_dto.dart';
 
 import '../../domain/entities/checklist_entity.dart';
 import '../../domain/repositories/checklist_repository.dart';
-
-import '../dto/checklist_checkpoint_dto.dart';
-import '../dto/checklist_dto.dart';
 
 class ChecklistRepositoryImpl implements ChecklistRepository {
   final ChecklistRemoteDatasource remoteDatasource;
@@ -34,15 +32,14 @@ class ChecklistRepositoryImpl implements ChecklistRepository {
       dateTime: checklist.dateTime,
       checkpoints: checklist.checkpoints
           .map(
-            (checkpoint) => ChecklistCheckpointDto(
-              id: checkpoint.id,
-              checkpointName: checkpoint.checkpointName,
-              result: checkpoint.result,
+            (e) => ChecklistCheckpointDto(
+              id: e.id,
+              checkpointName: e.checkpointName,
+              result: e.result,
             ),
           )
           .toList(),
     );
-    debugPrint('array dto send check list ${dto}');
 
     return await remoteDatasource.sendChecklist(
       dto,

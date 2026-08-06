@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:segadi/features/check_list/presentation/models/checklist_arguments.dart';
+import 'package:segadi/features/check_list/presentation/pages/checklist_page.dart';
 import 'package:segadi/features/services/presentation/models/service_detail_arguments.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/recipient_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/sender_card.dart';
@@ -85,6 +87,38 @@ class _ServiceDetailView extends StatelessWidget {
             ),
             ServiceActionsCard(
               actions: vm.actionItems,
+              onActionTap: (action) {
+                switch (action.key) {
+                  case 'checklist':
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChecklistPage(
+                          arguments: ChecklistArguments(
+                              referralId: vm.arguments.id,
+                              serviceNumber: vm.arguments.serviceNumber),
+                        ),
+                      ),
+                    );
+
+                    break;
+
+                  case 'support':
+                    break;
+
+                  case 'route':
+                    break;
+
+                  case 'close_evidence':
+                    break;
+
+                  case 'travel_expenses':
+                    break;
+
+                  case 'download_ccp':
+                    break;
+                }
+              },
             ),
             ServiceStatusButton(
               status: '',

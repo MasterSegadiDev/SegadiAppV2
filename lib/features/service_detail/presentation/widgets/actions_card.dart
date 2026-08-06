@@ -372,9 +372,9 @@ class _ChecklistModal extends StatelessWidget {
               ),
             ),
             const Divider(height: 1),
-            const Expanded(
-              child: CheckListView(),
-            ),
+            // const Expanded(
+            //   child: CheckListView(),
+            // ),
           ],
         ),
       ),

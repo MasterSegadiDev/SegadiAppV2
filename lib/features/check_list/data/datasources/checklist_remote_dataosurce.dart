@@ -1,62 +1,67 @@
 import 'package:dio/dio.dart';
-import 'package:segadi/core/network/dio_client.dart';
-import 'package:segadi/features/check_list/domain/entities/checklist_entity.dart';
-import 'package:segadi/features/service_detail/core/errors/dio_exceptions.dart';
-import 'package:segadi/features/services/core/errors/exceptions.dart';
+import 'package:flutter/material.dart';
+import 'package:segadi/core/errors/dio_exception_handler.dart';
+import 'package:segadi/features/check_list/data/dto/checklist_dto.dart';
 
-class ChecklistRemoteDataSource {
-  final Dio _dio = DioClient.instance;
+import '../../../../core/network/dio_client.dart';
 
-  ChecklistRemoteDataSource();
+abstract class ChecklistRemoteDatasource {
+  Future<ChecklistDto> getChecklist(
+    String referralId,
+  );
 
-  /// GET catálogo de puntos de revisión
-  Future<List<ChecklistItemModel>> getChecklistCatalog(String token) async {
+  Future<bool> sendChecklist(
+    ChecklistDto checklist,
+  );
+}
+
+class ChecklistRemoteDatasourceImpl implements ChecklistRemoteDatasource {
+  ChecklistRemoteDatasourceImpl({
+    Dio? dio,
+  }) : _dio = dio ?? DioClient.instance;
+
+  final Dio _dio;
+
+  @override
+  Future<ChecklistDto> getChecklist(
+    String referralId,
+  ) async {
     try {
       final response = await _dio.get(
-        'index.php',
-        queryParameters: {
-          'r': 'esegadi/get-puntosrevision',
-          'token': token,
-        },
+        '/appUser/checklist/$referralId',
       );
-      if (response.statusCode == 200) {
-        final List data = response.data;
-        return data.map((json) => ChecklistItemModel.fromJson(json)).toList();
-      } else {
-        throw ServerException(
-            message:
-                'Ha ocurrido un error al consultar el listado del checklist: ${response.statusCode}',
-            statusCode: response.statusCode);
+
+      debugPrint(response.data.toString());
+
+      final List<dynamic> result = response.data['Result'] ?? [];
+
+      if (result.isEmpty) {
+        throw Exception(
+          'No existe checklist para esta remisión.',
+        );
       }
+
+      return ChecklistDto.fromJson(
+        result.first as Map<String, dynamic>,
+      );
     } on DioException catch (e) {
-      // Aquí es donde el usuario deja de ver "Exception" y ve un mensaje real
-      throw DioExceptions.fromDioError(e).message;
+      throw DioExceptionHandler.handle(e);
     }
   }
 
-  /// POST guardar checklist
-  Future<bool> saveChecklist({
-    required int serviceId,
-    required List<int> checkedIds,
-    required String token,
-  }) async {
+  @override
+  Future<bool> sendChecklist(
+    ChecklistDto checklist,
+  ) async {
     try {
-      final data = {
-        "service": {
-          "service_id": serviceId,
-          "list": checkedIds,
-        },
-        "token": token,
-      };
-
-      final response = await _dio.post(
-        'index.php?r=esegadi/checklistpost',
-        data: data,
+      await _dio.put(
+        '/appUser/checklist',
+        data: checklist.toJson(),
       );
 
-      return response.statusCode == 200;
+      return true;
     } on DioException catch (e) {
-      throw DioExceptions.fromDioError(e).message;
+      throw DioExceptionHandler.handle(e);
     }
   }
 }

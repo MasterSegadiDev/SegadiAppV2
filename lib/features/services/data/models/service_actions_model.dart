@@ -1,4 +1,5 @@
-import 'package:segadi/features/services/domain/entities/detail_service_actions_entity.dart';
+import '../../domain/entities/service_actions_entity.dart';
+import 'service_action_model.dart';
 
 class ServiceActionsModel extends ServiceActionsEntity {
   const ServiceActionsModel({
@@ -14,22 +15,34 @@ class ServiceActionsModel extends ServiceActionsEntity {
     Map<String, dynamic> json,
   ) {
     return ServiceActionsModel(
-      checklist: json['check_list'] ?? false,
-      support: json['support'] ?? false,
-      route: json['route'] ?? false,
-      closeEvidence: json['close_evidence'] ?? false,
-      travelExpenses: json['travel_expenses'] ?? false,
-      downloadCcp: json['download_ccp'] ?? false,
+      checklist: ServiceActionModel.fromJson(
+        json['check_list'] ?? {},
+      ),
+      support: ServiceActionModel.fromJson(
+        json['support'] ?? {},
+      ),
+      route: ServiceActionModel.fromJson(
+        json['route'] ?? {},
+      ),
+      closeEvidence: ServiceActionModel.fromJson(
+        json['close_evidence'] ?? {},
+      ),
+      travelExpenses: ServiceActionModel.fromJson(
+        json['travel_expenses'] ?? {},
+      ),
+      downloadCcp: ServiceActionModel.fromJson(
+        json['download_ccp'] ?? {},
+      ),
     );
   }
 
-  const ServiceActionsModel.empty()
+  ServiceActionsModel.empty()
       : super(
-          checklist: true,
-          support: true,
-          route: true,
-          closeEvidence: true,
-          travelExpenses: true,
-          downloadCcp: true,
+          checklist: ServiceActionModel.empty(),
+          support: ServiceActionModel.empty(),
+          route: ServiceActionModel.empty(),
+          closeEvidence: ServiceActionModel.empty(),
+          travelExpenses: ServiceActionModel.empty(),
+          downloadCcp: ServiceActionModel.empty(),
         );
 }

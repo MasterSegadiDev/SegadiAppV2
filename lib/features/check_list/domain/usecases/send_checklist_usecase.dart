@@ -1,18 +1,18 @@
 import '../entities/checklist_entity.dart';
 import '../repositories/checklist_repository.dart';
 
-class GetChecklistUseCase {
+class SendChecklistUseCase {
   final ChecklistRepository repository;
 
-  GetChecklistUseCase(
+  SendChecklistUseCase(
     this.repository,
   );
 
-  Future<ChecklistEntity> call(
-    String referralId,
+  Future<bool> call(
+    ChecklistEntity checklist,
   ) {
-    return repository.getChecklist(
-      referralId,
+    return repository.sendChecklist(
+      checklist,
     );
   }
 }
