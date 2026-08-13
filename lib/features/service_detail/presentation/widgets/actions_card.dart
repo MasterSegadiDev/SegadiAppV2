@@ -13,9 +13,9 @@ import 'package:segadi/features/check_list/presentation/viewmodels/checklist_vie
 import 'package:segadi/features/service_detail/domain/entities/detail_service_entity.dart';
 import 'package:segadi/features/service_detail/domain/entities/detail_service_permissions.dart';
 import 'package:segadi/features/service_detail/presentation/viewmodel/detail_service_viewmodel.dart';
-import 'package:segadi/features/support_status/data/api/support_status_api.dart';
+
 import 'package:segadi/features/support_status/data/repositories/support_status_repository_impl.dart';
-import 'package:segadi/features/support_status/presentation/ui/status_support_view.dart';
+
 import 'package:segadi/features/support_status/presentation/viewmodel/support_status_viewmodel.dart';
 import 'package:segadi/features/trip_closure/presentation/pages/capture_trip_evidence_page.dart';
 
@@ -83,29 +83,30 @@ class ActionsCard extends StatelessWidget {
         label: 'Soporte',
         color: Colors.red,
         enabled: state.ui.enableSupport,
-        onPressed: () async {
-          final updated = await showModalBottomSheet<bool>(
-            context: context,
-            isScrollControlled: true,
-            backgroundColor: Colors.transparent,
-            barrierColor: Colors.black54,
-            builder: (_) => ChangeNotifierProvider(
-              create: (_) => SupportStatusViewModel(
-                repo: SupportStatusRepositoryImpl(
-                  SupportStatusApi(), // <--- AQUÍ PASAS EL DIO
-                ),
-                serviceId: state.id,
-                statusId: state.statusId,
-                type: state.type,
-              ),
-              child: const StatusSupportView(),
-            ),
-          );
+        onPressed: null,
+        // onPressed: () async {
+        //   final updated = await showModalBottomSheet<bool>(
+        //     context: context,
+        //     isScrollControlled: true,
+        //     backgroundColor: Colors.transparent,
+        //     barrierColor: Colors.black54,
+        //     builder: (_) => ChangeNotifierProvider(
+        //       create: (_) => SupportStatusViewModel(
+        //         repo: SupportStatusRepositoryImpl(
+        //           SupportStatusApi(), // <--- AQUÍ PASAS EL DIO
+        //         ),
+        //         serviceId: state.id,
+        //         statusId: state.statusId,
+        //         type: state.type,
+        //       ),
+        //       child: const StatusSupportView(),
+        //     ),
+        //   );
 
-          if (updated == true && context.mounted) {
-            context.read<DetailServiceViewModel>().loadDetail(state.id);
-          }
-        },
+        //   if (updated == true && context.mounted) {
+        //     context.read<DetailServiceViewModel>().loadDetail(state.id);
+        //   }
+        // },
       ),
       ActionButton(
         icon: FontAwesomeIcons.mapLocation.data,

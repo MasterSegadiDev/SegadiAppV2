@@ -1,13 +1,19 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+
 import 'package:segadi/features/check_list/presentation/models/checklist_arguments.dart';
 import 'package:segadi/features/check_list/presentation/pages/checklist_page.dart';
+
 import 'package:segadi/features/services/presentation/models/service_detail_arguments.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/recipient_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/sender_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/service_actions_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/service_header_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/service_status_button.dart';
+
+import 'package:segadi/features/services/presentation/widgets/support_status_modal.dart';
+
+import 'package:segadi/features/support_status/presentation/viewmodel/support_status_viewmodel.dart';
 
 import '../../../../app/di/injection_container.dart';
 import '../viewmodels/service_detail_viewmodel.dart';
@@ -87,7 +93,7 @@ class _ServiceDetailView extends StatelessWidget {
             ),
             ServiceActionsCard(
               actions: vm.actionItems,
-              onActionTap: (action) {
+              onActionTap: (action) async {
                 switch (action.key) {
                   case 'checklist':
                     Navigator.push(
@@ -95,15 +101,22 @@ class _ServiceDetailView extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => ChecklistPage(
                           arguments: ChecklistArguments(
-                              referralId: vm.arguments.id,
-                              serviceNumber: vm.arguments.serviceNumber),
+                            referralId: vm.arguments.referralId,
+                            serviceNumber: vm.arguments.serviceNumber,
+                          ),
                         ),
                       ),
                     );
-
                     break;
 
                   case 'support':
+                    final success =
+                        await openSupportStatusModal(context, vm.arguments);
+
+                    if (success == true) {
+                      await vm.initialize(vm.arguments);
+                    }
+
                     break;
 
                   case 'route':
@@ -126,6 +139,23 @@ class _ServiceDetailView extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+
+  Future<bool?> openSupportStatusModal(
+    BuildContext context,
+    ServiceDetailArguments arguments,
+  ) async {
+    return showDialog<bool>(
+      context: context,
+      builder: (_) {
+        return ChangeNotifierProvider(
+          create: (_) => getIt<SupportStatusViewModel>()..loadStatuses(),
+          child: SupportStatusModal(
+            arguments: arguments,
+          ),
+        );
+      },
     );
   }
 }

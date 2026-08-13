@@ -1,68 +1,160 @@
-import 'package:flutter/material.dart';
-import 'package:segadi/features/support_status/data/repositories/support_status_repository_impl.dart';
-import 'package:segadi/features/support_status/domain/entities/support_status_entity.dart';
+/* import 'package:flutter/foundation.dart';
+
+import '../../domain/entities/support_status_entity.dart';
+import '../../domain/usecases/get_support_status_usecase.dart';
 
 class SupportStatusViewModel extends ChangeNotifier {
-  final SupportStatusRepositoryImpl repo;
-  final int serviceId;
-
-  int statusId;
-  String type; // 'begin' | 'end' | ''
-  bool loading = false;
-  String? errorMessage;
+  final GetSupportStatusUseCase getSupportStatusUseCase;
 
   SupportStatusViewModel({
-    required this.repo,
-    required this.serviceId,
-    required this.statusId,
-    required this.type,
+    required this.getSupportStatusUseCase,
   });
 
-  final options = const [
-    SupportStatusEntity(id: 24, label: 'Baño', icon: Icons.wc),
-    SupportStatusEntity(id: 22, label: 'Comer', icon: Icons.restaurant),
-    SupportStatusEntity(id: 38, label: 'Dormir', icon: Icons.hotel),
-    SupportStatusEntity(
-        id: 39, label: 'Gasolina', icon: Icons.local_gas_station),
-  ];
+  bool isLoading = false;
 
-  bool get hasActive => type == 'begin';
-  bool isSelected(int id) => hasActive && statusId == id;
+  String? error;
 
-  /// 🔹 Tap handler (BEGIN / END) con manejo de errores Clean
-  Future<bool> send(int id) async {
-    if (loading) return false;
+  List<SupportStatusEntity> statuses = [];
 
-    if (hasActive && statusId != id) {
-      errorMessage = 'Debes finalizar el apoyo actual primero';
+  SupportStatusEntity? selectedStatus;
+
+  bool get hasStatuses => statuses.isNotEmpty;
+
+  bool get hasSelectedStatus => selectedStatus != null;
+
+  Future<void> loadStatuses() async {
+    try {
+      print('precionando ver lista de estatus de soporte');
+      isLoading = true;
+      error = null;
+
+      notifyListeners();
+
+      statuses = await getSupportStatusUseCase();
+      debugPrint(
+        'SUPPORT STATUS COUNT: ${statuses.length}',
+      );
+
+      // Limpia la selección si ya no existe en la respuesta.
+      if (selectedStatus != null) {
+        final exists = statuses.any(
+          (status) => status.id == selectedStatus!.id,
+        );
+
+        if (!exists) {
+          selectedStatus = null;
+        }
+      }
+    } catch (e) {
+      error = e.toString();
+      statuses = [];
+    } finally {
+      isLoading = false;
+
+      notifyListeners();
+    }
+  }
+
+  void selectStatus(
+    SupportStatusEntity status,
+  ) {
+    selectedStatus = status;
+
+    error = null;
+
+    notifyListeners();
+  }
+
+  void clearSelection() {
+    selectedStatus = null;
+
+    notifyListeners();
+  }
+
+  bool canContinue() {
+    return selectedStatus != null;
+  }
+}
+ */
+
+import 'package:flutter/material.dart';
+
+import '../../domain/entities/support_status_entity.dart';
+import '../../domain/usecases/get_support_status_usecase.dart';
+import '../../domain/usecases/send_support_status_usecase.dart';
+
+class SupportStatusViewModel extends ChangeNotifier {
+  final GetSupportStatusUseCase getSupportStatusUseCase;
+  final SendSupportStatusUseCase sendSupportStatusUseCase;
+
+  SupportStatusViewModel({
+    required this.getSupportStatusUseCase,
+    required this.sendSupportStatusUseCase,
+  });
+
+  bool isLoading = false;
+  bool isSending = false;
+
+  String? error;
+
+  List<SupportStatusEntity> statuses = [];
+
+  SupportStatusEntity? selectedStatus;
+
+  Future<void> loadStatuses() async {
+    try {
+      isLoading = true;
+      error = null;
+
+      notifyListeners();
+
+      statuses = await getSupportStatusUseCase();
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  void selectStatus(
+    SupportStatusEntity status,
+  ) {
+    selectedStatus = status;
+
+    notifyListeners();
+  }
+
+  Future<bool> sendStatus({
+    required String referralId,
+    required String serviceRequestId,
+  }) async {
+    print('remision id: ${referralId} y servicio id: ${serviceRequestId}');
+    if (selectedStatus == null) {
+      error = 'Selecciona un estatus de soporte.';
       notifyListeners();
       return false;
     }
 
-    loading = true;
-    errorMessage = null;
-    notifyListeners();
-
     try {
-      final newType = hasActive ? 'end' : 'begin';
+      isSending = true;
+      error = null;
 
-      await repo.sendStatus(
-        serviceId: serviceId,
-        statusId: id,
-        type: newType,
+      notifyListeners();
+
+      final result = await sendSupportStatusUseCase(
+        referralId: referralId,
+        serviceRequestId: serviceRequestId,
+        statusId: selectedStatus!.id,
       );
 
-      // Éxito: Actualizamos estado local
-      statusId = id;
-      type = newType;
-      loading = false;
-      notifyListeners();
-      return true;
+      return result;
     } catch (e) {
-      errorMessage = e.toString().replaceAll('Exception:', '').trim();
-      loading = false;
-      notifyListeners();
+      error = e.toString();
       return false;
+    } finally {
+      isSending = false;
+      notifyListeners();
     }
   }
 }

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:segadi/features/services/domain/entities/recipient_entity.dart';
 import 'package:segadi/features/services/domain/entities/sender_entity.dart';
 import 'package:segadi/features/services/presentation/models/service_action_item.dart';
@@ -23,10 +22,8 @@ class ServiceDetailViewModel extends ChangeNotifier {
     ServiceDetailArguments args,
   ) async {
     arguments = args;
-
-    await loadService(
-      args.id,
-    );
+    print('id de la remision: ${arguments.referralId}');
+    await loadService(args.serviceId);
   }
 
   String get serviceNumber => arguments.serviceNumber;
@@ -73,7 +70,7 @@ class ServiceDetailViewModel extends ChangeNotifier {
         icon: Icons.headset,
         enabled: actions.support.enabled,
         show: actions.support.show,
-        key: '',
+        key: 'support',
       ),
       ServiceActionItem(
         title: 'Geo Ruta',

@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:segadi/app/di/support_status_injection.dart';
 
 import 'auth_injection.dart';
 import 'user_profile_injection.dart';
@@ -24,4 +25,5 @@ Future<void> setupDependencies() async {
   await setupNotificationDependencies();
   await setupServicesDependencies();
   await setupChecklistDependencies();
+  registerSupportStatusDependencies(getIt);
 }
