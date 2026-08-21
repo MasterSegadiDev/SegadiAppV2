@@ -4,7 +4,10 @@ import 'package:segadi/features/services/data/datasources/services_remote_data_s
 import 'package:segadi/features/services/data/repository/service_repository_impl.dart';
 import 'package:segadi/features/services/domain/repository/services_repository.dart';
 import 'package:segadi/features/services/domain/usecases/get_assigned_services_usecase.dart';
-import 'package:segadi/features/services/domain/usecases/get_service_detail_usecase.dart';
+import 'package:segadi/features/services/domain/usecases/get_detail_service_actions_usecase.dart';
+import 'package:segadi/features/services/domain/usecases/get_detail_service_info_general_usecase.dart';
+import 'package:segadi/features/services/domain/usecases/get_service_status_usecase.dart';
+import 'package:segadi/features/services/domain/usecases/update_mandatory_status_usecase.dart';
 import 'package:segadi/features/services/presentation/viewmodels/service_detail_viewmodel.dart';
 
 Future<void> setupServicesDependencies() async {
@@ -14,30 +17,59 @@ Future<void> setupServicesDependencies() async {
   );
 
   /// Repository
-  getIt.registerLazySingleton<ServicesRepository>(
+  getIt.registerLazySingleton<ServiceRepository>(
     () => ServicesRepositoryImpl(
-      remoteDatasource: getIt(),
+      remoteDataSource: getIt(),
     ),
   );
 
-  /// UseCase
-  getIt.registerLazySingleton(
+  getIt.registerLazySingleton<ServiceRepository>(
+    () => ServicesRepositoryImpl(
+      remoteDataSource: getIt<ServicesRemoteDatasource>(),
+    ),
+  );
+
+  /// UseCase - Assigned Services
+  getIt.registerLazySingleton<GetAssignedServicesUseCase>(
     () => GetAssignedServicesUseCase(
       getIt(),
     ),
   );
 
-  //UseCase ServiceDetail
-  getIt.registerLazySingleton(
-    () => GetServiceDetailUseCase(
+  /// UseCase - Service General
+  getIt.registerLazySingleton<GetServiceGeneralUseCase>(
+    () => GetServiceGeneralUseCase(
       getIt(),
     ),
   );
 
-  //viewModel ServiceDetail
-  getIt.registerFactory(
+  /// UseCase - Service Actions
+  getIt.registerLazySingleton<GetServiceActionsUseCase>(
+    () => GetServiceActionsUseCase(
+      getIt(),
+    ),
+  );
+
+  // updated mandatory status
+  getIt.registerLazySingleton<UpdateMandatoryStatusUseCase>(
+    () => UpdateMandatoryStatusUseCase(
+      getIt(),
+    ),
+  );
+
+  getIt.registerLazySingleton<GetServiceStatusUseCase>(
+    () => GetServiceStatusUseCase(
+      repository: getIt<ServiceRepository>(),
+    ),
+  );
+
+  /// ViewModel - Service Detail
+  getIt.registerFactory<ServiceDetailViewModel>(
     () => ServiceDetailViewModel(
-      getServiceDetailUseCase: getIt(),
+      getServiceGeneralUseCase: getIt(),
+      getServiceActionsUseCase: getIt(),
+      getServiceStatusUseCase: getIt(),
+      updateMandatoryStatusUseCase: getIt(),
     ),
   );
 }

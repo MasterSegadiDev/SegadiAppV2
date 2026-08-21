@@ -130,6 +130,7 @@ class SupportStatusViewModel extends ChangeNotifier {
     required String serviceRequestId,
   }) async {
     print('remision id: ${referralId} y servicio id: ${serviceRequestId}');
+
     if (selectedStatus == null) {
       error = 'Selecciona un estatus de soporte.';
       notifyListeners();

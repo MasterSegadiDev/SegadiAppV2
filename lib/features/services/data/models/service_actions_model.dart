@@ -1,5 +1,5 @@
+import '../../domain/entities/service_action_entity.dart';
 import '../../domain/entities/service_actions_entity.dart';
-import 'service_action_model.dart';
 
 class ServiceActionsModel extends ServiceActionsEntity {
   const ServiceActionsModel({
@@ -15,34 +15,57 @@ class ServiceActionsModel extends ServiceActionsEntity {
     Map<String, dynamic> json,
   ) {
     return ServiceActionsModel(
-      checklist: ServiceActionModel.fromJson(
-        json['check_list'] ?? {},
-      ),
-      support: ServiceActionModel.fromJson(
-        json['support'] ?? {},
-      ),
-      route: ServiceActionModel.fromJson(
-        json['route'] ?? {},
-      ),
-      closeEvidence: ServiceActionModel.fromJson(
-        json['close_evidence'] ?? {},
-      ),
-      travelExpenses: ServiceActionModel.fromJson(
-        json['travel_expenses'] ?? {},
-      ),
-      downloadCcp: ServiceActionModel.fromJson(
-        json['download_ccp'] ?? {},
-      ),
+      checklist: _fromJson(json['check_list']),
+      support: _fromJson(json['support']),
+      route: _fromJson(json['route']),
+      closeEvidence: _fromJson(json['close_evidence']),
+      travelExpenses: _fromJson(json['travel_expenses']),
+      downloadCcp: _fromJson(json['download_ccp']),
     );
   }
 
-  ServiceActionsModel.empty()
-      : super(
-          checklist: ServiceActionModel.empty(),
-          support: ServiceActionModel.empty(),
-          route: ServiceActionModel.empty(),
-          closeEvidence: ServiceActionModel.empty(),
-          travelExpenses: ServiceActionModel.empty(),
-          downloadCcp: ServiceActionModel.empty(),
-        );
+  static ServiceActionEntity _fromJson(
+    dynamic value,
+  ) {
+    if (value is! Map<String, dynamic>) {
+      return const ServiceActionEntity(
+        enabled: false,
+        show: false,
+      );
+    }
+
+    return ServiceActionEntity(
+      enabled: value['enabled'] == true,
+      show: value['show'] == true,
+    );
+  }
+
+  factory ServiceActionsModel.empty() {
+    return const ServiceActionsModel(
+      checklist: ServiceActionEntity(
+        enabled: false,
+        show: false,
+      ),
+      support: ServiceActionEntity(
+        enabled: false,
+        show: false,
+      ),
+      route: ServiceActionEntity(
+        enabled: false,
+        show: false,
+      ),
+      closeEvidence: ServiceActionEntity(
+        enabled: false,
+        show: false,
+      ),
+      travelExpenses: ServiceActionEntity(
+        enabled: false,
+        show: false,
+      ),
+      downloadCcp: ServiceActionEntity(
+        enabled: false,
+        show: false,
+      ),
+    );
+  }
 }

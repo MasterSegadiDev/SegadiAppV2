@@ -1,43 +1,58 @@
-import 'package:segadi/features/services/data/models/serice_action_dto_model.dart';
+// import '../../domain/entities/service_actions_entity.dart';
 
-class ServiceActionsDto {
-  final bool enableBtn;
+// class ServiceActionsModel extends ServiceActionsEntity {
+//   const ServiceActionsModel({
+//     required super.checklist,
+//     required super.support,
+//     required super.route,
+//     required super.closeEvidence,
+//     required super.travelExpenses,
+//     required super.downloadCcp,
+//   });
 
-  final ActionDto checklist;
-  final ActionDto support;
-  final ActionDto evidence;
-  final ActionDto closeTravel;
-  final ActionDto expenses;
+//   factory ServiceActionsModel.fromJson(
+//     Map<String, dynamic> json,
+//   ) {
+//     return ServiceActionsModel(
+//       checklist: _isEnabled(
+//         json['check_list'],
+//       ),
+//       support: _isEnabled(
+//         json['support'],
+//       ),
+//       route: _isEnabled(
+//         json['route'],
+//       ),
+//       closeEvidence: _isEnabled(
+//         json['close_evidence'],
+//       ),
+//       travelExpenses: _isEnabled(
+//         json['travel_expenses'],
+//       ),
+//       downloadCcp: _isEnabled(
+//         json['download_ccp'],
+//       ),
+//     );
+//   }
 
-  const ServiceActionsDto({
-    required this.enableBtn,
-    required this.checklist,
-    required this.support,
-    required this.evidence,
-    required this.closeTravel,
-    required this.expenses,
-  });
+//   static bool _isEnabled(
+//     dynamic value,
+//   ) {
+//     if (value is! Map) {
+//       return false;
+//     }
 
-  factory ServiceActionsDto.fromJson(
-    Map<String, dynamic> json,
-  ) {
-    return ServiceActionsDto(
-      enableBtn: json['enableBtn'] ?? false,
-      checklist: ActionDto.fromJson(
-        json['check_list'] ?? {},
-      ),
-      support: ActionDto.fromJson(
-        json['support'] ?? {},
-      ),
-      evidence: ActionDto.fromJson(
-        json['close_evidence'] ?? {},
-      ),
-      closeTravel: ActionDto.fromJson(
-        json['close_travel'] ?? {},
-      ),
-      expenses: ActionDto.fromJson(
-        json['travel_expenses'] ?? {},
-      ),
-    );
-  }
-}
+//     return value['enabled'] == true;
+//   }
+
+//   factory ServiceActionsModel.empty() {
+//     return const ServiceActionsModel(
+//       checklist: false,
+//       support: false,
+//       route: false,
+//       closeEvidence: false,
+//       travelExpenses: false,
+//       downloadCcp: false,
+//     );
+//   }
+// }

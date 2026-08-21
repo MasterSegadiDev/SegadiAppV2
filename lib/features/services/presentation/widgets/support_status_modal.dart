@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/features/services/presentation/models/service_detail_arguments.dart';
 import 'package:segadi/features/support_status/presentation/viewmodel/support_status_viewmodel.dart';
 
 import '../../../support_status/domain/entities/support_status_entity.dart';
 
 class SupportStatusModal extends StatefulWidget {
-  final ServiceDetailArguments arguments;
+  final String idRemision;
+  final String idSolicitud;
+
   const SupportStatusModal({
     super.key,
-    required this.arguments,
+    required this.idRemision,
+    required this.idSolicitud,
   });
 
   @override
@@ -276,8 +278,8 @@ class _SupportStatusModalState extends State<SupportStatusModal> {
                   ? null
                   : () async {
                       final success = await vm.sendStatus(
-                        referralId: widget.arguments.referralId,
-                        serviceRequestId: widget.arguments.serviceId,
+                        referralId: widget.idRemision,
+                        serviceRequestId: widget.idSolicitud,
                       );
 
                       if (!context.mounted) {

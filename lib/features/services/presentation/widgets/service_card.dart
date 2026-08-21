@@ -21,16 +21,17 @@ class ServiceCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     debugPrint(
-        'id de la solicitud: ${service.serviceId}  y id de la remision: ${service.referralId}');
+        'id de la solicitud: ${service.serviceId}  y id de la remision: ${service.serviceNumber}');
     return GestureDetector(
       onTap: () {
-        context.push('/service-detail/${service.serviceId}',
-            extra: ServiceDetailArguments(
-              serviceId: service.serviceId,
-              referralId: service.referralId,
-              serviceRequestId: '',
-              serviceNumber: service.serviceNumber,
-            ));
+        context.push(
+          '/service-detail/${service.serviceId}',
+          extra: ServiceDetailArguments(
+            idSolicitud: service.serviceId,
+            idRemision: service.referralId,
+            serviceNumber: service.serviceNumber,
+          ),
+        );
       },
       child: Container(
         margin: const EdgeInsets.symmetric(

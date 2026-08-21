@@ -96,25 +96,35 @@ class _ServiceDetailView extends StatelessWidget {
               onActionTap: (action) async {
                 switch (action.key) {
                   case 'checklist':
-                    Navigator.push(
+                    final result = await Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => ChecklistPage(
                           arguments: ChecklistArguments(
-                            referralId: vm.arguments.referralId,
+                            referralId: vm.arguments.idRemision,
                             serviceNumber: vm.arguments.serviceNumber,
                           ),
                         ),
                       ),
                     );
+
+                    if (result == true) {
+                      await vm.refreshServiceState(
+                        vm.arguments.idSolicitud,
+                      );
+                    }
+
                     break;
 
                   case 'support':
-                    final success =
-                        await openSupportStatusModal(context, vm.arguments);
+                    final success = await openSupportStatusModal(
+                      context,
+                      idRemision: vm.arguments.idRemision,
+                      idSolicitud: vm.arguments.idSolicitud,
+                    );
 
                     if (success == true) {
-                      await vm.initialize(vm.arguments);
+                      await vm.refreshAfterSupport();
                     }
 
                     break;
@@ -134,7 +144,25 @@ class _ServiceDetailView extends StatelessWidget {
               },
             ),
             ServiceStatusButton(
-              status: '',
+              status: vm.nextStatusName,
+              enabled: vm.enableStatusButton,
+              onPressed: () async {
+                final success = await vm.updateMandatoryStatus();
+
+                if (!context.mounted) {
+                  return;
+                }
+
+                if (success) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(
+                      content: Text(
+                        'Estatus actualizado correctamente.',
+                      ),
+                    ),
+                  );
+                }
+              },
             ),
           ],
         ),
@@ -143,16 +171,18 @@ class _ServiceDetailView extends StatelessWidget {
   }
 
   Future<bool?> openSupportStatusModal(
-    BuildContext context,
-    ServiceDetailArguments arguments,
-  ) async {
+    BuildContext context, {
+    required String idRemision,
+    required String idSolicitud,
+  }) {
     return showDialog<bool>(
       context: context,
       builder: (_) {
         return ChangeNotifierProvider(
           create: (_) => getIt<SupportStatusViewModel>()..loadStatuses(),
           child: SupportStatusModal(
-            arguments: arguments,
+            idRemision: idRemision,
+            idSolicitud: idSolicitud,
           ),
         );
       },

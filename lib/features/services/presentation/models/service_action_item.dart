@@ -4,18 +4,14 @@ class ServiceActionItem {
   final String key;
   final String title;
   final IconData icon;
-
-  final bool show;
   final bool enabled;
-
-  final VoidCallback? onTap;
+  final bool show;
 
   const ServiceActionItem({
     required this.key,
     required this.title,
     required this.icon,
-    required this.show,
     required this.enabled,
-    this.onTap,
+    required this.show,
   });
 }

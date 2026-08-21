@@ -1,10 +1,9 @@
 import 'package:segadi/core/result/result.dart';
-
-import '../entities/assigned_service.dart';
-import '../repository/services_repository.dart';
+import 'package:segadi/features/services/domain/entities/assigned_service.dart';
+import 'package:segadi/features/services/domain/repository/services_repository.dart';
 
 class GetAssignedServicesUseCase {
-  final ServicesRepository repository;
+  final ServiceRepository repository;
 
   const GetAssignedServicesUseCase(
     this.repository,

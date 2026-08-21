@@ -1,13 +1,11 @@
 class ServiceDetailArguments {
-  final String serviceId;
-  final String referralId;
-  final String serviceRequestId;
+  final String idSolicitud;
+  final String idRemision;
   final String serviceNumber;
 
   const ServiceDetailArguments({
-    required this.serviceId,
-    required this.referralId,
-    required this.serviceRequestId,
+    required this.idSolicitud,
+    required this.idRemision,
     required this.serviceNumber,
   });
 }

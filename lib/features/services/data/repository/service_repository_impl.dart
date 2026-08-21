@@ -3,24 +3,28 @@ import 'package:dio/dio.dart';
 import 'package:segadi/core/errors/failure.dart';
 import 'package:segadi/core/result/result.dart';
 import 'package:segadi/features/services/data/datasources/services_remote_data_source.dart';
-import 'package:segadi/features/services/domain/entities/service_detail_entity.dart';
+import 'package:segadi/features/services/domain/entities/mandatory_status_result_entity.dart';
+import 'package:segadi/features/services/domain/entities/service_actions_entity.dart';
+import 'package:segadi/features/services/domain/entities/service_general_entity.dart';
+import 'package:segadi/features/services/domain/entities/service_status_entity.dart';
+import 'package:segadi/features/services/domain/entities/update_mandatory_status_entity.dart';
+import 'package:segadi/features/services/domain/repository/services_repository.dart';
 
 import '../../domain/entities/assigned_service.dart';
-import '../../domain/repository/services_repository.dart';
 
 import '../mapper/assigned_service_mapper.dart';
 
-class ServicesRepositoryImpl implements ServicesRepository {
-  final ServicesRemoteDatasource remoteDatasource;
+class ServicesRepositoryImpl implements ServiceRepository {
+  final ServicesRemoteDatasource remoteDataSource;
 
   const ServicesRepositoryImpl({
-    required this.remoteDatasource,
+    required this.remoteDataSource,
   });
 
   @override
   Future<Result<List<AssignedService>>> getAssignedServices() async {
     try {
-      final dtoList = await remoteDatasource.getAssignedServices();
+      final dtoList = await remoteDataSource.getAssignedServices();
 
       final services = dtoList
           .map(
@@ -49,11 +53,40 @@ class ServicesRepositoryImpl implements ServicesRepository {
   }
 
   @override
-  Future<ServiceDetailEntity> getServiceDetail(
+  Future<ServiceGeneralEntity> getServiceGeneral(
     String referralId,
   ) async {
-    return await remoteDatasource.getServiceDetail(
+    return remoteDataSource.getServiceGeneral(
       referralId,
+    );
+  }
+
+  @override
+  Future<ServiceActionsEntity> getServiceActions(
+    String referralId,
+  ) async {
+    final model = await remoteDataSource.getServiceActions(
+      referralId,
+    );
+
+    return model;
+  }
+
+  @override
+  Future<ServiceStatusEntity> getServiceStatus(
+    String referralId,
+  ) async {
+    return remoteDataSource.getServiceStatus(
+      referralId,
+    );
+  }
+
+  @override
+  Future<MandatoryStatusResultEntity> updateMandatoryStatus(
+    UpdateMandatoryStatusParams params,
+  ) {
+    return remoteDataSource.updateMandatoryStatus(
+      params,
     );
   }
 }

@@ -4,7 +4,6 @@ import 'package:segadi/features/services/presentation/models/service_action_item
 
 class ServiceActionsCard extends StatelessWidget {
   final List<ServiceActionItem> actions;
-
   final Function(ServiceActionItem action)? onActionTap;
 
   const ServiceActionsCard({
@@ -15,11 +14,11 @@ class ServiceActionsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final visibleActions = actions
-        .where(
-          (e) => e.show,
-        )
-        .toList();
+    final visibleActions = actions.where((action) => action.show).toList();
+
+    if (visibleActions.isEmpty) {
+      return const SizedBox.shrink();
+    }
 
     return Container(
       margin: const EdgeInsets.only(
@@ -34,10 +33,7 @@ class ServiceActionsCard extends StatelessWidget {
           BoxShadow(
             color: Colors.black.withOpacity(.05),
             blurRadius: 10,
-            offset: const Offset(
-              0,
-              4,
-            ),
+            offset: const Offset(0, 4),
           ),
         ],
       ),
@@ -76,7 +72,9 @@ class ServiceActionsCard extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(18),
+            padding: const EdgeInsets.all(
+              18,
+            ),
             child: GridView.builder(
               shrinkWrap: true,
               physics: const NeverScrollableScrollPhysics(),
@@ -87,7 +85,10 @@ class ServiceActionsCard extends StatelessWidget {
                 crossAxisSpacing: 18,
                 childAspectRatio: .95,
               ),
-              itemBuilder: (context, index) {
+              itemBuilder: (
+                context,
+                index,
+              ) {
                 final item = visibleActions[index];
 
                 return _ActionButton(
@@ -96,9 +97,7 @@ class ServiceActionsCard extends StatelessWidget {
                   enabled: item.enabled,
                   onTap: item.enabled
                       ? () {
-                          onActionTap?.call(
-                            item,
-                          );
+                          onActionTap?.call(item);
                         }
                       : null,
                 );
@@ -113,11 +112,8 @@ class ServiceActionsCard extends StatelessWidget {
 
 class _ActionButton extends StatelessWidget {
   final IconData icon;
-
   final String title;
-
   final bool enabled;
-
   final VoidCallback? onTap;
 
   const _ActionButton({
@@ -129,8 +125,15 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final backgroundColor =
+        enabled ? Colors.grey.shade50 : Colors.grey.shade100;
+
+    final iconColor = enabled ? const Color(0xFF2C522A) : Colors.grey.shade400;
+
+    final textColor = enabled ? Colors.black87 : Colors.grey.shade500;
+
     return Material(
-      color: enabled ? Colors.grey.shade50 : Colors.grey.shade200,
+      color: backgroundColor,
       borderRadius: BorderRadius.circular(
         14,
       ),
@@ -145,7 +148,7 @@ class _ActionButton extends StatelessWidget {
               14,
             ),
             border: Border.all(
-              color: Colors.grey.shade200,
+              color: enabled ? Colors.grey.shade200 : Colors.grey.shade300,
             ),
           ),
           child: Column(
@@ -153,11 +156,7 @@ class _ActionButton extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: enabled
-                    ? const Color(
-                        0xFF2C522A,
-                      )
-                    : Colors.grey,
+                color: iconColor,
                 size: 24,
               ),
               const SizedBox(
@@ -173,21 +172,10 @@ class _ActionButton extends StatelessWidget {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: enabled ? Colors.black87 : Colors.grey,
+                    color: textColor,
                   ),
                 ),
               ),
-              if (!enabled)
-                const Padding(
-                  padding: EdgeInsets.only(
-                    top: 6,
-                  ),
-                  child: Icon(
-                    Icons.lock_outline,
-                    size: 14,
-                    color: Colors.grey,
-                  ),
-                ),
             ],
           ),
         ),
