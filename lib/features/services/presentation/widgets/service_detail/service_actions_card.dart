@@ -1,22 +1,30 @@
 import 'package:flutter/material.dart';
+import 'package:segadi/features/services/domain/entities/support_status_current_entity.dart';
 
 import 'package:segadi/features/services/presentation/models/service_action_item.dart';
+import 'package:segadi/features/services/presentation/widgets/support_status/active_status_support.dart';
 
 class ServiceActionsCard extends StatelessWidget {
   final List<ServiceActionItem> actions;
+  final SupportStatusCurrentEntity? supportStatus;
   final Function(ServiceActionItem action)? onActionTap;
 
   const ServiceActionsCard({
     super.key,
     required this.actions,
+    this.supportStatus,
     this.onActionTap,
   });
 
   @override
   Widget build(BuildContext context) {
-    final visibleActions = actions.where((action) => action.show).toList();
+    final visibleActions = actions
+        .where(
+          (action) => action.show,
+        )
+        .toList();
 
-    if (visibleActions.isEmpty) {
+    if (visibleActions.isEmpty && supportStatus == null) {
       return const SizedBox.shrink();
     }
 
@@ -71,39 +79,47 @@ class ServiceActionsCard extends StatelessWidget {
               ],
             ),
           ),
-          Padding(
-            padding: const EdgeInsets.all(
-              18,
-            ),
-            child: GridView.builder(
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: visibleActions.length,
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 3,
-                mainAxisSpacing: 18,
-                crossAxisSpacing: 18,
-                childAspectRatio: .95,
-              ),
-              itemBuilder: (
-                context,
-                index,
-              ) {
-                final item = visibleActions[index];
 
-                return _ActionButton(
-                  icon: item.icon,
-                  title: item.title,
-                  enabled: item.enabled,
-                  onTap: item.enabled
-                      ? () {
-                          onActionTap?.call(item);
-                        }
-                      : null,
-                );
-              },
+          // Soporte activo
+          if (supportStatus?.active == true)
+            ActiveSupportStatus(
+              supportStatus: supportStatus!,
             ),
-          ),
+
+          if (visibleActions.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.all(
+                18,
+              ),
+              child: GridView.builder(
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
+                itemCount: visibleActions.length,
+                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 18,
+                  crossAxisSpacing: 18,
+                  childAspectRatio: .95,
+                ),
+                itemBuilder: (
+                  context,
+                  index,
+                ) {
+                  final item = visibleActions[index];
+
+                  return _ActionButton(
+                    icon: item.icon,
+                    title: item.title,
+                    enabled: item.enabled,
+                    onTap: item.enabled
+                        ? () {
+                            onActionTap?.call(item);
+                          }
+                        : null,
+                  );
+                },
+              ),
+            ),
         ],
       ),
     );

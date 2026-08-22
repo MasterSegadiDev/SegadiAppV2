@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'package:segadi/features/check_list/presentation/models/checklist_arguments.dart';
 import 'package:segadi/features/check_list/presentation/pages/checklist_page.dart';
+import 'package:segadi/features/georuta/presentation/pages/georoute_page.dart';
 
 import 'package:segadi/features/services/presentation/models/service_detail_arguments.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/recipient_card.dart';
@@ -11,7 +12,8 @@ import 'package:segadi/features/services/presentation/widgets/service_detail/ser
 import 'package:segadi/features/services/presentation/widgets/service_detail/service_header_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/service_status_button.dart';
 
-import 'package:segadi/features/services/presentation/widgets/support_status_modal.dart';
+import 'package:segadi/features/support_status/presentation/widgets/support_status_modal.dart';
+import 'package:segadi/features/support_status/domain/entities/support_status_entity.dart';
 
 import 'package:segadi/features/support_status/presentation/viewmodel/support_status_viewmodel.dart';
 
@@ -93,6 +95,7 @@ class _ServiceDetailView extends StatelessWidget {
             ),
             ServiceActionsCard(
               actions: vm.actionItems,
+              supportStatus: vm.currentSupportStatus,
               onActionTap: (action) async {
                 switch (action.key) {
                   case 'checklist':
@@ -109,9 +112,7 @@ class _ServiceDetailView extends StatelessWidget {
                     );
 
                     if (result == true) {
-                      await vm.refreshServiceState(
-                        vm.arguments.idSolicitud,
-                      );
+                      await vm.refreshServiceState();
                     }
 
                     break;
@@ -130,6 +131,15 @@ class _ServiceDetailView extends StatelessWidget {
                     break;
 
                   case 'route':
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => GeoroutePage(
+                          serviceRequestId: vm.arguments.idSolicitud,
+                        ),
+                      ),
+                    );
+
                     break;
 
                   case 'close_evidence':

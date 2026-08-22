@@ -19,12 +19,6 @@ Future<void> setupServicesDependencies() async {
   /// Repository
   getIt.registerLazySingleton<ServiceRepository>(
     () => ServicesRepositoryImpl(
-      remoteDataSource: getIt(),
-    ),
-  );
-
-  getIt.registerLazySingleton<ServiceRepository>(
-    () => ServicesRepositoryImpl(
       remoteDataSource: getIt<ServicesRemoteDatasource>(),
     ),
   );
@@ -32,44 +26,45 @@ Future<void> setupServicesDependencies() async {
   /// UseCase - Assigned Services
   getIt.registerLazySingleton<GetAssignedServicesUseCase>(
     () => GetAssignedServicesUseCase(
-      getIt(),
+      getIt<ServiceRepository>(),
     ),
   );
 
   /// UseCase - Service General
   getIt.registerLazySingleton<GetServiceGeneralUseCase>(
     () => GetServiceGeneralUseCase(
-      getIt(),
+      getIt<ServiceRepository>(),
     ),
   );
 
   /// UseCase - Service Actions
   getIt.registerLazySingleton<GetServiceActionsUseCase>(
     () => GetServiceActionsUseCase(
-      getIt(),
+      getIt<ServiceRepository>(),
     ),
   );
 
-  // updated mandatory status
-  getIt.registerLazySingleton<UpdateMandatoryStatusUseCase>(
-    () => UpdateMandatoryStatusUseCase(
-      getIt(),
-    ),
-  );
-
+  /// UseCase - Service Status
   getIt.registerLazySingleton<GetServiceStatusUseCase>(
     () => GetServiceStatusUseCase(
       repository: getIt<ServiceRepository>(),
     ),
   );
 
+  /// UseCase - Update Mandatory Status
+  getIt.registerLazySingleton<UpdateMandatoryStatusUseCase>(
+    () => UpdateMandatoryStatusUseCase(
+      getIt<ServiceRepository>(),
+    ),
+  );
+
   /// ViewModel - Service Detail
   getIt.registerFactory<ServiceDetailViewModel>(
     () => ServiceDetailViewModel(
-      getServiceGeneralUseCase: getIt(),
-      getServiceActionsUseCase: getIt(),
-      getServiceStatusUseCase: getIt(),
-      updateMandatoryStatusUseCase: getIt(),
+      getServiceGeneralUseCase: getIt<GetServiceGeneralUseCase>(),
+      getServiceActionsUseCase: getIt<GetServiceActionsUseCase>(),
+      getServiceStatusUseCase: getIt<GetServiceStatusUseCase>(),
+      updateMandatoryStatusUseCase: getIt<UpdateMandatoryStatusUseCase>(),
     ),
   );
 }

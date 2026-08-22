@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/features/support_status/presentation/viewmodel/support_status_viewmodel.dart';
 
-import '../../../support_status/domain/entities/support_status_entity.dart';
+import '../../domain/entities/support_status_entity.dart';
 
 class SupportStatusModal extends StatefulWidget {
   final String idRemision;
