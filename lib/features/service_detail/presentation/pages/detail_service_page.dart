@@ -2,7 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'package:segadi/features/evidence/presentation/pages/widgets/flow_evidence_page.dart';
+import 'package:segadi/features/evidence_old/presentation/pages/widgets/flow_evidence_page.dart';
 import 'package:segadi/features/service_detail/presentation/viewmodel/detail_service_viewmodel.dart';
 import 'package:segadi/features/service_detail/presentation/widgets/detail_content.dart';
 import 'package:segadi/features/service_detail/presentation/widgets/error_message_view.dart';

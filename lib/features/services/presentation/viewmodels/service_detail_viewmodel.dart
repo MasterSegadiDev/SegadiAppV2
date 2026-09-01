@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'package:segadi/features/services/domain/entities/recipient_entity.dart';
 import 'package:segadi/features/services/domain/entities/sender_entity.dart';
 import 'package:segadi/features/services/domain/entities/service_actions_entity.dart';
@@ -6,225 +7,19 @@ import 'package:segadi/features/services/domain/entities/service_general_entity.
 import 'package:segadi/features/services/domain/entities/service_status_entity.dart';
 import 'package:segadi/features/services/domain/entities/support_status_current_entity.dart';
 import 'package:segadi/features/services/domain/entities/update_mandatory_status_entity.dart';
+
 import 'package:segadi/features/services/domain/usecases/get_detail_service_actions_usecase.dart';
 import 'package:segadi/features/services/domain/usecases/get_detail_service_info_general_usecase.dart';
 import 'package:segadi/features/services/domain/usecases/get_service_status_usecase.dart';
 import 'package:segadi/features/services/domain/usecases/update_mandatory_status_usecase.dart';
+
 import 'package:segadi/features/services/presentation/models/service_action_item.dart';
 import 'package:segadi/features/services/presentation/models/service_detail_arguments.dart';
 
-// class ServiceDetailViewModel extends ChangeNotifier {
-//   late ServiceDetailArguments arguments;
-
-//   final GetServiceGeneralUseCase getServiceGeneralUseCase;
-//   final GetServiceActionsUseCase getServiceActionsUseCase;
-//   final GetServiceStatusUseCase getServiceStatusUseCase;
-//   final UpdateMandatoryStatusUseCase updateMandatoryStatusUseCase;
-
-//   ServiceDetailViewModel({
-//     required this.getServiceGeneralUseCase,
-//     required this.getServiceActionsUseCase,
-//     required this.getServiceStatusUseCase,
-//     required this.updateMandatoryStatusUseCase,
-//   });
-
-//   bool isLoading = false;
-//   bool isRefreshing = false;
-//   String? error;
-
-//   ServiceGeneralEntity? service;
-//   ServiceActionsEntity? serviceActions;
-//   ServiceStatusEntity? serviceStatus;
-
-//   Future<void> initialize(
-//     ServiceDetailArguments args,
-//   ) async {
-//     arguments = args;
-
-//     try {
-//       isLoading = true;
-//       error = null;
-//       notifyListeners();
-
-//       await Future.wait([
-//         getServiceGeneral(args.idSolicitud),
-//         getServiceActions(args.idSolicitud),
-//         getServiceStatus(args.idSolicitud),
-//       ]);
-//     } catch (e) {
-//       error = e.toString();
-//     } finally {
-//       isLoading = false;
-//       notifyListeners();
-//     }
-//   }
-
-//   SenderEntity get sender => service!.sender;
-//   RecipientEntity get recipient => service!.recipient;
-//   String get serviceNumber => arguments.serviceNumber;
-
-//   bool get enableStatusButton => serviceStatus?.enableBtn ?? false;
-//   String get nextStatusName => serviceStatus?.nextMandatoryStatus ?? '';
-//   String get nextStatusId => serviceStatus?.nextMandatoryStatusId ?? '';
-
-//   Future<void> refreshServiceState(
-//     String referralId,
-//   ) async {
-//     try {
-//       isRefreshing = true;
-//       error = null;
-//       notifyListeners();
-
-//       await Future.wait([
-//         getServiceActions(referralId),
-//         getServiceStatus(referralId),
-//       ]);
-//     } catch (e) {
-//       error = e.toString();
-//     } finally {
-//       isRefreshing = false;
-//       notifyListeners();
-//     }
-//   }
-
-//   Future<void> getServiceGeneral(
-//     String referralId,
-//   ) async {
-//     service = await getServiceGeneralUseCase(
-//       referralId,
-//     );
-//   }
-
-//   Future<void> getServiceActions(
-//     String referralId,
-//   ) async {
-//     serviceActions = await getServiceActionsUseCase(
-//       referralId,
-//     );
-//   }
-
-//   Future<void> getServiceStatus(
-//     String referralId,
-//   ) async {
-//     serviceStatus = await getServiceStatusUseCase(
-//       referralId,
-//     );
-//   }
-
-//   List<ServiceActionItem> get actionItems {
-//     final actions = serviceActions;
-
-//     if (actions == null) {
-//       return [];
-//     }
-
-//     return [
-//       ServiceActionItem(
-//         title: 'Chequeo Unidad',
-//         icon: Icons.checklist,
-//         enabled: actions.checklist.enabled,
-//         show: actions.checklist.show,
-//         key: 'checklist',
-//       ),
-//       ServiceActionItem(
-//         title: 'Estatus Soporte',
-//         icon: Icons.headset,
-//         enabled: actions.support.enabled,
-//         show: actions.support.show,
-//         key: 'support',
-//       ),
-//       ServiceActionItem(
-//         title: 'Geo Ruta',
-//         icon: Icons.route,
-//         enabled: actions.route.enabled,
-//         show: actions.route.show,
-//         key: 'route',
-//       ),
-//       ServiceActionItem(
-//         title: 'Cerrar Viaje',
-//         icon: Icons.check_circle,
-//         enabled: actions.closeEvidence.enabled,
-//         show: actions.closeEvidence.show,
-//         key: 'close_evidence',
-//       ),
-//       ServiceActionItem(
-//         title: 'Viáticos',
-//         icon: Icons.money,
-//         enabled: actions.travelExpenses.enabled,
-//         show: actions.travelExpenses.show,
-//         key: 'travel_expenses',
-//       ),
-//       ServiceActionItem(
-//         title: 'Descargar CCP',
-//         icon: Icons.picture_as_pdf,
-//         enabled: actions.downloadCcp.enabled,
-//         show: actions.downloadCcp.show,
-//         key: 'download_ccp',
-//       ),
-//     ];
-//   }
-
-//   Future<bool> updateMandatoryStatus() async {
-//     try {
-//       isRefreshing = true;
-//       error = null;
-//       notifyListeners();
-
-//       final result = await updateMandatoryStatusUseCase(
-//         UpdateMandatoryStatusParams(
-//           referralId: arguments.idRemision,
-//           serviceRequestId: arguments.idSolicitud,
-//           statusId: nextStatusId,
-//         ),
-//       );
-
-//       // Actualizamos el estado local
-//       serviceStatus = ServiceStatusEntity(
-//         enableBtn: serviceStatus?.enableBtn ?? false,
-//         nextMandatoryStatus: result.nextMandatoryStatus,
-//         nextMandatoryStatusId: result.nextMandatoryStatusId,
-//         supportStatus: serviceStatus?.supportStatus,
-//       );
-
-//       // Las acciones sí las volvemos a consultar
-//       await getServiceActions(
-//         arguments.idSolicitud,
-//       );
-
-//       return true;
-//     } catch (e) {
-//       error = e.toString();
-//       return false;
-//     } finally {
-//       isRefreshing = false;
-//       notifyListeners();
-//     }
-//   }
-
-//   Future<void> refreshAfterSupport() async {
-//     try {
-//       isRefreshing = true;
-//       error = null;
-//       notifyListeners();
-
-//       await Future.wait([
-//         getServiceActions(
-//           arguments.idSolicitud,
-//         ),
-//         getServiceStatus(
-//           arguments.idSolicitud,
-//         ),
-//       ]);
-//     } catch (e) {
-//       error = e.toString();
-//     } finally {
-//       isRefreshing = false;
-//       notifyListeners();
-//     }
-//   }
-// }
 class ServiceDetailViewModel extends ChangeNotifier {
-  late ServiceDetailArguments arguments;
+  // ---------------------------------------------------------------------------
+  // Dependencies
+  // ---------------------------------------------------------------------------
 
   final GetServiceGeneralUseCase getServiceGeneralUseCase;
   final GetServiceActionsUseCase getServiceActionsUseCase;
@@ -238,48 +33,55 @@ class ServiceDetailViewModel extends ChangeNotifier {
     required this.updateMandatoryStatusUseCase,
   });
 
+  // ---------------------------------------------------------------------------
+  // State
+  // ---------------------------------------------------------------------------
+
+  ServiceDetailArguments? _arguments;
+
+  ServiceDetailArguments? get arguments => _arguments;
+
+  bool isInitialized = false;
   bool isLoading = false;
   bool isRefreshing = false;
+
   String? error;
 
   ServiceGeneralEntity? service;
   ServiceActionsEntity? serviceActions;
   ServiceStatusEntity? serviceStatus;
 
-  Future<void> initialize(
-    ServiceDetailArguments args,
-  ) async {
-    arguments = args;
+  // ---------------------------------------------------------------------------
+  // Computed state
+  // ---------------------------------------------------------------------------
 
-    try {
-      isLoading = true;
-      error = null;
-      notifyListeners();
+  bool get hasError => error != null;
 
-      await Future.wait([
-        getServiceGeneral(
-          args.idSolicitud,
-        ),
-        getServiceActions(
-          args.idSolicitud,
-        ),
-        getServiceStatus(
-          args.idSolicitud,
-        ),
-      ]);
-    } catch (e) {
-      error = e.toString();
-    } finally {
-      isLoading = false;
-      notifyListeners();
-    }
+  bool get hasService => service != null;
+
+  bool get hasActions => serviceActions != null;
+
+  bool get hasStatus => serviceStatus != null;
+
+  String get serviceNumber {
+    return _arguments?.serviceNumber ?? '';
   }
 
-  SenderEntity get sender => service!.sender;
+  String get idRemision {
+    return _arguments?.idRemision ?? '';
+  }
 
-  RecipientEntity get recipient => service!.recipient;
+  String get idSolicitud {
+    return _arguments?.idSolicitud ?? '';
+  }
 
-  String get serviceNumber => arguments.serviceNumber;
+  SenderEntity? get sender {
+    return service?.sender;
+  }
+
+  RecipientEntity? get recipient {
+    return service?.recipient;
+  }
 
   bool get enableStatusButton {
     return serviceStatus?.enableBtn ?? false;
@@ -297,62 +99,134 @@ class ServiceDetailViewModel extends ChangeNotifier {
     return serviceStatus?.supportStatus;
   }
 
-  Future<void> getServiceGeneral(
-    String referralId,
-  ) async {
-    service = await getServiceGeneralUseCase(
-      referralId,
-    );
+  bool get requiresConfirmation {
+    return service?.blnConfirmation == false;
   }
 
-  Future<void> getServiceActions(
-    String referralId,
-  ) async {
-    serviceActions = await getServiceActionsUseCase(
-      referralId,
-    );
+  bool get requiresEvidence {
+    return service?.blnConfirmation == true && service?.blnEvidence == false;
   }
 
-  Future<void> getServiceStatus(
-    String referralId,
-  ) async {
-    serviceStatus = await getServiceStatusUseCase(
-      referralId,
-    );
+  bool get flowCompleted {
+    return service?.blnConfirmation == true && service?.blnEvidence == true;
   }
+
+  // ---------------------------------------------------------------------------
+  // Initialization
+  // ---------------------------------------------------------------------------
+
+  Future<void> initialize(ServiceDetailArguments args) async {
+    // Guardamos los argumentos ANTES de cualquier operación async.
+    _arguments = args;
+
+    isInitialized = false;
+    isLoading = true;
+    error = null;
+
+    notifyListeners();
+
+    try {
+      await Future.wait([
+        getServiceGeneral(args.idSolicitud),
+        getServiceActions(args.idSolicitud),
+        getServiceStatus(args.idSolicitud),
+      ]);
+
+      isInitialized = true;
+    } catch (e) {
+      error = e.toString();
+    } finally {
+      isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // Service General
+  // ---------------------------------------------------------------------------
+
+  Future<void> getServiceGeneral(String referralId) async {
+    service = await getServiceGeneralUseCase(referralId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Service Actions
+  // ---------------------------------------------------------------------------
+
+  Future<void> getServiceActions(String referralId) async {
+    serviceActions = await getServiceActionsUseCase(referralId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Service Status
+  // ---------------------------------------------------------------------------
+
+  Future<void> getServiceStatus(String referralId) async {
+    serviceStatus = await getServiceStatusUseCase(referralId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Refresh
+  // ---------------------------------------------------------------------------
 
   Future<void> refreshServiceState() async {
+    final args = _arguments;
+
+    // Si por alguna razón todavía no existen argumentos,
+    // simplemente no hacemos nada.
+    if (args == null) {
+      return;
+    }
+
     try {
       isRefreshing = true;
       error = null;
+
       notifyListeners();
 
       await Future.wait([
-        getServiceActions(
-          arguments.idSolicitud,
-        ),
-        getServiceStatus(
-          arguments.idSolicitud,
-        ),
+        getServiceGeneral(args.idSolicitud),
+        getServiceActions(args.idSolicitud),
+        getServiceStatus(args.idSolicitud),
       ]);
     } catch (e) {
       error = e.toString();
     } finally {
       isRefreshing = false;
+
       notifyListeners();
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Update Mandatory Status
+  // ---------------------------------------------------------------------------
+
   Future<bool> updateMandatoryStatus() async {
+    final args = _arguments;
+
+    if (args == null) {
+      error = 'No se han inicializado los argumentos del servicio.';
+      notifyListeners();
+      return false;
+    }
+
+    if (nextStatusId.isEmpty) {
+      error = 'No existe un siguiente estatus disponible.';
+      notifyListeners();
+      return false;
+    }
+
     try {
       isRefreshing = true;
       error = null;
+
       notifyListeners();
 
       final result = await updateMandatoryStatusUseCase(
         UpdateMandatoryStatusParams(
-          referralId: arguments.idRemision,
-          serviceRequestId: arguments.idSolicitud,
+          referralId: args.idRemision,
+          serviceRequestId: args.idSolicitud,
           statusId: nextStatusId,
         ),
       );
@@ -364,9 +238,7 @@ class ServiceDetailViewModel extends ChangeNotifier {
         supportStatus: serviceStatus?.supportStatus,
       );
 
-      await getServiceActions(
-        arguments.idSolicitud,
-      );
+      await getServiceActions(args.idSolicitud);
 
       return true;
     } catch (e) {
@@ -374,37 +246,50 @@ class ServiceDetailViewModel extends ChangeNotifier {
       return false;
     } finally {
       isRefreshing = false;
+
       notifyListeners();
     }
   }
 
+  // ---------------------------------------------------------------------------
+  // Refresh after support
+  // ---------------------------------------------------------------------------
+
   Future<void> refreshAfterSupport() async {
+    final args = _arguments;
+
+    if (args == null) {
+      return;
+    }
+
     try {
       isRefreshing = true;
       error = null;
+
       notifyListeners();
 
       await Future.wait([
-        getServiceActions(
-          arguments.idSolicitud,
-        ),
-        getServiceStatus(
-          arguments.idSolicitud,
-        ),
+        getServiceActions(args.idSolicitud),
+        getServiceStatus(args.idSolicitud),
       ]);
     } catch (e) {
       error = e.toString();
     } finally {
       isRefreshing = false;
+
       notifyListeners();
     }
   }
+
+  // ---------------------------------------------------------------------------
+  // Action items
+  // ---------------------------------------------------------------------------
 
   List<ServiceActionItem> get actionItems {
     final actions = serviceActions;
 
     if (actions == null) {
-      return [];
+      return const [];
     }
 
     return [
@@ -451,5 +336,19 @@ class ServiceDetailViewModel extends ChangeNotifier {
         key: 'download_ccp',
       ),
     ];
+  }
+
+  // ---------------------------------------------------------------------------
+  // Clear state
+  // ---------------------------------------------------------------------------
+
+  void clearError() {
+    error = null;
+    notifyListeners();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

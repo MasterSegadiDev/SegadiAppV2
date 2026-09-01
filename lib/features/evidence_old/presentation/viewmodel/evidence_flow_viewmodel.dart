@@ -5,8 +5,8 @@ import 'package:flutter/foundation.dart';
 import 'package:cunning_document_scanner/cunning_document_scanner.dart';
 import 'package:flutter_image_compress/flutter_image_compress.dart';
 
-import 'package:segadi/features/evidence/domain/repositories/evidence_repository.dart';
-import 'package:segadi/features/evidence/presentation/pages/widgets/evidence_pdf_generator.dart';
+import 'package:segadi/features/evidence_old/domain/repositories/evidence_repository.dart';
+import 'package:segadi/features/evidence_old/presentation/pages/widgets/evidence_pdf_generator.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
 import '../../domain/evidence_entity.dart';
 
@@ -277,98 +277,6 @@ class EvidenceFlowViewModel extends ChangeNotifier {
       _setStatus(EvidenceFlowStatus.error);
     }
   }
-
-  /// Envío final de evidencias
-  // Future<bool> sendEvidences() async {
-  //   if (_pdfBytes == null || _pdfBytes!.isEmpty) {
-  //     _errorMessage =
-  //         "Hay un problema con el PDF generado. Por favor, intenta generar el PDF de nuevo.";
-  //     _setStatus(EvidenceFlowStatus.error);
-  //     return false;
-  //   }
-
-  //   if (_signatureBytes == null || _signatureBytes!.isEmpty) {
-  //     _errorMessage =
-  //         "Hay un problema con la firma capturada. Por favor, intenta capturar la firma de nuevo.";
-  //     _setStatus(EvidenceFlowStatus.error);
-  //     return false;
-  //   }
-
-  //   debugPrint("BODY DE FIRMA: ${_signatureBytes!.length / 1024} KB");
-
-  //   _setStatus(EvidenceFlowStatus.sending);
-
-  //   try {
-  //     // 1. PDF
-  //     final pdfResult = await repository.sendPdf(
-  //       serviceId: id,
-  //       pdfBytes: _pdfBytes!,
-  //       receiverName: receiverName,
-  //       receiverDate: confirmationDate,
-  //     );
-
-  //     if (pdfResult.isLeft()) {
-  //       return pdfResult.fold((failure) {
-  //         _errorMessage = "Error PDF: ${failure.message}";
-  //         _setStatus(EvidenceFlowStatus.error);
-  //         return false;
-  //       }, (_) => false);
-  //     }
-
-  //     debugPrint("✅ PDF subido correctamente");
-
-  //     // 2. FIRMA
-  //     final signResult = await repository.sendSignature(
-  //       serviceId: id,
-  //       signatureBytes: _signatureBytes!,
-  //       receiverName: receiverName,
-  //       receiverDate: confirmationDate,
-  //     );
-
-  //     if (signResult.isLeft()) {
-  //       return signResult.fold((failure) {
-  //         _errorMessage = "Error en FIRMA: ${failure.message}";
-  //         _setStatus(EvidenceFlowStatus.error);
-  //         debugPrint("❌ Firma falló: ${failure.message}");
-  //         return false;
-  //       }, (_) => false);
-  //     }
-
-  //     debugPrint("✅ Firma subida correctamente");
-
-  //     // 3. STATUS
-  //     final statusResult = await detailServiceApi.changeStatus(
-  //       serviceId: id,
-  //       statusId: 10,
-  //     );
-
-  //     return statusResult.fold(
-  //       (failure) {
-  //         _errorMessage = "Error STATUS: ${failure.message}";
-  //         _setStatus(EvidenceFlowStatus.error);
-  //         return false;
-  //       },
-  //       (response) async {
-  //         if (response.success) {
-  //           debugPrint("✅ Status actualizado correctamente");
-  //           await reset();
-  //           _setStatus(EvidenceFlowStatus.success);
-  //           return true;
-  //         }
-
-  //         _errorMessage =
-  //             "Ha ocurrido un error al actualizar la remisión despues de subir las evidencias. Por favor, contacta al equipo de soporte.";
-  //         _setStatus(EvidenceFlowStatus.error);
-  //         return false;
-  //       },
-  //     );
-  //   } catch (e) {
-  //     _errorMessage = "Ha ocurrido un error inesperado: $e";
-  //     _setStatus(EvidenceFlowStatus.error);
-  //     debugPrint("❌ EXCEPCIÓN: $e");
-  //     return false;
-  //   }
-  // }
 
   Future<bool> sendEvidences() async {
     print("DEBUG: Iniciando envío de evidencias");

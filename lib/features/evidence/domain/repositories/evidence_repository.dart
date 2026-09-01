@@ -1,17 +1,12 @@
-import 'dart:typed_data';
+import 'package:segadi/features/evidence/domain/entities/delivery_confirmation.dart';
+import 'package:segadi/features/evidence/domain/entities/delivery_evidence.dart';
 
 abstract class EvidenceRepository {
-  Future<void> sendPdf({
-    required int serviceId,
-    required Uint8List pdfBytes,
-    required String receiverName,
-    required DateTime receiverDate,
-  });
+  Future<bool> sendDeliveryConfirmation(
+    DeliveryConfirmation confirmation,
+  );
 
-  Future<void> sendSignature({
-    required int serviceId,
-    required Uint8List signatureBytes,
-    required String receiverName,
-    required DateTime receiverDate,
-  });
+  Future<bool> sendDeliveryEvidences(
+    DeliveryEvidence evidence,
+  );
 }

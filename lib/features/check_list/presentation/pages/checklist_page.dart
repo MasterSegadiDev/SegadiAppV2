@@ -50,21 +50,6 @@ class _ChecklistView extends StatelessWidget {
       );
     }
 
-    // if (vm.error != null) {
-    //   return Scaffold(
-    //     appBar: AppBar(
-    //       title: const Text(
-    //         'Chequeo Unidad ',
-    //       ),
-    //     ),
-    //     body: Center(
-    //       child: Text(
-    //         vm.error!,
-    //       ),
-    //     ),
-    //   );
-    // }
-
     return Scaffold(
       appBar: AppBar(
         elevation: 0,

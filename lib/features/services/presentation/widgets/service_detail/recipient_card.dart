@@ -25,10 +25,10 @@ class RecipientCard extends StatelessWidget {
     return PersonCard(
       title: 'DESTINATARIO',
       icon: FontAwesomeIcons.locationDot,
-      name: vm.recipient.name,
-      phone: vm.recipient.phone,
-      directContact: vm.recipient.directContact,
-      address: vm.recipient.address,
+      name: vm.recipient?.name ?? 'Sin nombre',
+      phone: vm.recipient?.phone ?? 'Sin teléfono',
+      directContact: vm.recipient?.directContact ?? 'Sin contacto',
+      address: vm.recipient?.address ?? 'Sin dirección',
       headerColor: const Color(0xFF2C522A),
     );
   }

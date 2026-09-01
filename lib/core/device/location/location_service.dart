@@ -1,5 +1,9 @@
-import 'location_data.dart';
+import 'package:geolocator/geolocator.dart';
 
 abstract class LocationService {
-  Future<LocationData?> getCurrentLocation();
+  Future<Position> getCurrentPosition();
+
+  Stream<Position> getPositionStream();
+
+  Future<bool> isLocationAvailable();
 }

@@ -2,8 +2,8 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/features/evidence/presentation/pages/capture_evidence_page.dart';
-import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
+import 'package:segadi/features/evidence_old/presentation/pages/capture_evidence_page.dart';
+import 'package:segadi/features/evidence_old/presentation/viewmodel/evidence_flow_viewmodel.dart';
 import 'package:signature/signature.dart';
 
 class ConfirmEvidencePage extends StatefulWidget {

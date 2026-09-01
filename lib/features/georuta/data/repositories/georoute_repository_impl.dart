@@ -1,6 +1,6 @@
-import '../../domain/entities/geofence_entity.dart';
 import '../../domain/repositories/georoute_repository.dart';
 import '../datasources/georoute_remote_datasource.dart';
+import '../models/georoute_model.dart';
 
 class GeorouteRepositoryImpl implements GeorouteRepository {
   final GeorouteRemoteDatasource remoteDataSource;
@@ -10,13 +10,11 @@ class GeorouteRepositoryImpl implements GeorouteRepository {
   });
 
   @override
-  Future<GeofenceEntity> getGeofences(
+  Future<GeorouteModel> getGeoroute(
     String serviceRequestId,
-  ) async {
-    final model = await remoteDataSource.getGeofences(
+  ) {
+    return remoteDataSource.getGeoroute(
       serviceRequestId,
     );
-
-    return model;
   }
 }

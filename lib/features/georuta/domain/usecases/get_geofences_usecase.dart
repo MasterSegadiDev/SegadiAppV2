@@ -1,17 +1,17 @@
-import '../entities/geofence_entity.dart';
+import '../../data/models/georoute_model.dart';
 import '../repositories/georoute_repository.dart';
 
-class GetGeofencesUseCase {
+class GetGeorouteUseCase {
   final GeorouteRepository repository;
 
-  GetGeofencesUseCase(
+  GetGeorouteUseCase(
     this.repository,
   );
 
-  Future<GeofenceEntity> call(
+  Future<GeorouteModel> call(
     String serviceRequestId,
   ) {
-    return repository.getGeofences(
+    return repository.getGeoroute(
       serviceRequestId,
     );
   }

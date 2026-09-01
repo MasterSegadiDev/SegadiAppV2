@@ -1,7 +1,7 @@
-import '../entities/geofence_entity.dart';
+import '../../data/models/georoute_model.dart';
 
 abstract class GeorouteRepository {
-  Future<GeofenceEntity> getGeofences(
+  Future<GeorouteModel> getGeoroute(
     String serviceRequestId,
   );
 }

@@ -1,24 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
-
+import 'package:segadi/app/di/injection_container.dart';
 import 'package:segadi/features/check_list/presentation/models/checklist_arguments.dart';
 import 'package:segadi/features/check_list/presentation/pages/checklist_page.dart';
 import 'package:segadi/features/georuta/presentation/pages/georoute_page.dart';
-
 import 'package:segadi/features/services/presentation/models/service_detail_arguments.dart';
+import 'package:segadi/features/services/presentation/viewmodels/service_detail_viewmodel.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/recipient_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/sender_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/service_actions_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/service_header_card.dart';
 import 'package:segadi/features/services/presentation/widgets/service_detail/service_status_button.dart';
-
-import 'package:segadi/features/support_status/presentation/widgets/support_status_modal.dart';
-import 'package:segadi/features/support_status/domain/entities/support_status_entity.dart';
-
 import 'package:segadi/features/support_status/presentation/viewmodel/support_status_viewmodel.dart';
-
-import '../../../../app/di/injection_container.dart';
-import '../viewmodels/service_detail_viewmodel.dart';
+import 'package:segadi/features/support_status/presentation/widgets/support_status_modal.dart';
 
 class ServiceDetailPage extends StatelessWidget {
   final ServiceDetailArguments arguments;
@@ -30,15 +25,138 @@ class ServiceDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return ChangeNotifierProvider(
-      create: (_) => getIt<ServiceDetailViewModel>()..initialize(arguments),
-      child: const _ServiceDetailView(),
+    return ChangeNotifierProvider<ServiceDetailViewModel>(
+      create: (_) => getIt<ServiceDetailViewModel>(),
+      child: _ServiceDetailView(arguments: arguments),
     );
   }
 }
 
-class _ServiceDetailView extends StatelessWidget {
-  const _ServiceDetailView();
+class _ServiceDetailView extends StatefulWidget {
+  final ServiceDetailArguments arguments;
+
+  const _ServiceDetailView({
+    required this.arguments,
+  });
+
+  @override
+  State<_ServiceDetailView> createState() => _ServiceDetailViewState();
+}
+
+class _ServiceDetailViewState extends State<_ServiceDetailView> {
+  late final ServiceDetailViewModel _vm;
+
+  bool _initialized = false;
+  bool _navigatingToEvidence = false;
+
+  @override
+  void initState() {
+    super.initState();
+
+    _vm = context.read<ServiceDetailViewModel>();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _initialize();
+    });
+  }
+
+  Future<void> _initialize() async {
+    if (!mounted || _initialized) {
+      return;
+    }
+
+    _initialized = true;
+
+    await _vm.initialize(
+      widget.arguments,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    await _checkEvidenceFlow();
+  }
+
+  Future<void> _checkEvidenceFlow() async {
+    if (!mounted || _navigatingToEvidence) {
+      return;
+    }
+
+    final service = _vm.service;
+
+    if (service == null) {
+      return;
+    }
+
+    if (!service.blnConfirmation) {
+      await _openConfirmation();
+      return;
+    }
+
+    if (!service.blnEvidence) {
+      await _openCapture();
+      return;
+    }
+  }
+
+  Future<void> _openConfirmation() async {
+    if (!mounted || _navigatingToEvidence) {
+      return;
+    }
+
+    _navigatingToEvidence = true;
+
+    final result = await context.push<bool>(
+      '/evidence/confirmation',
+      extra: widget.arguments,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    _navigatingToEvidence = false;
+
+    if (result == true) {
+      await _vm.refreshServiceState();
+
+      if (!mounted) {
+        return;
+      }
+
+      await _checkEvidenceFlow();
+    }
+  }
+
+  Future<void> _openCapture() async {
+    if (!mounted || _navigatingToEvidence) {
+      return;
+    }
+
+    _navigatingToEvidence = true;
+
+    final result = await context.push<bool>(
+      '/evidence/capture',
+      extra: widget.arguments,
+    );
+
+    if (!mounted) {
+      return;
+    }
+
+    _navigatingToEvidence = false;
+
+    if (result == true) {
+      await _vm.refreshServiceState();
+
+      if (!mounted) {
+        return;
+      }
+
+      await _checkEvidenceFlow();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -55,14 +173,10 @@ class _ServiceDetailView extends StatelessWidget {
     if (vm.error != null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text(
-            'Detalle',
-          ),
+          title: const Text('Detalle'),
         ),
         body: Center(
-          child: Text(
-            vm.error!,
-          ),
+          child: Text(vm.error!),
         ),
       );
     }
@@ -78,7 +192,7 @@ class _ServiceDetailView extends StatelessWidget {
         child: Column(
           children: [
             ServiceHeaderCard(
-              serviceNumber: vm.arguments.serviceNumber,
+              serviceNumber: vm.arguments?.serviceNumber ?? '',
             ),
             const SizedBox(height: 16),
             SenderCard(
@@ -104,8 +218,8 @@ class _ServiceDetailView extends StatelessWidget {
                       MaterialPageRoute(
                         builder: (_) => ChecklistPage(
                           arguments: ChecklistArguments(
-                            referralId: vm.arguments.idRemision,
-                            serviceNumber: vm.arguments.serviceNumber,
+                            referralId: vm.arguments?.idRemision ?? '',
+                            serviceNumber: vm.arguments?.serviceNumber ?? '',
                           ),
                         ),
                       ),
@@ -120,8 +234,8 @@ class _ServiceDetailView extends StatelessWidget {
                   case 'support':
                     final success = await openSupportStatusModal(
                       context,
-                      idRemision: vm.arguments.idRemision,
-                      idSolicitud: vm.arguments.idSolicitud,
+                      idRemision: vm.arguments?.idRemision ?? '',
+                      idSolicitud: vm.arguments?.idSolicitud ?? '',
                     );
 
                     if (success == true) {
@@ -135,7 +249,7 @@ class _ServiceDetailView extends StatelessWidget {
                       context,
                       MaterialPageRoute(
                         builder: (_) => GeoroutePage(
-                          serviceRequestId: vm.arguments.idSolicitud,
+                          serviceRequestId: vm.arguments?.idSolicitud ?? '',
                         ),
                       ),
                     );
@@ -143,6 +257,7 @@ class _ServiceDetailView extends StatelessWidget {
                     break;
 
                   case 'close_evidence':
+                    await _checkEvidenceFlow();
                     break;
 
                   case 'travel_expenses':
@@ -164,7 +279,9 @@ class _ServiceDetailView extends StatelessWidget {
                 }
 
                 if (success) {
-                  ScaffoldMessenger.of(context).showSnackBar(
+                  ScaffoldMessenger.of(
+                    context,
+                  ).showSnackBar(
                     const SnackBar(
                       content: Text(
                         'Estatus actualizado correctamente.',

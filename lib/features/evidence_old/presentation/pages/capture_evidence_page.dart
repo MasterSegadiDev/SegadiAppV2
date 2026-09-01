@@ -2,9 +2,9 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/features/evidence/domain/evidence_entity.dart';
-import 'package:segadi/features/evidence/presentation/pages/pdf_preview_page.dart';
-import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
+import 'package:segadi/features/evidence_old/domain/evidence_entity.dart';
+import 'package:segadi/features/evidence_old/presentation/pages/pdf_preview_page.dart';
+import 'package:segadi/features/evidence_old/presentation/viewmodel/evidence_flow_viewmodel.dart';
 
 class CaptureEvidencePage extends StatefulWidget {
   const CaptureEvidencePage({super.key});

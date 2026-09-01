@@ -2,7 +2,7 @@ import 'dart:io';
 import 'dart:typed_data';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
-import 'package:segadi/features/evidence/domain/evidence_entity.dart';
+import 'package:segadi/features/evidence_old/domain/evidence_entity.dart';
 
 class EvidencePdfGenerator {
   static Future<Uint8List> generate({

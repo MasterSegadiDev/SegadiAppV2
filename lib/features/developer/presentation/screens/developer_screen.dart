@@ -239,7 +239,7 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
     print("entrando a get location");
     final location = getIt<LocationService>();
 
-    final data = await location.getCurrentLocation();
+    final data = await location.getCurrentPosition();
 
     if (data == null) {
       debugPrint(

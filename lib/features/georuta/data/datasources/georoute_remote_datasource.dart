@@ -1,7 +1,7 @@
-import '../models/geofence_model.dart';
+import '../models/georoute_model.dart';
 
 abstract class GeorouteRemoteDatasource {
-  Future<GeofenceModel> getGeofences(
+  Future<GeorouteModel> getGeoroute(
     String serviceRequestId,
   );
 }

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:printing/printing.dart';
 import 'package:provider/provider.dart';
-import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
+import 'package:segadi/features/evidence_old/presentation/viewmodel/evidence_flow_viewmodel.dart';
 
 class PdfPreviewPage extends StatefulWidget {
   const PdfPreviewPage({super.key});

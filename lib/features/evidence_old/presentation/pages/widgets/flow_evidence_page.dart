@@ -1,12 +1,11 @@
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:segadi/core/network/dio_client.dart';
-import 'package:segadi/features/evidence/data/datasources/evidence_remote_datasource.dart';
-import 'package:segadi/features/evidence/data/repositories/evidence_repository_impl.dart';
-import 'package:segadi/features/evidence/presentation/pages/confirm_evidence_page.dart';
-import 'package:segadi/features/evidence/presentation/viewmodel/evidence_flow_viewmodel.dart';
+import 'package:segadi/features/evidence_old/data/datasources/evidence_remote_datasource.dart';
+import 'package:segadi/features/evidence_old/data/repositories/evidence_repository_impl.dart';
+import 'package:segadi/features/evidence_old/presentation/pages/confirm_evidence_page.dart';
+import 'package:segadi/features/evidence_old/presentation/viewmodel/evidence_flow_viewmodel.dart';
 import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
 
 class EvidenceFlowPage extends StatelessWidget {

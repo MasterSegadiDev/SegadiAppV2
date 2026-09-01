@@ -8,6 +8,8 @@ class ServiceGeneralDto extends ServiceGeneralEntity {
     required super.sender,
     required super.recipient,
     required super.serviceType,
+    required super.blnConfirmation,
+    required super.blnEvidence,
   });
 
   factory ServiceGeneralDto.fromJson(
@@ -22,6 +24,8 @@ class ServiceGeneralDto extends ServiceGeneralEntity {
         json['destinatario'] ?? {},
       ),
       serviceType: json['serviceType']?.toString() ?? '',
+      blnConfirmation: json['blnConfirmation'] ?? false,
+      blnEvidence: json['blnEvidence'] ?? false,
     );
   }
 }

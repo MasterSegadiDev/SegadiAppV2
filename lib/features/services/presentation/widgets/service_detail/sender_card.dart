@@ -23,10 +23,10 @@ class SenderCard extends StatelessWidget {
     return PersonCard(
       title: 'REMITENTE',
       icon: FontAwesomeIcons.locationDot,
-      name: vm.sender.name,
-      phone: vm.sender.phone,
-      directContact: vm.sender.directContact,
-      address: vm.sender.address,
+      name: vm.sender?.name ?? 'Sin nombre',
+      phone: vm.sender?.phone ?? 'Sin teléfono',
+      directContact: vm.sender?.directContact ?? 'Sin contacto',
+      address: vm.sender?.address ?? 'Sin dirección',
       headerColor: const Color(0xFF2C522A),
     );
   }

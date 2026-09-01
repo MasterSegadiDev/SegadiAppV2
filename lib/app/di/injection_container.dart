@@ -1,6 +1,4 @@
 import 'package:get_it/get_it.dart';
-import 'package:segadi/app/di/georoute_injection.dart';
-import 'package:segadi/app/di/support_status_injection.dart';
 
 import 'auth_injection.dart';
 import 'user_profile_injection.dart';
@@ -12,6 +10,9 @@ import 'firebase_injection.dart';
 import 'notification_injection.dart';
 import 'services_injection.dart';
 import 'checklist_injection.dart';
+import 'evidence_injection.dart';
+import 'georoute_injection.dart';
+import 'support_status_injection.dart';
 
 final getIt = GetIt.instance;
 
@@ -28,4 +29,5 @@ Future<void> setupDependencies() async {
   await setupChecklistDependencies();
   registerSupportStatusDependencies(getIt);
   await setupGeorouteDependencies(getIt);
+  await setupEvidenceDependencies(getIt);
 }
