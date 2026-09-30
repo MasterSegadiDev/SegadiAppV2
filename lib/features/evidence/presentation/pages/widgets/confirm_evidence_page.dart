@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:segadi/features/evidence/presentation/providers/confirmation_provider.dart';
 import 'package:segadi/features/evidence/presentation/viewmodels/delivery_confirmation_view_model.dart';
-import 'package:segadi/features/services/presentation/models/service_detail_arguments.dart';
+import 'package:segadi/features/services/presentation/detail/arguments/service_detail_arguments.dart';
 import 'package:signature/signature.dart';
 
 class ConfirmEvidencePage extends ConsumerStatefulWidget {

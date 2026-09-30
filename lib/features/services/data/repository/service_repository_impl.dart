@@ -8,7 +8,7 @@ import 'package:segadi/features/services/domain/entities/service_actions_entity.
 import 'package:segadi/features/services/domain/entities/service_general_entity.dart';
 import 'package:segadi/features/services/domain/entities/service_status_entity.dart';
 import 'package:segadi/features/services/domain/entities/update_mandatory_status_entity.dart';
-import 'package:segadi/features/services/domain/repository/services_repository.dart';
+import 'package:segadi/features/services/domain/repositories/services_repository.dart';
 
 import '../../domain/entities/assigned_service.dart';
 

@@ -22,32 +22,32 @@ class DrawerGroup extends StatelessWidget {
       ),
       child: ExpansionTile(
         tilePadding: const EdgeInsets.symmetric(
-          horizontal: 20,
+          horizontal: 12,
         ),
         childrenPadding: const EdgeInsets.only(
-          left: 15,
-          bottom: 5,
+          left: 8,
+          bottom: 4,
         ),
         leading: Icon(
           icon,
-          color: const Color(0xFF2C522A),
-          size: 20,
+          color: const Color(0xFF1E7A3C),
+          size: 19,
         ),
         title: Text(
           title,
           style: const TextStyle(
-            fontSize: 15,
+            fontSize: 14,
             fontWeight: FontWeight.w500,
-            color: Color(0xFF333333),
+            color: Color(0xFF101812),
           ),
         ),
-        iconColor: const Color(0xFF2C522A),
-        collapsedIconColor: const Color(0xFF2C522A),
+        iconColor: const Color(0xFF1E7A3C),
+        collapsedIconColor: const Color(0xFF1E7A3C),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
         ),
         collapsedShape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(10),
         ),
         children: children,
       ),

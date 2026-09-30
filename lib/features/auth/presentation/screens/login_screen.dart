@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:segadi/core/widgets/app_snackbar.dart';
+import 'package:segadi/shared/widgets/app_snackbar.dart';
 import 'package:segadi/features/auth/presentation/providers/auth_provider.dart';
 import 'package:segadi/features/auth/presentation/state/auth_state.dart';
 
@@ -24,6 +24,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   bool _isPasswordVisible = false;
 
   late final ProviderSubscription<AuthState> _authListener;
+
+  // Paleta de la pantalla. Si ya tienes AppColors centralizado, elimina
+  // esto y referencia tus tokens en su lugar.
+  static const _background = Color(0xFF0B0F0D);
+  static const _surfaceDark = Color(0xFF101812);
+  static const _primaryGreen = Color(0xFF1E7A3C);
+  static const _textPrimary = Color(0xFF0F1512);
+  static const _textSecondary = Color(0xFF6B6B66);
+  static const _border = Color(0xFFE0E0DA);
 
   @override
   void dispose() {
@@ -78,89 +87,104 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     BuildContext context,
   ) {
     final authState = ref.watch(authProvider);
-    final size = MediaQuery.sizeOf(context).width;
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            colors: [
-              Color(0xFF2C522A),
-              Color(0xFF1B321A),
-            ],
+      backgroundColor: _background,
+      body: SafeArea(
+        child: LayoutBuilder(
+          builder: (context, constraints) {
+            return SingleChildScrollView(
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: IntrinsicHeight(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        _buildBranding(),
+                        const SizedBox(height: 28),
+                        _buildCard(authState),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBranding() {
+    return Column(
+      children: [
+        Container(
+          width: 108,
+          height: 108,
+          decoration: BoxDecoration(
+            color: _primaryGreen,
+            borderRadius: BorderRadius.circular(26),
+          ),
+          child: Image.asset(
+            "assets/images/logo1.png",
+            width: 58,
+            color: Colors.white,
           ),
         ),
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 24,
-            ),
-            child: Container(
-              constraints: const BoxConstraints(
-                maxWidth: 400,
-              ),
-              padding: const EdgeInsets.all(30),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(
-                  24,
-                ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black26,
-                    blurRadius: 15,
-                  ),
-                ],
-              ),
-              child: Form(
-                key: _formKey,
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Image.asset(
-                      "assets/images/logo1.png",
-                      width: size * 0.4,
-                    ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    const Text(
-                      'Bienvenido',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: Color(
-                          0xFF2C522A,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    _buildField(
-                      controller: _usernameController,
-                      label: 'Usuario',
-                      icon: Icons.person_outline,
-                    ),
-                    const SizedBox(
-                      height: 16,
-                    ),
-                    _buildField(
-                      controller: _passwordController,
-                      label: 'Contraseña',
-                      icon: Icons.lock_outline,
-                      isPassword: true,
-                    ),
-                    const SizedBox(
-                      height: 30,
-                    ),
-                    _buildLoginButton(authState),
-                  ],
-                ),
-              ),
-            ),
+        const SizedBox(height: 22),
+        const Text(
+          'SEGADI',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w500,
+            color: Colors.white,
           ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Gestión de rutas y servicios',
+          style: TextStyle(fontSize: 14, color: Color(0xFF8A938C)),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildCard(AuthState authState) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
+      margin: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildField(
+              controller: _usernameController,
+              label: 'Usuario',
+              icon: Icons.person_outline,
+            ),
+            const SizedBox(height: 16),
+            _buildField(
+              controller: _passwordController,
+              label: 'Contraseña',
+              icon: Icons.lock_outline,
+              isPassword: true,
+            ),
+            const SizedBox(height: 24),
+            _buildLoginButton(authState),
+            const SizedBox(height: 18),
+            const Center(
+              child: Text('v2.0.0',
+                  style: TextStyle(fontSize: 11, color: _textSecondary)),
+            ),
+          ],
         ),
       ),
     );
@@ -175,16 +199,21 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     return TextFormField(
       controller: controller,
       obscureText: isPassword && !_isPasswordVisible,
+      style: const TextStyle(fontSize: 14, color: _textPrimary),
       decoration: InputDecoration(
         labelText: label,
+        labelStyle: const TextStyle(fontSize: 13, color: _textSecondary),
         prefixIcon: Icon(
           icon,
-          color: const Color(0xFF2C522A),
+          size: 18,
+          color: _textSecondary,
         ),
         suffixIcon: isPassword
             ? IconButton(
                 icon: Icon(
                   _isPasswordVisible ? Icons.visibility : Icons.visibility_off,
+                  size: 18,
+                  color: _textSecondary,
                 ),
                 onPressed: () {
                   setState(() {
@@ -193,10 +222,19 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 },
               )
             : null,
+        isDense: true,
+        contentPadding:
+            const EdgeInsets.symmetric(vertical: 12, horizontal: 12),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: _border),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(10),
+          borderSide: const BorderSide(color: _primaryGreen),
+        ),
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(
-            12,
-          ),
+          borderRadius: BorderRadius.circular(10),
         ),
       ),
       validator: (value) {
@@ -212,28 +250,29 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   Widget _buildLoginButton(AuthState authState) {
     return SizedBox(
       width: double.infinity,
-      height: 55,
+      height: 50,
       child: ElevatedButton(
         style: ElevatedButton.styleFrom(
-          backgroundColor: const Color(0xFF2C522A),
+          backgroundColor: _surfaceDark,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(10),
           ),
         ),
         onPressed: authState.status == AuthStatus.loading ? null : _login,
         child: authState.status == AuthStatus.loading
             ? const SizedBox(
-                width: 22,
-                height: 22,
+                width: 20,
+                height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: Colors.white,
                 ),
               )
             : const Text(
-                'Iniciar Sesión',
+                'Iniciar sesión',
                 style: TextStyle(
-                  fontSize: 18,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                   color: Colors.white,
                 ),
               ),

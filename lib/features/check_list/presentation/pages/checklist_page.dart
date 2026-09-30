@@ -67,7 +67,7 @@ class _ChecklistView extends StatelessWidget {
             ),
             const SizedBox(height: 2),
             Text(
-              'Servicio # ${arguments.serviceNumber}',
+              'Servicio : ${arguments.serviceNumber}',
               style: TextStyle(
                 fontSize: 13,
                 color: Colors.white.withOpacity(.85),

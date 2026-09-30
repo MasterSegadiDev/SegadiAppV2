@@ -7,6 +7,7 @@ class ServiceStatusDto extends ServiceStatusEntity {
     required super.nextMandatoryStatus,
     required super.nextMandatoryStatusId,
     super.supportStatus,
+    required super.blnOutgoingFromRecipient,
   });
 
   factory ServiceStatusDto.fromJson(
@@ -15,6 +16,7 @@ class ServiceStatusDto extends ServiceStatusEntity {
     final supportStatusJson = json['supportStatus'] as Map<String, dynamic>?;
 
     return ServiceStatusDto(
+      blnOutgoingFromRecipient: json['blnOutgoingFromRecipient'],
       enableBtn: json['enableBtn'] == true,
       nextMandatoryStatus: json['nextMandatoryStatus']?.toString() ?? '',
       nextMandatoryStatusId: json['nextMandatoryStatusId']?.toString() ?? '',

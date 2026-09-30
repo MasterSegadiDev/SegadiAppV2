@@ -22,12 +22,12 @@ class DrawerHeaderWidget extends ConsumerWidget {
         20,
         50,
         20,
-        30,
+        26,
       ),
       decoration: const BoxDecoration(
-        color: Color(0xFF2C522A),
+        color: Color(0xFF101812),
         borderRadius: BorderRadius.only(
-          bottomRight: Radius.circular(45),
+          bottomRight: Radius.circular(24),
         ),
       ),
       child: Column(
@@ -36,7 +36,7 @@ class DrawerHeaderWidget extends ConsumerWidget {
           Container(
             padding: const EdgeInsets.all(2),
             decoration: const BoxDecoration(
-              color: Colors.white24,
+              color: Color(0xFF1E7A3C),
               shape: BoxShape.circle,
             ),
             child: CircleAvatar(
@@ -47,7 +47,7 @@ class DrawerHeaderWidget extends ConsumerWidget {
                   ? const Icon(
                       Icons.person,
                       size: 42,
-                      color: Color(0xFF2C522A),
+                      color: Color(0xFF1E7A3C),
                     )
                   : null,
             ),
@@ -57,27 +57,27 @@ class DrawerHeaderWidget extends ConsumerWidget {
             authUser?.name ?? '',
             style: const TextStyle(
               color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             authUser?.email ?? '',
-            style: TextStyle(
-              color: Colors.white.withOpacity(.80),
+            style: const TextStyle(
+              color: Color(0xFF8A938C),
               fontSize: 13,
             ),
           ),
           const SizedBox(height: 10),
-          if (photo.isNotEmpty)
+          if (profile.profile?.tipoRol != null)
             Container(
               padding: const EdgeInsets.symmetric(
                 horizontal: 10,
                 vertical: 5,
               ),
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: const Color(0xFF1E7A3C).withOpacity(.25),
                 borderRadius: BorderRadius.circular(30),
               ),
               child: Text(
@@ -85,6 +85,7 @@ class DrawerHeaderWidget extends ConsumerWidget {
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 12,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),

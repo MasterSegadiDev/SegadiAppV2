@@ -1,4 +1,5 @@
 import 'package:get_it/get_it.dart';
+import 'package:segadi/app/di/tramo_injection.dart';
 
 import 'auth_injection.dart';
 import 'user_profile_injection.dart';
@@ -20,6 +21,7 @@ Future<void> setupDependencies() async {
   await setupCoreDependencies();
   await setupAuthDependencies();
   await setupUserProfileDependencies();
+  await setupTramoDependencies();
   await setupScannerDependencies();
   await setupImageDependencies();
   await setupLocationDependencies();

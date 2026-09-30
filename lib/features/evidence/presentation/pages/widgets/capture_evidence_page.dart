@@ -5,7 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:segadi/features/evidence/presentation/providers/evidence_provider.dart';
 import 'package:segadi/features/evidence/presentation/viewmodels/delivery_evidence_view_model.dart';
-import 'package:segadi/features/services/presentation/models/service_detail_arguments.dart';
+import 'package:segadi/features/services/presentation/detail/arguments/service_detail_arguments.dart';
 
 class CaptureEvidencePage extends ConsumerStatefulWidget {
   final ServiceDetailArguments arguments;

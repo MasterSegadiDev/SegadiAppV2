@@ -1,4 +1,4 @@
-import 'package:segadi/features/services/domain/repository/services_repository.dart';
+import 'package:segadi/features/services/domain/repositories/services_repository.dart';
 
 import '../entities/service_status_entity.dart';
 

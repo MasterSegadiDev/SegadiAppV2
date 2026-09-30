@@ -37,14 +37,15 @@ class AppDrawer extends ConsumerWidget {
               physics: const BouncingScrollPhysics(),
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
+                  horizontal: 10,
+                  vertical: 12,
                 ),
                 child: Column(
                   children: [
                     DrawerMenuItem(
                       title: 'Inicio',
                       icon: Icons.home_rounded,
+                      route: '/home',
                       onTap: () {
                         context.pop();
                         context.go('/home');
@@ -53,6 +54,7 @@ class AppDrawer extends ConsumerWidget {
                     DrawerMenuItem(
                       title: 'Perfil',
                       icon: Icons.person_outline,
+                      route: '/profile',
                       onTap: () {
                         context.pop();
                         context.go('/profile');
@@ -60,7 +62,8 @@ class AppDrawer extends ConsumerWidget {
                     ),
                     DrawerMenuItem(
                       title: 'Pruebas servicios',
-                      icon: Icons.home_rounded,
+                      icon: Icons.science_outlined,
+                      route: '/screenDevelop',
                       onTap: () {
                         context.pop();
                         context.go('/screenDevelop');
@@ -68,10 +71,10 @@ class AppDrawer extends ConsumerWidget {
                     ),
                     const Padding(
                       padding: EdgeInsets.symmetric(
-                        horizontal: 12,
+                        horizontal: 4,
                         vertical: 12,
                       ),
-                      child: Divider(),
+                      child: Divider(color: Color(0xFFECECE6), height: 1),
                     ),
                     if (permissionService.hasPermission(
                       PermissionCodes.viewServices,
@@ -83,6 +86,7 @@ class AppDrawer extends ConsumerWidget {
                           DrawerMenuItem(
                             title: 'Servicios Asignados',
                             icon: Icons.assignment_outlined,
+                            route: '/services',
                             onTap: () {
                               context.pop();
                               context.go('/services');
@@ -91,6 +95,7 @@ class AppDrawer extends ConsumerWidget {
                           DrawerMenuItem(
                             title: 'Servicios Finalizados',
                             icon: Icons.task_alt,
+                            route: '/services/history',
                             onTap: () {
                               context.pop();
                               context.go('/services/history');
@@ -108,6 +113,7 @@ class AppDrawer extends ConsumerWidget {
                           DrawerMenuItem(
                             title: 'Listado',
                             icon: Icons.list_alt,
+                            route: '/containers',
                             onTap: () {
                               context.pop();
                               context.go('/containers');
@@ -121,6 +127,7 @@ class AppDrawer extends ConsumerWidget {
                       DrawerMenuItem(
                         title: 'Viajes',
                         icon: Icons.local_shipping_outlined,
+                        route: '/trips',
                         onTap: () {
                           context.pop();
                           context.go('/trips');
@@ -132,6 +139,7 @@ class AppDrawer extends ConsumerWidget {
                       DrawerMenuItem(
                         title: 'Gastos',
                         icon: Icons.payments_outlined,
+                        route: '/expenses',
                         onTap: () {
                           context.pop();
                           context.go('/expenses');
@@ -143,6 +151,7 @@ class AppDrawer extends ConsumerWidget {
                       DrawerMenuItem(
                         title: 'Mantenimiento',
                         icon: Icons.build_outlined,
+                        route: '/maintenance',
                         onTap: () {
                           context.pop();
                           context.go('/maintenance');

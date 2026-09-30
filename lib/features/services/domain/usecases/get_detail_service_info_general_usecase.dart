@@ -1,5 +1,5 @@
 import 'package:segadi/features/services/domain/entities/service_general_entity.dart';
-import 'package:segadi/features/services/domain/repository/services_repository.dart';
+import 'package:segadi/features/services/domain/repositories/services_repository.dart';
 
 class GetServiceGeneralUseCase {
   final ServiceRepository repository;
