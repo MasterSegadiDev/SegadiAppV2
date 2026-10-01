@@ -8,11 +8,7 @@ class GetActiveTramoUseCase {
     this.repository,
   );
 
-  Future<Tramo?> call(
-    String operadorId,
-  ) {
-    return repository.getActiveTramo(
-      operadorId,
-    );
+  Future<Tramo?> call() {
+    return repository.getActiveTramo();
   }
 }

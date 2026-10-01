@@ -32,4 +32,8 @@ class CurrentUserNotifier extends StateNotifier<UserEntity?> {
   bool hasRole(String role) {
     return state?.roles.contains(role) ?? false;
   }
+
+  bool get isTruckOperator {
+    return hasRole('operador_camion');
+  }
 }

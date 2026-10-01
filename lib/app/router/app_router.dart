@@ -32,22 +32,18 @@ final routerProvider = Provider<GoRouter>(
           builder: (context, state) => const LoginScreen(),
         ),
         GoRoute(
-          path: AppRoutes.truck,
+          path: '/local-service',
           builder: (
             context,
             state,
           ) {
-            final operadorId = state.extra as String;
-
             return MainLayout(
-              child: TruckHomePage(
-                operadorId: operadorId,
-              ),
+              child: TruckHomePage(),
             );
           },
         ),
         GoRoute(
-          path: AppRoutes.tramoDetail,
+          path: '/local-service/stretch',
           builder: (
             context,
             state,

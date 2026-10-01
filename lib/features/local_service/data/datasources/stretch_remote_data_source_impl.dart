@@ -14,15 +14,9 @@ class TramoRemoteDataSourceImpl implements TramoRemoteDataSource {
 
   final Dio _dio;
   @override
-  Future<Tramo?> getActiveTramo(
-    String operadorId,
-  ) async {
-    debugPrint(
-      'GET TRAMO operadorId=$operadorId',
-    );
-
+  Future<Tramo?> getActiveTramo() async {
     final response = await _dio.get(
-      '/tramo/$operadorId',
+      '/tramo/active',
     );
 
     debugPrint(

@@ -1,7 +1,11 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
+import 'package:segadi/features/local_service/presentation/providers/provider.dart';
 
+import '../../../../core/security/permission_codes.dart';
 import '../../../../core/security/session_manager.dart';
+import '../../../../core/security/providers/permission_service_provider.dart';
+
 import '../../data/models/user_model.dart';
 import '../../domain/use_cases/login_usecase.dart';
 import '../providers/current_user_provider.dart';
@@ -32,6 +36,10 @@ class AuthNotifier extends StateNotifier<AuthState> {
         password: password,
       );
 
+      // ==============================================
+      // GUARDAR SESIÓN
+      // ==============================================
+
       await SessionManager.saveSession(
         accessToken: session.accessToken,
         refreshToken: session.refreshToken,
@@ -47,9 +55,38 @@ class AuthNotifier extends StateNotifier<AuthState> {
         ).toJson(),
       );
 
-      ref.read(currentUserProvider.notifier).setUser(
-            session.user,
-          );
+      // ==============================================
+      // ACTUALIZAR USUARIO ACTUAL
+      // ==============================================
+
+      ref.read(currentUserProvider.notifier).setUser(session.user);
+
+      // ==============================================
+      // CARGAR SERVICIOS LOCALES / TRAMO
+      // ==============================================
+      //
+      // No validamos roles.
+      //
+      // Si el usuario tiene permiso 001
+      // puede trabajar con Servicios.
+      //
+      // Consultamos si además tiene un
+      // tramo activo asignado.
+      // ==============================================
+
+      final hasServicesPermission = session.user.permissions.contains(
+        PermissionCodes.viewServices,
+      );
+
+      if (hasServicesPermission) {
+        await ref.read(tramoProvider.notifier).load();
+      } else {
+        ref.read(tramoProvider.notifier).clear();
+      }
+
+      // ==============================================
+      // LOGIN COMPLETO
+      // ==============================================
 
       state = AuthState.authenticated();
     } catch (e) {
@@ -60,6 +97,9 @@ class AuthNotifier extends StateNotifier<AuthState> {
   }
 
   Future<void> logout() async {
+    // Limpiar tramo antes de eliminar sesión.
+    ref.read(tramoProvider.notifier).clear();
+
     await SessionManager.clearSession();
 
     ref.read(currentUserProvider.notifier).clear();

@@ -12,12 +12,8 @@ class TramoRepositoryImpl implements TramoRepository {
   });
 
   @override
-  Future<Tramo?> getActiveTramo(
-    String operadorId,
-  ) {
-    return remoteDataSource.getActiveTramo(
-      operadorId,
-    );
+  Future<Tramo?> getActiveTramo() {
+    return remoteDataSource.getActiveTramo();
   }
 
   @override

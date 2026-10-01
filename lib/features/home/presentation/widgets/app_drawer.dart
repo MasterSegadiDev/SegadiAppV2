@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:segadi/core/security/providers/permission_service_provider.dart';
+import 'package:segadi/features/local_service/presentation/providers/provider.dart';
+import 'package:segadi/features/local_service/presentation/states/stretch_state.dart';
 
 import '../../../../core/security/permission_codes.dart';
 
@@ -17,8 +19,19 @@ class AppDrawer extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(
+    BuildContext context,
+    WidgetRef ref,
+  ) {
     final permissionService = ref.watch(permissionServiceProvider);
+
+    final tramoState = ref.watch(tramoProvider);
+
+    final canViewServices = permissionService.hasPermission(
+      PermissionCodes.viewServices,
+    );
+
+    final hasLocalServices = tramoState is TramoLoaded;
 
     return Drawer(
       backgroundColor: Colors.white,
@@ -32,6 +45,7 @@ class AppDrawer extends ConsumerWidget {
       child: Column(
         children: [
           const DrawerHeaderWidget(),
+
           Expanded(
             child: SingleChildScrollView(
               physics: const BouncingScrollPhysics(),
@@ -42,6 +56,10 @@ class AppDrawer extends ConsumerWidget {
                 ),
                 child: Column(
                   children: [
+                    // =================================
+                    // INICIO
+                    // =================================
+
                     DrawerMenuItem(
                       title: 'Inicio',
                       icon: Icons.home_rounded,
@@ -51,6 +69,11 @@ class AppDrawer extends ConsumerWidget {
                         context.go('/home');
                       },
                     ),
+
+                    // =================================
+                    // PERFIL
+                    // =================================
+
                     DrawerMenuItem(
                       title: 'Perfil',
                       icon: Icons.person_outline,
@@ -60,49 +83,94 @@ class AppDrawer extends ConsumerWidget {
                         context.go('/profile');
                       },
                     ),
+
+                    // =================================
+                    // PRUEBAS
+                    // =================================
+
                     DrawerMenuItem(
                       title: 'Pruebas servicios',
                       icon: Icons.science_outlined,
                       route: '/screenDevelop',
                       onTap: () {
                         context.pop();
-                        context.go('/screenDevelop');
+                        context.go(
+                          '/screenDevelop',
+                        );
                       },
                     ),
+
                     const Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 4,
                         vertical: 12,
                       ),
-                      child: Divider(color: Color(0xFFECECE6), height: 1),
+                      child: Divider(
+                        color: Color(0xFFECECE6),
+                        height: 1,
+                      ),
                     ),
-                    if (permissionService.hasPermission(
-                      PermissionCodes.viewServices,
-                    ))
+
+                    // =================================
+                    // SERVICIOS
+                    // =================================
+
+                    if (canViewServices)
                       DrawerGroup(
                         title: 'Servicios',
                         icon: Icons.miscellaneous_services,
                         children: [
+                          if (hasLocalServices)
+                            DrawerMenuItem(
+                              title: 'Servicios locales por tramo',
+                              icon: Icons.route_outlined,
+                              route: '/local-service',
+                              onTap: () {
+                                context.pop();
+                                context.go('/local-service');
+                              },
+                            ),
+
+                          // ===========================
+                          // SERVICIOS ASIGNADOS
+                          // ===========================
+
                           DrawerMenuItem(
                             title: 'Servicios Asignados',
                             icon: Icons.assignment_outlined,
                             route: '/services',
                             onTap: () {
                               context.pop();
-                              context.go('/services');
+
+                              context.go(
+                                '/services',
+                              );
                             },
                           ),
+
+                          // ===========================
+                          // SERVICIOS FINALIZADOS
+                          // ===========================
+
                           DrawerMenuItem(
                             title: 'Servicios Finalizados',
                             icon: Icons.task_alt,
                             route: '/services/history',
                             onTap: () {
                               context.pop();
-                              context.go('/services/history');
+
+                              context.go(
+                                '/services/history',
+                              );
                             },
                           ),
                         ],
                       ),
+
+                    // =================================
+                    // CONTENEDORES
+                    // =================================
+
                     if (permissionService.hasPermission(
                       PermissionCodes.viewContainers,
                     ))
@@ -116,11 +184,19 @@ class AppDrawer extends ConsumerWidget {
                             route: '/containers',
                             onTap: () {
                               context.pop();
-                              context.go('/containers');
+
+                              context.go(
+                                '/containers',
+                              );
                             },
                           ),
                         ],
                       ),
+
+                    // =================================
+                    // VIAJES
+                    // =================================
+
                     if (permissionService.hasPermission(
                       PermissionCodes.viewTrips,
                     ))
@@ -130,9 +206,17 @@ class AppDrawer extends ConsumerWidget {
                         route: '/trips',
                         onTap: () {
                           context.pop();
-                          context.go('/trips');
+
+                          context.go(
+                            '/trips',
+                          );
                         },
                       ),
+
+                    // =================================
+                    // GASTOS
+                    // =================================
+
                     if (permissionService.hasPermission(
                       PermissionCodes.viewExpenses,
                     ))
@@ -142,9 +226,17 @@ class AppDrawer extends ConsumerWidget {
                         route: '/expenses',
                         onTap: () {
                           context.pop();
-                          context.go('/expenses');
+
+                          context.go(
+                            '/expenses',
+                          );
                         },
                       ),
+
+                    // =================================
+                    // MANTENIMIENTO
+                    // =================================
+
                     if (permissionService.hasPermission(
                       PermissionCodes.viewMaintenance,
                     ))
@@ -154,7 +246,10 @@ class AppDrawer extends ConsumerWidget {
                         route: '/maintenance',
                         onTap: () {
                           context.pop();
-                          context.go('/maintenance');
+
+                          context.go(
+                            '/maintenance',
+                          );
                         },
                       ),
                   ],
@@ -162,6 +257,11 @@ class AppDrawer extends ConsumerWidget {
               ),
             ),
           ),
+
+          // ===========================================
+          // CERRAR SESIÓN
+          // ===========================================
+
           Container(
             padding: const EdgeInsets.fromLTRB(
               20,
@@ -172,7 +272,20 @@ class AppDrawer extends ConsumerWidget {
             child: InkWell(
               borderRadius: BorderRadius.circular(50),
               onTap: () async {
-                await ref.read(authProvider.notifier).logout();
+                /// Limpiamos el tramo para que
+                /// no quede información del
+                /// usuario anterior.
+                ref
+                    .read(
+                      tramoProvider.notifier,
+                    )
+                    .clear();
+
+                await ref
+                    .read(
+                      authProvider.notifier,
+                    )
+                    .logout();
 
                 if (context.mounted) {
                   context.go('/login');

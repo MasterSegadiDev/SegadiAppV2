@@ -23,19 +23,12 @@ class TramoNotifier extends Notifier<TramoState> {
     return const TramoInitial();
   }
 
-  Future<void> load(
-    String operadorId,
-  ) async {
-    debugPrint(
-      '🟡 TRAMO PROVIDER load: $operadorId',
-    );
-    _operadorId = operadorId;
+  Future<void> load() async {
+    debugPrint('🟡 TRAMO PROVIDER load');
 
     state = const TramoLoading();
 
-    state = await _viewModel.getActiveTramo(
-      operadorId,
-    );
+    state = await _viewModel.getActiveTramo();
     debugPrint(
       '🟢 TRAMO STATE: ${state.runtimeType}',
     );
@@ -48,9 +41,7 @@ class TramoNotifier extends Notifier<TramoState> {
       return;
     }
 
-    state = await _viewModel.getActiveTramo(
-      operadorId,
-    );
+    state = await _viewModel.getActiveTramo();
   }
 
   Future<bool> changeStatus(

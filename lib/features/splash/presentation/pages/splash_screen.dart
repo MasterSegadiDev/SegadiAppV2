@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:segadi/features/local_service/presentation/providers/provider.dart';
 
+import '../../../../core/security/permission_codes.dart';
 import '../../../../core/security/session_manager.dart';
+
 import '../../../auth/presentation/providers/current_user_provider.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
@@ -24,7 +27,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   Future<void> _initialize() async {
     try {
-      /// ¿Existe sesión?
+      // ==============================================
+      // VALIDAR SESIÓN
+      // ==============================================
+
       final hasSession = await SessionManager.hasSession();
 
       if (!hasSession) {
@@ -34,10 +40,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         return;
       }
 
-      /// Restaurar usuario
+      // ==============================================
+      // RESTAURAR USUARIO
+      // ==============================================
+
       await ref.read(currentUserProvider.notifier).loadUser();
 
-      /// Validar que realmente exista el usuario
       final user = ref.read(currentUserProvider);
 
       if (user == null) {
@@ -49,17 +57,48 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         return;
       }
 
-      /// Aquí después agregaremos:
-      ///
-      /// if(await SessionManager.shouldRefreshToken()){
-      ///      refreshToken();
-      /// }
+      // ==============================================
+      // FUTURO:
+      // REFRESH TOKEN
+      // ==============================================
+
+      // if (await SessionManager.shouldRefreshToken()) {
+      //   await refreshToken();
+      // }
+
+      // ==============================================
+      // CONSULTAR SERVICIOS LOCALES
+      // ==============================================
+      //
+      // El usuario ya fue restaurado.
+      //
+      // Si tiene permiso de Servicios,
+      // consultamos si tiene un tramo activo.
+      // ==============================================
+
+      final hasServicesPermission = user.permissions.contains(
+        PermissionCodes.viewServices,
+      );
+
+      if (hasServicesPermission) {
+        await ref.read(tramoProvider.notifier).load();
+      } else {
+        ref.read(tramoProvider.notifier).clear();
+      }
+
+      // ==============================================
+      // IR AL HOME
+      // ==============================================
 
       if (!mounted) return;
 
       context.go('/home');
     } catch (e) {
-      debugPrint(e.toString());
+      debugPrint(
+        'Error inicializando aplicación: $e',
+      );
+
+      ref.read(tramoProvider.notifier).clear();
 
       await SessionManager.clearSession();
 

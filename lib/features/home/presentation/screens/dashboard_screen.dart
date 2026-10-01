@@ -1,13 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:segadi/features/local_service/presentation/providers/provider.dart';
+import 'package:segadi/features/local_service/presentation/states/stretch_state.dart';
 
 import '../../../../core/security/permission_codes.dart';
 import '../../../../core/security/providers/permission_service_provider.dart';
+
 import '../../../auth/presentation/providers/current_user_provider.dart';
 
-/// Contenido de la pantalla Home. Se monta directo dentro de MainLayout
-/// (que ya pone su propio Scaffold/AppBar/Drawer) — no debe traer los suyos.
 class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({
     super.key,
@@ -21,15 +22,23 @@ class DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final user = ref.watch(currentUserProvider);
+
     final permissionService = ref.watch(permissionServiceProvider);
+
+    final tramoState = ref.watch(tramoProvider);
 
     if (user == null) {
       return const Center(
-        child: Text('Usuario no encontrado'),
+        child: Text(
+          'Usuario no encontrado',
+        ),
       );
     }
 
-    final items = _buildDashboardItems(permissionService);
+    final items = _buildDashboardItems(
+      permissionService,
+      tramoState: tramoState,
+    );
 
     return Container(
       color: const Color(0xFFF7F8F6),
@@ -38,14 +47,21 @@ class DashboardScreenState extends ConsumerState<DashboardScreen> {
           Column(
             children: [
               Padding(
-                padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  18,
+                  16,
+                  10,
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Hola, ${user.name}',
                       style: const TextStyle(
-                          fontSize: 13, color: Color(0xFF6B6B66)),
+                        fontSize: 13,
+                        color: Color(0xFF6B6B66),
+                      ),
                     ),
                     const SizedBox(height: 2),
                     const Text(
@@ -64,11 +80,18 @@ class DashboardScreenState extends ConsumerState<DashboardScreen> {
                     ? const Center(
                         child: Text(
                           'No tienes módulos asignados',
-                          style: TextStyle(color: Color(0xFF9A9A94)),
+                          style: TextStyle(
+                            color: Color(0xFF9A9A94),
+                          ),
                         ),
                       )
                     : GridView.builder(
-                        padding: const EdgeInsets.fromLTRB(16, 6, 16, 90),
+                        padding: const EdgeInsets.fromLTRB(
+                          16,
+                          6,
+                          16,
+                          90,
+                        ),
                         gridDelegate:
                             const SliverGridDelegateWithFixedCrossAxisCount(
                           crossAxisCount: 2,
@@ -78,23 +101,30 @@ class DashboardScreenState extends ConsumerState<DashboardScreen> {
                         ),
                         itemCount: items.length,
                         itemBuilder: (context, index) {
-                          return _DashboardCard(item: items[index]);
+                          return _DashboardCard(
+                            item: items[index],
+                          );
                         },
                       ),
               ),
             ],
           ),
-          // FAB manual: al no tener Scaffold propio, no hay slot
-          // floatingActionButton, así que se posiciona con Stack.
+
+          /// FAB manual porque el Scaffold
+          /// está en MainLayout.
           Positioned(
             right: 18,
             bottom: 22,
             child: FloatingActionButton(
               backgroundColor: const Color(0xFF101812),
               onPressed: () {
-                // TODO: acción de llamada a soporte/emergencia
+                // TODO:
+                // acción de llamada a soporte/emergencia
               },
-              child: const Icon(Icons.call, color: Colors.white),
+              child: const Icon(
+                Icons.call,
+                color: Colors.white,
+              ),
             ),
           ),
         ],
@@ -102,14 +132,23 @@ class DashboardScreenState extends ConsumerState<DashboardScreen> {
     );
   }
 
-  /// Un módulo por cada card visible. Se agrega solo si el usuario
-  /// tiene el permiso correspondiente — así el mapeo real de
-  /// rol → permisos vive en el backend / permissionService, no aquí.
-  List<_DashboardItem> _buildDashboardItems(dynamic permissionService) {
+  /// Construye los módulos visibles.
+  ///
+  /// Los permisos siguen siendo la fuente para
+  /// determinar qué módulos puede usar el usuario.
+  List<_DashboardItem> _buildDashboardItems(
+    dynamic permissionService, {
+    required TramoState tramoState,
+  }) {
     final items = <_DashboardItem>[];
 
-    // rol: operador
-    if (permissionService.hasPermission(PermissionCodes.viewServices)) {
+    // =================================================
+    // SERVICIOS ASIGNADOS
+    // =================================================
+
+    if (permissionService.hasPermission(
+      PermissionCodes.viewServices,
+    )) {
       items.add(
         const _DashboardItem(
           title: 'Servicio',
@@ -120,8 +159,50 @@ class DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     }
 
-    // rol: operador
-    if (permissionService.hasPermission(PermissionCodes.viewContainers)) {
+    // =================================================
+    // SERVICIOS LOCALES POR TRAMO
+    // =================================================
+    //
+    // Solo aparece cuando:
+    //
+    // 1. Tiene permiso viewServices.
+    // 2. El GET del tramo encontró un tramo activo.
+    //
+    // TramoEmpty:
+    // no se muestra.
+    //
+    // TramoLoaded:
+    // sí se muestra.
+    // =================================================
+
+    if (permissionService.hasPermission(
+          PermissionCodes.viewServices,
+        ) &&
+        tramoState is TramoLoaded) {
+      items.add(
+        const _DashboardItem(
+          title: 'Servicios locales\npor tramo',
+          subtitle: 'Tramo activo',
+          icon: Icons.route_outlined,
+          route: '/local-service',
+
+          /// Por ahora 1 significa:
+          /// existe un tramo activo.
+          ///
+          /// No representa todavía un contador
+          /// real de múltiples servicios.
+          badgeCount: 1,
+        ),
+      );
+    }
+
+    // =================================================
+    // EXPEDIENTE
+    // =================================================
+
+    if (permissionService.hasPermission(
+      PermissionCodes.viewContainers,
+    )) {
       items.add(
         const _DashboardItem(
           title: 'Expediente',
@@ -132,8 +213,14 @@ class DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     }
 
-    // rol: operador_grua
-    // TODO: agrega este código en tu PermissionCodes si aún no existe.
+    // =================================================
+    // MOVIMIENTO DE CONTENEDORES
+    // =================================================
+    //
+    // Conservamos tu comportamiento actual.
+    // Actualmente utiliza viewContainers.
+    // =================================================
+
     if (permissionService.hasPermission(
       PermissionCodes.viewContainers,
     )) {
@@ -147,8 +234,13 @@ class DashboardScreenState extends ConsumerState<DashboardScreen> {
       );
     }
 
-    // rol: guardia_seguridad, mecanico
-    if (permissionService.hasPermission(PermissionCodes.viewMaintenance)) {
+    // =================================================
+    // MANTENIMIENTO
+    // =================================================
+
+    if (permissionService.hasPermission(
+      PermissionCodes.viewMaintenance,
+    )) {
       items.add(
         const _DashboardItem(
           title: 'Mantenimiento',
@@ -182,7 +274,9 @@ class _DashboardItem {
 class _DashboardCard extends StatelessWidget {
   final _DashboardItem item;
 
-  const _DashboardCard({required this.item});
+  const _DashboardCard({
+    required this.item,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -233,8 +327,10 @@ class _DashboardCard extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   item.subtitle,
-                  style:
-                      const TextStyle(fontSize: 11, color: Color(0xFF9A9A94)),
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: Color(0xFF9A9A94),
+                  ),
                 ),
               ],
             ),
@@ -243,8 +339,10 @@ class _DashboardCard extends StatelessWidget {
                 top: 0,
                 right: 0,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 6,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: const Color(0xFF1E7A3C),
                     borderRadius: BorderRadius.circular(20),

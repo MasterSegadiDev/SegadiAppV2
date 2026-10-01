@@ -14,13 +14,9 @@ class TramoViewModel {
     required this.updateTramoStatusUseCase,
   });
 
-  Future<TramoState> getActiveTramo(
-    String operadorId,
-  ) async {
+  Future<TramoState> getActiveTramo() async {
     try {
-      final tramo = await getActiveTramoUseCase(
-        operadorId,
-      );
+      final tramo = await getActiveTramoUseCase();
 
       if (tramo == null) {
         return const TramoEmpty();

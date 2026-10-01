@@ -6,12 +6,25 @@ import 'package:segadi/app/router/app_routes.dart';
 import 'package:segadi/features/local_service/presentation/providers/provider.dart';
 import 'package:segadi/features/local_service/presentation/states/stretch_state.dart';
 
-class TruckHomePage extends ConsumerStatefulWidget {
-  final String operadorId;
+// Paleta central usada en toda la app.
+// TODO: si ya creaste app_colors.dart, borra esto e importa de ahí.
+class _C {
+  static const background = Color(0xFFF7F8F6);
+  static const surfaceDark = Color(0xFF101812);
+  static const primaryGreen = Color(0xFF1E7A3C);
+  static const primaryGreenSoft = Color(0xFFE1F0E3);
+  static const textPrimary = Color(0xFF101812);
+  static const textSecondary = Color(0xFF6B6B66);
+  static const textMuted = Color(0xFF9A9A94);
+  static const border = Color(0xFFE0E0DA);
+  static const errorRed = Color(0xFFB23A3A);
+}
 
+/// Contenido de "Mi viaje". Se monta dentro de MainLayout
+/// (Scaffold/AppBar/Drawer ya los pone el layout) — no debe traer los suyos.
+class TruckHomePage extends ConsumerStatefulWidget {
   const TruckHomePage({
     super.key,
-    required this.operadorId,
   });
 
   @override
@@ -23,12 +36,10 @@ class _TruckHomePageState extends ConsumerState<TruckHomePage> {
   void initState() {
     super.initState();
 
-    // Esperamos a que termine el primer frame
-    // antes de modificar el provider.
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
 
-      ref.read(tramoProvider.notifier).load(widget.operadorId);
+      ref.read(tramoProvider.notifier).load();
     });
   }
 
@@ -36,14 +47,13 @@ class _TruckHomePageState extends ConsumerState<TruckHomePage> {
   Widget build(BuildContext context) {
     final state = ref.watch(tramoProvider);
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Mi viaje'),
-      ),
-      body: switch (state) {
+    return Container(
+      color: _C.background,
+      child: switch (state) {
         TramoInitial() || TramoLoading() => const _LoadingView(),
         TramoEmpty() => const _EmptyView(),
         TramoLoaded(:final tramo) => RefreshIndicator(
+            color: _C.primaryGreen,
             onRefresh: () {
               return ref.read(tramoProvider.notifier).refresh();
             },
@@ -51,69 +61,180 @@ class _TruckHomePageState extends ConsumerState<TruckHomePage> {
               physics: const AlwaysScrollableScrollPhysics(),
               padding: const EdgeInsets.all(16),
               children: [
-                Text(
+                const Text(
                   'Viaje activo',
-                  style: Theme.of(context).textTheme.headlineSmall,
-                ),
-                const SizedBox(height: 16),
-                Card(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Estado',
-                          style: Theme.of(context).textTheme.labelLarge,
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          tramo.status.apiValue,
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 20),
-                        _InfoRow(
-                          label: 'Operador',
-                          value: tramo.operadorName,
-                        ),
-                        const SizedBox(height: 8),
-                        _InfoRow(
-                          label: 'Unidad',
-                          value: tramo.unidadId,
-                        ),
-                        if (tramo.contenedores.isNotEmpty) ...[
-                          const SizedBox(height: 8),
-                          _InfoRow(
-                            label: 'Contenedor',
-                            value: tramo.contenedores.first.numero,
-                          ),
-                        ],
-                        const SizedBox(height: 24),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FilledButton.icon(
-                            onPressed: () {
-                              context.push(
-                                AppRoutes.tramoDetail,
-                              );
-                            },
-                            icon: const Icon(
-                              Icons.visibility_outlined,
-                            ),
-                            label: const Text(
-                              'Ver detalle',
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: _C.textSecondary,
                   ),
+                ),
+                const SizedBox(height: 12),
+                _TripCard(
+                  status: tramo.status.apiValue,
+                  operador: tramo.operadorName,
+                  unidad: tramo.unidadId,
+                  contenedor: tramo.contenedores.isNotEmpty
+                      ? tramo.contenedores.first.numero
+                      : null,
+                  onVerDetalle: () {
+                    context.push(AppRoutes.tramoDetail);
+                  },
                 ),
               ],
             ),
           ),
         TramoError(:final message) => _ErrorView(message: message),
       },
+    );
+  }
+}
+
+// ============================================================
+// TARJETA DE VIAJE
+// ============================================================
+
+class _TripCard extends StatelessWidget {
+  final String status;
+  final String operador;
+  final String unidad;
+  final String? contenedor;
+  final VoidCallback onVerDetalle;
+
+  const _TripCard({
+    required this.status,
+    required this.operador,
+    required this.unidad,
+    required this.contenedor,
+    required this.onVerDetalle,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: _C.surfaceDark.withOpacity(0.05),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                'Estado',
+                style: TextStyle(fontSize: 12, color: _C.textSecondary),
+              ),
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(
+                  color: _C.primaryGreenSoft,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  status,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: _C.primaryGreen,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          _InfoRow(
+            icon: Icons.person_outline,
+            label: 'Operador',
+            value: operador,
+          ),
+          const SizedBox(height: 12),
+          _InfoRow(
+            icon: Icons.local_shipping_outlined,
+            label: 'Unidad',
+            value: unidad,
+          ),
+          if (contenedor != null) ...[
+            const SizedBox(height: 12),
+            _InfoRow(
+              icon: Icons.inventory_2_outlined,
+              label: 'Contenedor',
+              value: contenedor!,
+            ),
+          ],
+          const SizedBox(height: 22),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: onVerDetalle,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: _C.surfaceDark,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 13),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                elevation: 0,
+              ),
+              icon: const Icon(Icons.visibility_outlined, size: 18),
+              label: const Text(
+                'Ver detalle',
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _InfoRow extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Icon(icon, size: 17, color: _C.textSecondary),
+        const SizedBox(width: 10),
+        SizedBox(
+          width: 82,
+          child: Text(
+            label,
+            style: const TextStyle(fontSize: 13, color: _C.textSecondary),
+          ),
+        ),
+        Expanded(
+          child: Text(
+            value,
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+              color: _C.textPrimary,
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -128,7 +249,10 @@ class _LoadingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: CircularProgressIndicator(),
+      child: CircularProgressIndicator(
+        color: _C.primaryGreen,
+        strokeWidth: 2.4,
+      ),
     );
   }
 }
@@ -146,6 +270,7 @@ class _EmptyView extends ConsumerWidget {
     WidgetRef ref,
   ) {
     return RefreshIndicator(
+      color: _C.primaryGreen,
       onRefresh: () {
         return ref.read(tramoProvider.notifier).refresh();
       },
@@ -153,37 +278,68 @@ class _EmptyView extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(24),
         children: [
-          const SizedBox(height: 100),
-          const Icon(
-            Icons.local_shipping_outlined,
-            size: 80,
+          const SizedBox(height: 90),
+          Center(
+            child: Container(
+              width: 84,
+              height: 84,
+              decoration: const BoxDecoration(
+                color: _C.primaryGreenSoft,
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.local_shipping_outlined,
+                size: 38,
+                color: _C.primaryGreen,
+              ),
+            ),
           ),
           const SizedBox(height: 24),
-          Text(
+          const Text(
             'Sin viaje asignado',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.headlineSmall,
+            style: TextStyle(
+              fontSize: 17,
+              fontWeight: FontWeight.w500,
+              color: _C.textPrimary,
+            ),
           ),
           const SizedBox(height: 8),
-          Text(
+          const Text(
             'Actualmente no tienes un tramo activo.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodyMedium,
+            style: TextStyle(fontSize: 13, color: _C.textSecondary),
           ),
-          const SizedBox(height: 8),
-          Text(
-            'Desliza hacia abajo o presiona '
-            'Actualizar para consultar nuevamente.',
+          const SizedBox(height: 4),
+          const Text(
+            'Desliza hacia abajo o presiona Actualizar '
+            'para consultar nuevamente.',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.bodySmall,
+            style: TextStyle(fontSize: 12, color: _C.textMuted),
           ),
           const SizedBox(height: 24),
-          FilledButton.icon(
-            onPressed: () {
-              ref.read(tramoProvider.notifier).refresh();
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text('Actualizar'),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: () {
+                ref.read(tramoProvider.notifier).refresh();
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _C.textPrimary,
+                side: const BorderSide(color: _C.border),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              icon: const Icon(Icons.refresh, size: 18, color: _C.primaryGreen),
+              label: const Text(
+                'Actualizar',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
+            ),
           ),
         ],
       ),
@@ -208,6 +364,7 @@ class _ErrorView extends ConsumerWidget {
     WidgetRef ref,
   ) {
     return RefreshIndicator(
+      color: _C.primaryGreen,
       onRefresh: () {
         return ref.read(tramoProvider.notifier).refresh();
       },
@@ -215,67 +372,64 @@ class _ErrorView extends ConsumerWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         padding: const EdgeInsets.all(24),
         children: [
-          const SizedBox(height: 100),
-          const Icon(
-            Icons.error_outline,
-            size: 64,
+          const SizedBox(height: 90),
+          Center(
+            child: Container(
+              width: 72,
+              height: 72,
+              decoration: BoxDecoration(
+                color: _C.errorRed.withOpacity(0.08),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.error_outline,
+                size: 32,
+                color: _C.errorRed,
+              ),
+            ),
           ),
-          const SizedBox(height: 16),
-          Text(
+          const SizedBox(height: 18),
+          const Text(
             'No fue posible cargar el tramo',
             textAlign: TextAlign.center,
-            style: Theme.of(context).textTheme.titleLarge,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: _C.textPrimary,
+            ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 6),
           Text(
             message,
             textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 13, color: _C.textSecondary),
           ),
-          const SizedBox(height: 24),
-          OutlinedButton.icon(
-            onPressed: () {
-              ref.read(tramoProvider.notifier).refresh();
-            },
-            icon: const Icon(Icons.refresh),
-            label: const Text(
-              'Intentar nuevamente',
+          const SizedBox(height: 22),
+          Center(
+            child: OutlinedButton.icon(
+              onPressed: () {
+                ref.read(tramoProvider.notifier).refresh();
+              },
+              style: OutlinedButton.styleFrom(
+                foregroundColor: _C.textPrimary,
+                side: const BorderSide(color: _C.border),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+              icon: const Icon(Icons.refresh, size: 18, color: _C.primaryGreen),
+              label: const Text(
+                'Intentar nuevamente',
+                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              ),
             ),
           ),
         ],
       ),
-    );
-  }
-}
-
-// ============================================================
-// FILA DE INFORMACIÓN
-// ============================================================
-
-class _InfoRow extends StatelessWidget {
-  final String label;
-  final String value;
-
-  const _InfoRow({
-    required this.label,
-    required this.value,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        SizedBox(
-          width: 100,
-          child: Text(
-            label,
-            style: Theme.of(context).textTheme.labelLarge,
-          ),
-        ),
-        Expanded(
-          child: Text(value),
-        ),
-      ],
     );
   }
 }
