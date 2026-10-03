@@ -22,19 +22,9 @@ class ServicesRemoteDatasourceImpl implements ServicesRemoteDatasource {
   @override
   Future<List<AssignedServiceDto>> getAssignedServices() async {
     try {
-      /// Obtiene el usuario almacenado en la sesión
-      final user = await SessionManager.getUserId();
-
-      if (user == null) {
-        throw Exception('No existe una sesión activa.');
-      }
-
       final response = await _dio.get(
-        '/appUser/referrals/$user',
+        '/appUser/referrals',
       );
-
-      debugPrint(response.data.toString());
-      debugPrint(response.toString());
 
       final List<dynamic> result = response.data['Result'] ?? [];
 

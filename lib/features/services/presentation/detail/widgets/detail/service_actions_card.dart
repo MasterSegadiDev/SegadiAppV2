@@ -1,8 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:segadi/features/services/domain/entities/support_status_current_entity.dart';
 
+import 'package:segadi/features/services/domain/entities/support_status_current_entity.dart';
 import 'package:segadi/features/services/presentation/list/arguments/service_action_item.dart';
 import 'package:segadi/features/services/presentation/detail/widgets/support_status/active_status_support.dart';
+
+class _C {
+  static const surfaceDark = Color(0xFF101812);
+
+  static const primaryGreen = Color(0xFF1E7A3C);
+  static const primaryGreenSoft = Color(0xFFE1F0E3);
+
+  static const textPrimary = Color(0xFF101812);
+  static const textSecondary = Color(0xFF6B6B66);
+  static const textMuted = Color(0xFF9A9A94);
+
+  static const border = Color(0xFFE0E0DA);
+}
+
+// ============================================================
+// ACCIONES DEL SERVICIO
+// ============================================================
 
 class ServiceActionsCard extends StatelessWidget {
   final List<ServiceActionItem> actions;
@@ -29,102 +46,118 @@ class ServiceActionsCard extends StatelessWidget {
     }
 
     return Container(
-      margin: const EdgeInsets.only(
-        bottom: 18,
-      ),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(
-          16,
-        ),
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(.05),
+            color: _C.surfaceDark.withOpacity(.05),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
       ),
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-            decoration: BoxDecoration(
-              color: const Color(0xFF2C522A).withOpacity(.08),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(16),
-                topRight: Radius.circular(16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // ==================================================
+            // HEADER
+            // ==================================================
+
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
               ),
-            ),
-            child: const Row(
-              children: [
-                Icon(
-                  Icons.dashboard_customize,
-                  color: Color(0xFF2C522A),
-                ),
-                SizedBox(
-                  width: 10,
-                ),
-                Text(
-                  'ACCIONES DEL SERVICIO',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: Color(0xFF2C522A),
-                    fontSize: 15,
+              color: _C.primaryGreenSoft,
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.dashboard_customize_outlined,
+                    size: 18,
+                    color: _C.primaryGreen,
                   ),
-                ),
-              ],
-            ),
-          ),
-
-          // Soporte activo
-          if (supportStatus?.active == true)
-            ActiveSupportStatus(
-              supportStatus: supportStatus!,
-            ),
-
-          if (visibleActions.isNotEmpty)
-            Padding(
-              padding: const EdgeInsets.all(
-                18,
-              ),
-              child: GridView.builder(
-                shrinkWrap: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: visibleActions.length,
-                gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                  crossAxisCount: 3,
-                  mainAxisSpacing: 18,
-                  crossAxisSpacing: 18,
-                  childAspectRatio: .95,
-                ),
-                itemBuilder: (
-                  context,
-                  index,
-                ) {
-                  final item = visibleActions[index];
-
-                  return _ActionButton(
-                    icon: item.icon,
-                    title: item.title,
-                    enabled: item.enabled,
-                    onTap: item.enabled
-                        ? () {
-                            onActionTap?.call(item);
-                          }
-                        : null,
-                  );
-                },
+                  SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      'ACCIONES DEL SERVICIO',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: _C.surfaceDark,
+                        fontSize: 13,
+                        letterSpacing: .5,
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
-        ],
+
+            // ==================================================
+            // SOPORTE ACTIVO
+            // ==================================================
+
+            if (supportStatus?.active == true)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  0,
+                ),
+                child: ActiveSupportStatus(
+                  supportStatus: supportStatus!,
+                ),
+              ),
+
+            // ==================================================
+            // ACCIONES
+            // ==================================================
+
+            if (visibleActions.isNotEmpty)
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: GridView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: visibleActions.length,
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 3,
+                    mainAxisSpacing: 12,
+                    crossAxisSpacing: 12,
+                    childAspectRatio: .88,
+                  ),
+                  itemBuilder: (
+                    context,
+                    index,
+                  ) {
+                    final item = visibleActions[index];
+
+                    return _ActionButton(
+                      icon: item.icon,
+                      title: item.title,
+                      enabled: item.enabled,
+                      onTap: item.enabled
+                          ? () {
+                              onActionTap?.call(item);
+                            }
+                          : null,
+                    );
+                  },
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
 }
+
+// ============================================================
+// BOTÓN DE ACCIÓN
+// ============================================================
 
 class _ActionButton extends StatelessWidget {
   final IconData icon;
@@ -141,55 +174,64 @@ class _ActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final backgroundColor =
-        enabled ? Colors.grey.shade50 : Colors.grey.shade100;
-
-    final iconColor = enabled ? const Color(0xFF2C522A) : Colors.grey.shade400;
-
-    final textColor = enabled ? Colors.black87 : Colors.grey.shade500;
-
     return Material(
-      color: backgroundColor,
-      borderRadius: BorderRadius.circular(
-        14,
-      ),
+      color: Colors.transparent,
       child: InkWell(
-        borderRadius: BorderRadius.circular(
-          14,
-        ),
         onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        splashColor: _C.primaryGreen.withOpacity(.08),
+        highlightColor: _C.primaryGreen.withOpacity(.04),
         child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: 8,
+            vertical: 12,
+          ),
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(
-              14,
-            ),
+            color: enabled ? Colors.white : const Color(0xFFF7F8F6),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: enabled ? Colors.grey.shade200 : Colors.grey.shade300,
+              color: enabled ? _C.border : _C.border.withOpacity(.65),
             ),
           ),
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                icon,
-                color: iconColor,
-                size: 24,
-              ),
-              const SizedBox(
-                height: 12,
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 6,
+              // ==================================================
+              // ICONO
+              // ==================================================
+
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color:
+                      enabled ? _C.primaryGreenSoft : const Color(0xFFEDEDEA),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Text(
-                  title,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: textColor,
-                  ),
+                child: Icon(
+                  icon,
+                  size: 21,
+                  color: enabled ? _C.primaryGreen : _C.textMuted,
+                ),
+              ),
+
+              const SizedBox(height: 10),
+
+              // ==================================================
+              // TEXTO
+              // ==================================================
+
+              Text(
+                title,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 11,
+                  height: 1.2,
+                  fontWeight: FontWeight.w600,
+                  color: enabled ? _C.textPrimary : _C.textMuted,
                 ),
               ),
             ],

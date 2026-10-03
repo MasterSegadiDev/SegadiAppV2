@@ -44,9 +44,15 @@ class AppColors {
 
   static const white = Colors.white;
   static const black = Colors.black;
-  static const background = Color(0xFFF5F5F5);
-  static const border = Color(0xFFE0E0E0);
   static const disabled = Color(0xFFBDBDBD);
-  static const textPrimary = Color(0xFF212121);
-  static const textSecondary = Color(0xFF757575);
+
+  static const background = Color(0xFFF7F8F6);
+  static const surfaceDark = Color(0xFF101812);
+  static const primaryGreen = Color(0xFF1E7A3C);
+  static const primaryGreenSoft = Color(0xFFE1F0E3);
+  static const textPrimary = Color(0xFF101812);
+  static const textSecondary = Color(0xFF6B6B66);
+  static const textMuted = Color(0xFF9A9A94);
+  static const border = Color(0xFFE0E0DA);
+  static const errorRed = Color(0xFFB23A3A);
 }

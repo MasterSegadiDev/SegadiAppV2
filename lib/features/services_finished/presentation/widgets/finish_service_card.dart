@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:segadi/features/services_finished/domain/entities/service_finished.dart';
 
 /*
@@ -194,8 +193,8 @@ class FinishServiceCard extends StatelessWidget {
       color: const Color(0xFF2C522A).withOpacity(0.08),
       child: Row(
         children: [
-          Icon(FontAwesomeIcons.truckFast.data,
-              size: 18, color: Color(0xFF2C522A)),
+          // Icon(FontAwesomeIcons.truckFast.data,
+          //     size: 18, color: Color(0xFF2C522A)),
           const SizedBox(width: 10),
           Expanded(
             child: Text(

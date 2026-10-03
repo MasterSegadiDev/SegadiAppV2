@@ -19,7 +19,6 @@ class RecipientCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // final vm = context.watch<ServiceDetailViewModel>();
     return PersonCard(
       title: 'DESTINATARIO',
       icon: FontAwesomeIcons.locationDot,
@@ -27,7 +26,6 @@ class RecipientCard extends StatelessWidget {
       phone: phone.isNotEmpty ? phone : 'Sin teléfono',
       directContact: directContact.isNotEmpty ? directContact : 'Sin contacto',
       address: address.isNotEmpty ? address : 'Sin dirección',
-      headerColor: const Color(0xFF2C522A),
     );
   }
 }

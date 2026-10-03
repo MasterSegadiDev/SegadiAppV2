@@ -38,7 +38,7 @@ class DetailMainCard extends StatelessWidget {
                 ),
 
                 // SECCIÓN DE ACCIONES (GridView de tu ActionsCard)
-                ActionsCard(ui: entity, onRefresh: () {}),
+                // ActionsCard(ui: entity, onRefresh: () {}),
               ],
             ),
           ),

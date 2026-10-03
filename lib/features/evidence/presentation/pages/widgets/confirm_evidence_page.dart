@@ -25,12 +25,31 @@ class ConfirmEvidencePage extends ConsumerStatefulWidget {
 class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
   late final SignatureController _signatureController;
 
-  final Color primaryGreen = const Color(0xFF2C522A);
-
   final TextEditingController _receiverController = TextEditingController();
 
   bool _initialized = false;
   bool _sending = false;
+
+  // ============================================================
+  // COLORES
+  // ============================================================
+
+  static const _background = Color(0xFFF7F8F6);
+  static const _surfaceDark = Color(0xFF101812);
+
+  static const _primaryGreen = Color(0xFF1E7A3C);
+  static const _primaryGreenSoft = Color(0xFFE1F0E3);
+
+  static const _textPrimary = Color(0xFF101812);
+  static const _textSecondary = Color(0xFF6B6B66);
+  static const _textMuted = Color(0xFF9A9A94);
+
+  static const _border = Color(0xFFE0E0DA);
+  static const _errorRed = Color(0xFFB23A3A);
+
+  // ============================================================
+  // INIT
+  // ============================================================
 
   @override
   void initState() {
@@ -66,7 +85,9 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
 
     final now = DateTime.now();
 
-    final formattedDateTime = DateFormat('yyyy-MM-dd HH:mm:ss').format(now);
+    final formattedDateTime = DateFormat(
+      'yyyy-MM-dd HH:mm:ss',
+    ).format(now);
 
     vm.initialize(
       serviceRequestId: widget.arguments.idSolicitud,
@@ -109,6 +130,10 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
     super.dispose();
   }
 
+  // ============================================================
+  // BUILD
+  // ============================================================
+
   @override
   Widget build(BuildContext context) {
     final vm = ref.watch(
@@ -116,27 +141,49 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
     );
 
     return Scaffold(
-      backgroundColor: Colors.grey[100],
+      backgroundColor: _background,
       appBar: AppBar(
+        backgroundColor: _surfaceDark,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
         title: const Text(
           'Confirmación de entrega',
           style: TextStyle(
             color: Colors.white,
-            fontSize: 18,
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
           ),
         ),
-        iconTheme: const IconThemeData(
-          color: Colors.white,
-        ),
-        backgroundColor: primaryGreen,
-        elevation: 0,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.fromLTRB(
+            16,
+            16,
+            16,
+            28,
+          ),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildCard(vm),
+              _buildHeader(),
+              const SizedBox(height: 26),
+              _buildSectionTitle(
+                icon: Icons.person_outline,
+                title: 'Datos del receptor',
+              ),
+              const SizedBox(height: 10),
+              _buildReceiverCard(vm),
+              const SizedBox(height: 26),
+              _buildSectionTitle(
+                icon: Icons.draw_outlined,
+                title: 'Firma de conformidad',
+              ),
+              const SizedBox(height: 10),
+              _buildSignatureCard(),
+              const SizedBox(height: 24),
+              _buildSubmitButton(vm),
             ],
           ),
         ),
@@ -144,128 +191,137 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
     );
   }
 
-  Widget _buildCard(
-    DeliveryConfirmationViewModel vm,
-  ) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(24),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: Column(
-        children: [
-          _buildHeader(),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildSectionTitle(
-                  'Datos del receptor',
-                ),
-                _buildReceiverForm(vm),
-                const Padding(
-                  padding: EdgeInsets.symmetric(
-                    vertical: 20,
-                  ),
-                  child: Divider(
-                    height: 1,
-                    thickness: 0.5,
-                  ),
-                ),
-                _buildSectionTitle(
-                  'Firma de conformidad',
-                ),
-                _buildSignaturePad(),
-                const SizedBox(height: 30),
-                _buildSubmitButton(vm),
-                const SizedBox(height: 10),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
+  // ============================================================
+  // HEADER
+  // ============================================================
 
   Widget _buildHeader() {
     return Container(
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: primaryGreen.withOpacity(0.08),
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(24),
-          topRight: Radius.circular(24),
+      decoration: _cardDecoration(),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(16),
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              color: _primaryGreenSoft,
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.assignment_turned_in_outlined,
+                    color: _primaryGreen,
+                    size: 18,
+                  ),
+                  SizedBox(width: 10),
+                  Text(
+                    'PROCESO DE ENTREGA',
+                    style: TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: .5,
+                      color: _surfaceDark,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: _primaryGreenSoft,
+                      borderRadius: BorderRadius.circular(11),
+                    ),
+                    child: const Icon(
+                      Icons.receipt_long_outlined,
+                      color: _primaryGreen,
+                      size: 21,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Remisión',
+                          style: TextStyle(
+                            fontSize: 11,
+                            color: _textSecondary,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          widget.arguments.serviceNumber,
+                          style: const TextStyle(
+                            fontSize: 17,
+                            fontWeight: FontWeight.w700,
+                            color: _textPrimary,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
-      ),
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: primaryGreen,
-            radius: 18,
-            child: const Icon(
-              Icons.assignment_turned_in_outlined,
-              color: Colors.white,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'PROCESO DE ENTREGA',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: primaryGreen,
-                    letterSpacing: 1.1,
-                  ),
-                ),
-                Text(
-                  'Remisión - ${widget.arguments.serviceNumber}',
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.black87,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(
-    String title,
-  ) {
-    return Padding(
-      padding: const EdgeInsets.only(
-        bottom: 12,
-      ),
-      child: Text(
-        title.toUpperCase(),
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.bold,
-          color: Colors.grey[500],
-          letterSpacing: 1.1,
+  // ============================================================
+  // SECTION TITLE
+  // ============================================================
+
+  Widget _buildSectionTitle({
+    required IconData icon,
+    required String title,
+  }) {
+    return Row(
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _primaryGreenSoft,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: _primaryGreen,
+          ),
         ),
-      ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: _textPrimary,
+          ),
+        ),
+      ],
     );
   }
 
-  Widget _buildReceiverForm(
+  // ============================================================
+  // RECEIVER CARD
+  // ============================================================
+
+  Widget _buildReceiverCard(
     DeliveryConfirmationViewModel vm,
   ) {
     final date = DateFormat(
@@ -276,49 +332,85 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
       'HH:mm',
     ).format(DateTime.now());
 
-    return Column(
-      children: [
-        TextField(
-          controller: _receiverController,
-          onChanged: vm.updateReceiverName,
-          textCapitalization: TextCapitalization.words,
-          decoration: InputDecoration(
-            labelText: 'Nombre de quien recibe',
-            prefixIcon: Icon(
-              Icons.person_outline,
-              color: primaryGreen,
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: _cardDecoration(),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            'Nombre de quien recibe',
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: _textSecondary,
             ),
-            border: OutlineInputBorder(
-              borderRadius: BorderRadius.circular(50),
-            ),
-            isDense: true,
-            filled: true,
-            fillColor: Colors.grey[50],
           ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: _infoBox(
-                'Fecha',
-                date,
-                Icons.calendar_today,
+          const SizedBox(height: 7),
+          TextField(
+            controller: _receiverController,
+            onChanged: vm.updateReceiverName,
+            textCapitalization: TextCapitalization.words,
+            decoration: InputDecoration(
+              hintText: 'Ingresa el nombre completo',
+              hintStyle: const TextStyle(
+                color: _textMuted,
+                fontSize: 13,
+              ),
+              prefixIcon: const Icon(
+                Icons.person_outline,
+                color: _primaryGreen,
+                size: 20,
+              ),
+              filled: true,
+              fillColor: _background,
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 14,
+                vertical: 14,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: _border,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: const BorderSide(
+                  color: _primaryGreen,
+                  width: 1.4,
+                ),
               ),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: _infoBox(
-                'Hora',
-                time,
-                Icons.access_time,
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: _infoBox(
+                  'Fecha',
+                  date,
+                  Icons.calendar_today_outlined,
+                ),
               ),
-            ),
-          ],
-        ),
-      ],
+              const SizedBox(width: 10),
+              Expanded(
+                child: _infoBox(
+                  'Hora',
+                  time,
+                  Icons.access_time_outlined,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
     );
   }
+
+  // ============================================================
+  // INFO BOX
+  // ============================================================
 
   Widget _infoBox(
     String label,
@@ -328,20 +420,29 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: Colors.grey[50],
+        color: _background,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: Colors.grey[200]!,
+          color: _border,
         ),
       ),
       child: Row(
         children: [
-          Icon(
-            icon,
-            size: 14,
-            color: Colors.grey[600],
+          Container(
+            width: 32,
+            height: 32,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _primaryGreenSoft,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Icon(
+              icon,
+              size: 15,
+              color: _primaryGreen,
+            ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: 9),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -349,15 +450,17 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
                 Text(
                   label,
                   style: const TextStyle(
-                    fontSize: 9,
-                    color: Colors.grey,
+                    fontSize: 10,
+                    color: _textSecondary,
                   ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   value,
                   style: const TextStyle(
                     fontSize: 12,
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w600,
+                    color: _textPrimary,
                   ),
                 ),
               ],
@@ -368,71 +471,99 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
     );
   }
 
-  Widget _buildSignaturePad() {
+  // ============================================================
+  // SIGNATURE
+  // ============================================================
+
+  Widget _buildSignatureCard() {
     return Container(
-      decoration: BoxDecoration(
+      decoration: _cardDecoration(),
+      child: ClipRRect(
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: Colors.grey[200]!,
-        ),
-        color: Colors.grey[50],
-      ),
-      child: Column(
-        children: [
-          ClipRRect(
-            borderRadius: const BorderRadius.vertical(
-              top: Radius.circular(16),
-            ),
-            child: Signature(
-              controller: _signatureController,
-              height: 180,
-              backgroundColor: Colors.transparent,
-            ),
-          ),
-          Divider(
-            height: 1,
-            color: Colors.grey[200],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Padding(
-                padding: EdgeInsets.only(left: 12),
-                child: Text(
-                  'Firma aquí',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: Colors.grey,
+        child: Column(
+          children: [
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
+              color: _primaryGreenSoft,
+              child: const Row(
+                children: [
+                  Icon(
+                    Icons.gesture_outlined,
+                    size: 17,
+                    color: _primaryGreen,
                   ),
-                ),
+                  SizedBox(width: 9),
+                  Expanded(
+                    child: Text(
+                      'Firma dentro del recuadro',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                        color: _textPrimary,
+                      ),
+                    ),
+                  ),
+                ],
               ),
-              TextButton.icon(
-                onPressed: _sending ? null : _clearSignature,
-                icon: const Icon(
-                  Icons.delete_sweep_outlined,
-                  size: 18,
-                ),
-                label: const Text('Limpiar'),
-                style: TextButton.styleFrom(
-                  foregroundColor: Colors.redAccent,
-                ),
+            ),
+            Signature(
+              controller: _signatureController,
+              height: 190,
+              backgroundColor: Colors.white,
+            ),
+            const Divider(
+              height: 1,
+              color: _border,
+            ),
+            Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 12,
+                vertical: 6,
               ),
-            ],
-          ),
-        ],
+              child: Row(
+                children: [
+                  const Expanded(
+                    child: Text(
+                      'Firma de conformidad',
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: _textMuted,
+                      ),
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _sending ? null : _clearSignature,
+                    style: TextButton.styleFrom(
+                      foregroundColor: _errorRed,
+                    ),
+                    icon: const Icon(
+                      Icons.delete_outline,
+                      size: 17,
+                    ),
+                    label: const Text(
+                      'Limpiar',
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  void _clearSignature() {
-    _signatureController.clear();
-
-    final vm = ref.read(
-      deliveryConfirmationViewModelProvider,
-    );
-
-    vm.updateSignature(null);
-  }
+  // ============================================================
+  // SUBMIT
+  // ============================================================
 
   Widget _buildSubmitButton(
     DeliveryConfirmationViewModel vm,
@@ -447,32 +578,59 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
       child: ElevatedButton(
         onPressed: canSubmit ? _processSubmission : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: primaryGreen,
+          backgroundColor: _primaryGreen,
           foregroundColor: Colors.white,
-          disabledBackgroundColor: Colors.grey[300],
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(50),
-          ),
+          disabledBackgroundColor: _border,
+          disabledForegroundColor: _textMuted,
           elevation: 0,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
         ),
         child: _sending
             ? const SizedBox(
-                height: 22,
-                width: 22,
+                width: 21,
+                height: 21,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   color: Colors.white,
                 ),
               )
-            : Text(
-                canSubmit ? 'Continuar' : 'Falta el nombre o la firma',
-                style: const TextStyle(
-                  fontWeight: FontWeight.bold,
-                  letterSpacing: 0.5,
-                ),
+            : Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    canSubmit
+                        ? Icons.arrow_forward_rounded
+                        : Icons.edit_outlined,
+                    size: 19,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    canSubmit ? 'Continuar' : 'Completa el nombre y la firma',
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
       ),
     );
+  }
+
+  // ============================================================
+  // ACTIONS
+  // ============================================================
+
+  void _clearSignature() {
+    _signatureController.clear();
+
+    final vm = ref.read(
+      deliveryConfirmationViewModelProvider,
+    );
+
+    vm.updateSignature(null);
   }
 
   Future<void> _processSubmission() async {
@@ -521,14 +679,12 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
       return;
     }
 
-    /*
-     * Regresamos al ServiceDetailPage.
-     *
-     * El detalle será responsable de refrescar el servicio
-     * y decidir si debe abrir CaptureEvidencePage.
-     */
     context.pop(true);
   }
+
+  // ============================================================
+  // ERROR
+  // ============================================================
 
   void _showError(String message) {
     if (!mounted) {
@@ -538,7 +694,7 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(message),
-        backgroundColor: Colors.redAccent,
+        backgroundColor: _errorRed,
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -548,5 +704,23 @@ class _ConfirmEvidencePageState extends ConsumerState<ConfirmEvidencePage> {
           deliveryConfirmationViewModelProvider,
         )
         .clearError();
+  }
+
+  // ============================================================
+  // DECORATION
+  // ============================================================
+
+  BoxDecoration _cardDecoration() {
+    return BoxDecoration(
+      color: Colors.white,
+      borderRadius: BorderRadius.circular(16),
+      boxShadow: [
+        BoxShadow(
+          color: _surfaceDark.withOpacity(.05),
+          blurRadius: 10,
+          offset: const Offset(0, 4),
+        ),
+      ],
+    );
   }
 }

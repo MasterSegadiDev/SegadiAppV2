@@ -4,6 +4,7 @@ class AppRouteTitles {
   static const Map<String, String> _titles = {
     '/home': 'Inicio',
     '/services': 'Servicios asignados',
+    '/local-service': 'Servicios Locales Por Tramo',
   };
 
   static String forPath(String path) {

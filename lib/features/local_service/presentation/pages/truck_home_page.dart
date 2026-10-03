@@ -6,8 +6,6 @@ import 'package:segadi/app/router/app_routes.dart';
 import 'package:segadi/features/local_service/presentation/providers/provider.dart';
 import 'package:segadi/features/local_service/presentation/states/stretch_state.dart';
 
-// Paleta central usada en toda la app.
-// TODO: si ya creaste app_colors.dart, borra esto e importa de ahí.
 class _C {
   static const background = Color(0xFFF7F8F6);
   static const surfaceDark = Color(0xFF101812);
@@ -20,8 +18,6 @@ class _C {
   static const errorRed = Color(0xFFB23A3A);
 }
 
-/// Contenido de "Mi viaje". Se monta dentro de MainLayout
-/// (Scaffold/AppBar/Drawer ya los pone el layout) — no debe traer los suyos.
 class TruckHomePage extends ConsumerStatefulWidget {
   const TruckHomePage({
     super.key,
@@ -111,90 +107,131 @@ class _TripCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: _C.surfaceDark.withOpacity(0.05),
-            blurRadius: 8,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return GestureDetector(
+      onTap: onVerDetalle,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: _C.surfaceDark.withOpacity(0.05),
+              blurRadius: 10,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(16),
+          child: Column(
             children: [
-              const Text(
-                'Estado',
-                style: TextStyle(fontSize: 12, color: _C.textSecondary),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: _C.primaryGreenSoft,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  status,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: _C.primaryGreen,
-                  ),
+              _buildHeader(),
+              Padding(
+                padding: const EdgeInsets.all(16),
+                child: Column(
+                  children: [
+                    _buildInfoSection(),
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child:
+                          Divider(height: 1, thickness: .5, color: _C.border),
+                    ),
+                    _buildFooter(),
+                  ],
                 ),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-          _InfoRow(
-            icon: Icons.person_outline,
-            label: 'Operador',
-            value: operador,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      color: _C.primaryGreenSoft,
+      child: Row(
+        children: [
+          const Icon(
+            Icons.local_shipping_outlined,
+            size: 18,
+            color: _C.primaryGreen,
           ),
-          const SizedBox(height: 12),
-          _InfoRow(
-            icon: Icons.local_shipping_outlined,
-            label: 'Unidad',
-            value: unidad,
-          ),
-          if (contenedor != null) ...[
-            const SizedBox(height: 12),
-            _InfoRow(
-              icon: Icons.inventory_2_outlined,
-              label: 'Contenedor',
-              value: contenedor!,
-            ),
-          ],
-          const SizedBox(height: 22),
-          SizedBox(
-            width: double.infinity,
-            child: ElevatedButton.icon(
-              onPressed: onVerDetalle,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: _C.surfaceDark,
-                foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 13),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                elevation: 0,
+          const SizedBox(width: 10),
+          const Expanded(
+            child: Text(
+              'VIAJE ACTIVO',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 14,
+                letterSpacing: .5,
+                color: _C.surfaceDark,
               ),
-              icon: const Icon(Icons.visibility_outlined, size: 18),
-              label: const Text(
-                'Ver detalle',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            decoration: BoxDecoration(
+              color: _C.primaryGreen,
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: Text(
+              status.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
               ),
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildInfoSection() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _InfoRow(
+          icon: Icons.person_outline,
+          label: 'Operador',
+          value: operador,
+        ),
+        const SizedBox(height: 12),
+        _InfoRow(
+          icon: Icons.local_shipping_outlined,
+          label: 'Unidad',
+          value: unidad,
+        ),
+        if (contenedor != null) ...[
+          const SizedBox(height: 12),
+          _InfoRow(
+            icon: Icons.inventory_2_outlined,
+            label: 'Contenedor',
+            value: contenedor!,
+          ),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildFooter() {
+    return Row(
+      children: [
+        const Expanded(
+          child: Text(
+            'Toca para ver el detalle completo',
+            style: TextStyle(fontSize: 12, color: _C.textMuted),
+          ),
+        ),
+        const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: _C.textMuted,
+        ),
+      ],
     );
   }
 }

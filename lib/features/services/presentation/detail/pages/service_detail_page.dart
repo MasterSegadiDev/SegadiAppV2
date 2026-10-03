@@ -19,6 +19,21 @@ import 'package:segadi/features/services/presentation/list/arguments/service_act
 
 import 'package:segadi/features/support_status/presentation/widgets/support_status_modal.dart';
 
+class _C {
+  static const background = Color(0xFFF7F8F6);
+  static const surfaceDark = Color(0xFF101812);
+
+  static const primaryGreen = Color(0xFF1E7A3C);
+  static const primaryGreenSoft = Color(0xFFE1F0E3);
+
+  static const textPrimary = Color(0xFF101812);
+  static const textSecondary = Color(0xFF6B6B66);
+  static const textMuted = Color(0xFF9A9A94);
+
+  static const border = Color(0xFFE0E0DA);
+  static const errorRed = Color(0xFFB23A3A);
+}
+
 class ServiceDetailPage extends ConsumerStatefulWidget {
   final ServiceDetailArguments arguments;
 
@@ -69,46 +84,95 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
         ref.read(serviceDetailNotifierProvider(widget.arguments).notifier);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Detalle del Servicio')),
+      backgroundColor: _C.background,
+      appBar: AppBar(
+        backgroundColor: _C.surfaceDark,
+        foregroundColor: Colors.white,
+        elevation: 0,
+        scrolledUnderElevation: 0,
+        title: const Text(
+          'Detalle del servicio',
+          style: TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+          ),
+        ),
+      ),
       body: SafeArea(
         child: Column(
           children: [
             if (_shouldShowEvidenceBanner(state.evidenceStep))
-              PendingEvidenceBanner(
-                onContinue: () => _handleEvidenceStep(state.evidenceStep),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                child: PendingEvidenceBanner(
+                  onContinue: () => _handleEvidenceStep(state.evidenceStep),
+                ),
               ),
             Expanded(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    ServiceHeaderCard(serviceNumber: state.serviceNumber),
-                    const SizedBox(height: 16),
-                    SenderCard(
-                      name: state.service?.sender?.name ?? '',
-                      phone: state.service?.sender?.phone ?? '',
-                      directContact: state.service?.sender?.directContact ?? '',
-                      address: state.service?.sender?.address ?? '',
-                    ),
-                    RecipientCard(
-                      name: state.service?.recipient?.name ?? '',
-                      phone: state.service?.recipient?.phone ?? '',
-                      directContact:
-                          state.service?.recipient?.directContact ?? '',
-                      address: state.service?.recipient?.address ?? '',
-                    ),
-                    ServiceActionsCard(
-                      actions: notifier.actionItems,
-                      supportStatus: state.currentSupportStatus,
-                      onActionTap: (ServiceActionItem item) =>
-                          _onActionTap(item.key, notifier),
-                    ),
-                  ],
+              child: RefreshIndicator(
+                color: _C.primaryGreen,
+                onRefresh: notifier.refreshServiceState,
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const Text(
+                        'Servicio asignado',
+                        style: TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                          color: _C.textSecondary,
+                        ),
+                      ),
+                      const SizedBox(height: 10),
+                      ServiceHeaderCard(
+                        serviceNumber: state.serviceNumber,
+                      ),
+                      const SizedBox(height: 26),
+                      const _SectionTitle(
+                        icon: Icons.people_outline,
+                        title: 'Información del servicio',
+                      ),
+                      const SizedBox(height: 10),
+                      SenderCard(
+                        name: state.service?.sender?.name ?? '',
+                        phone: state.service?.sender?.phone ?? '',
+                        directContact:
+                            state.service?.sender?.directContact ?? '',
+                        address: state.service?.sender?.address ?? '',
+                      ),
+                      const SizedBox(height: 12),
+                      RecipientCard(
+                        name: state.service?.recipient?.name ?? '',
+                        phone: state.service?.recipient?.phone ?? '',
+                        directContact:
+                            state.service?.recipient?.directContact ?? '',
+                        address: state.service?.recipient?.address ?? '',
+                      ),
+                      const SizedBox(height: 26),
+                      const _SectionTitle(
+                        icon: Icons.touch_app_outlined,
+                        title: 'Acciones disponibles',
+                      ),
+                      const SizedBox(height: 10),
+                      ServiceActionsCard(
+                        actions: notifier.actionItems,
+                        supportStatus: state.currentSupportStatus,
+                        onActionTap: (item) => _onActionTap(item.key, notifier),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ),
-            _buildStatusButtonBar(context, state, notifier),
+            _buildStatusButtonBar(
+              context,
+              state,
+              notifier,
+            ),
           ],
         ),
       ),
@@ -243,6 +307,47 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
           }
         },
       ),
+    );
+  }
+}
+
+class _SectionTitle extends StatelessWidget {
+  final IconData icon;
+  final String title;
+
+  const _SectionTitle({
+    required this.icon,
+    required this.title,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: _C.primaryGreenSoft,
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: Icon(
+            icon,
+            size: 16,
+            color: _C.primaryGreen,
+          ),
+        ),
+        const SizedBox(width: 10),
+        Text(
+          title,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: _C.textPrimary,
+          ),
+        ),
+      ],
     );
   }
 }

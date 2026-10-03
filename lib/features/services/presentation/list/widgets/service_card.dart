@@ -7,6 +7,7 @@ import 'package:segadi/features/services/presentation/detail/arguments/service_d
 import 'package:segadi/features/services/presentation/list/widgets/expandable_stops.dart';
 
 import '../../../domain/entities/assigned_service.dart';
+import '../../../../../core/theme/app_colors.dart'; // ajusta la ruta a donde la dejes
 
 class ServiceCard extends StatelessWidget {
   final AssignedService service;
@@ -36,7 +37,7 @@ class ServiceCard extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: Colors.black.withOpacity(0.05),
+              color: AppColors.surfaceDark.withOpacity(0.05),
               blurRadius: 10,
               offset: const Offset(0, 4),
             ),
@@ -54,7 +55,11 @@ class ServiceCard extends StatelessWidget {
                     _buildRouteSection(),
                     const Padding(
                       padding: EdgeInsets.symmetric(vertical: 12),
-                      child: Divider(height: 1, thickness: .5),
+                      child: Divider(
+                        height: 1,
+                        thickness: .5,
+                        color: AppColors.border,
+                      ),
                     ),
                     _buildFooter(),
                   ],
@@ -70,13 +75,13 @@ class ServiceCard extends StatelessWidget {
   Widget _buildHeader() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      color: const Color(0xFF2C522A).withOpacity(.08),
+      color: AppColors.primaryGreenSoft,
       child: Row(
         children: [
           const FaIcon(
             FontAwesomeIcons.truckFast,
             size: 18,
-            color: Color(0xFF2C522A),
+            color: AppColors.primaryGreen,
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -86,7 +91,7 @@ class ServiceCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
                 fontSize: 14,
                 letterSpacing: .5,
-                color: Color(0xFF2C522A),
+                color: AppColors.surfaceDark,
               ),
             ),
           ),
@@ -102,10 +107,17 @@ class ServiceCard extends StatelessWidget {
       children: [
         Column(
           children: [
-            const Icon(Icons.radio_button_checked,
-                size: 18, color: Colors.green),
-            Container(width: 2, height: 40, color: Colors.grey.shade300),
-            const Icon(Icons.location_on, size: 18, color: Colors.redAccent),
+            const Icon(
+              Icons.radio_button_checked,
+              size: 18,
+              color: AppColors.primaryGreen,
+            ),
+            Container(width: 2, height: 40, color: AppColors.border),
+            const Icon(
+              Icons.location_on,
+              size: 18,
+              color: AppColors.errorRed,
+            ),
           ],
         ),
         const SizedBox(width: 12),
@@ -134,21 +146,25 @@ class ServiceCard extends StatelessWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 10,
-            color: Colors.grey.shade600,
+            color: AppColors.textMuted,
             fontWeight: FontWeight.bold,
           ),
         ),
         Text(
           city,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w600,
+            color: AppColors.textPrimary,
+          ),
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
         ),
         Text(
           DateFormat('dd/MM/yyyy').format(date),
-          style: TextStyle(fontSize: 12, color: Colors.grey.shade500),
+          style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
         ),
       ],
     );
@@ -164,34 +180,46 @@ class ServiceCard extends StatelessWidget {
               const Text(
                 'CLIENTE',
                 style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textMuted,
+                ),
               ),
               Text(
                 service.customer,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w600),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
               const SizedBox(height: 10),
               const Text(
                 'RESPONSABLE',
                 style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.grey),
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.textMuted,
+                ),
               ),
               Text(
                 service.responsible,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(fontWeight: FontWeight.w500),
+                style: const TextStyle(
+                  fontWeight: FontWeight.w500,
+                  color: AppColors.textPrimary,
+                ),
               ),
             ],
           ),
         ),
-        const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.grey),
+        const Icon(
+          Icons.arrow_forward_ios,
+          size: 16,
+          color: AppColors.textMuted,
+        ),
       ],
     );
   }
@@ -221,18 +249,20 @@ class _StatusBadge extends StatelessWidget {
     );
   }
 
+  // Colores semánticos por estatus — se mantienen distintos entre sí
+  // a propósito, pero "finalizado" ahora usa el verde de marca.
   Color _statusColor(String status) {
     switch (status.toLowerCase()) {
       case 'inicio':
-        return Colors.blue;
+        return const Color(0xFF2E6BB8); // azul
       case 'en ruta':
-        return Colors.orange;
+        return const Color(0xFFC77A1F); // naranja
       case 'finalizado':
-        return Colors.green;
+        return AppColors.primaryGreen;
       case 'cancelado':
-        return Colors.red;
+        return AppColors.errorRed;
       default:
-        return Colors.grey;
+        return AppColors.textMuted;
     }
   }
 }
