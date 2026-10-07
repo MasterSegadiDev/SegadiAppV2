@@ -51,7 +51,7 @@ class TramoRemoteDataSourceImpl implements TramoRemoteDataSource {
     required TramoStatus status,
   }) async {
     final response = await _dio.post(
-      '/api/mobile/tramo/'
+      '/tramo/'
       '$referralId/'
       '$tramoIndex/'
       'status',
@@ -63,6 +63,8 @@ class TramoRemoteDataSourceImpl implements TramoRemoteDataSource {
     final data = response.data as Map<String, dynamic>;
 
     final success = data['success'] as bool? ?? false;
+
+    debugPrint('data del respone ${data} success ${success}');
 
     if (!success) {
       throw Exception(

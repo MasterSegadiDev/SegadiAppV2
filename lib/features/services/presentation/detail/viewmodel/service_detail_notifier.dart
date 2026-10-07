@@ -1,9 +1,9 @@
-//import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/legacy.dart';
 
 import 'package:segadi/features/services/domain/entities/update_mandatory_status_entity.dart';
 import 'package:segadi/features/services/domain/enums/service_action.dart';
+
 import 'package:segadi/features/services/domain/usecases/get_detail_service_actions_usecase.dart';
 import 'package:segadi/features/services/domain/usecases/get_detail_service_info_general_usecase.dart';
 import 'package:segadi/features/services/domain/usecases/get_service_status_usecase.dart';
@@ -13,6 +13,7 @@ import 'package:segadi/features/services/domain/usecases/update_mandatory_status
 import 'package:segadi/features/services/presentation/detail/arguments/service_detail_arguments.dart';
 import 'package:segadi/features/services/presentation/detail/state/load_status.dart';
 import 'package:segadi/features/services/presentation/detail/state/service_detail_state.dart';
+
 import 'package:segadi/features/services/presentation/list/arguments/service_action_item.dart';
 
 class ServiceDetailNotifier extends StateNotifier<ServiceDetailState> {
@@ -24,13 +25,27 @@ class ServiceDetailNotifier extends StateNotifier<ServiceDetailState> {
     required this.resolveEvidenceStepUseCase,
   }) : super(const ServiceDetailState());
 
+  // ============================================================
+  // DEPENDENCIAS
+  // ============================================================
+
   final GetServiceGeneralUseCase getServiceGeneralUseCase;
+
   final GetServiceActionsUseCase getServiceActionsUseCase;
+
   final GetServiceStatusUseCase getServiceStatusUseCase;
+
   final UpdateMandatoryStatusUseCase updateMandatoryStatusUseCase;
+
   final ResolveEvidenceStepUseCase resolveEvidenceStepUseCase;
 
-  Future<void> initialize(ServiceDetailArguments args) async {
+  // ============================================================
+  // INITIALIZE
+  // ============================================================
+
+  Future<void> initialize(
+    ServiceDetailArguments args,
+  ) async {
     state = state.copyWith(
       status: LoadStatus.loading,
       arguments: args,
@@ -40,23 +55,49 @@ class ServiceDetailNotifier extends StateNotifier<ServiceDetailState> {
     await _fetchAll(args.idSolicitud);
   }
 
+  // ============================================================
+  // REFRESH COMPLETO
+  // ============================================================
+
   Future<void> refreshServiceState() async {
     final args = state.arguments;
-    if (args == null) return;
 
-    state = state.copyWith(status: LoadStatus.refreshing, clearError: true);
+    if (args == null) {
+      return;
+    }
+
+    state = state.copyWith(
+      status: LoadStatus.refreshing,
+      clearError: true,
+    );
+
     await _fetchAll(args.idSolicitud);
   }
 
+  // ============================================================
+  // REFRESH DESPUÉS DE SOPORTE
+  // ============================================================
+
   Future<void> refreshAfterSupport() async {
     final args = state.arguments;
-    if (args == null) return;
 
-    state = state.copyWith(status: LoadStatus.refreshing, clearError: true);
+    if (args == null) {
+      return;
+    }
+
+    state = state.copyWith(
+      status: LoadStatus.refreshing,
+      clearError: true,
+    );
 
     try {
-      final actions = await getServiceActionsUseCase(args.idSolicitud);
-      final status = await getServiceStatusUseCase(args.idSolicitud);
+      final actions = await getServiceActionsUseCase(
+        args.idSolicitud,
+      );
+
+      final status = await getServiceStatusUseCase(
+        args.idSolicitud,
+      );
 
       state = state.copyWith(
         status: LoadStatus.success,
@@ -64,29 +105,55 @@ class ServiceDetailNotifier extends StateNotifier<ServiceDetailState> {
         serviceStatus: status,
       );
     } catch (e) {
-      state = state.copyWith(status: LoadStatus.error, error: e.toString());
+      state = state.copyWith(
+        status: LoadStatus.error,
+        error: e.toString(),
+      );
     }
   }
+
+  // ============================================================
+  // ACTUALIZAR ESTATUS OBLIGATORIO
+  // ============================================================
 
   Future<bool> updateMandatoryStatus() async {
     final args = state.arguments;
 
     if (args == null) {
       state = state.copyWith(
-          error: 'No se han inicializado los argumentos del servicio.');
+        error: 'No se han inicializado los argumentos del servicio.',
+      );
+
       return false;
     }
+
+    // ==========================================================
+    // VALIDAR SIGUIENTE ESTATUS
+    // ==========================================================
 
     if (state.nextStatusId.isEmpty) {
-      state =
-          state.copyWith(error: 'No existe un siguiente estatus disponible.');
+      state = state.copyWith(
+        error: 'No existe un siguiente estatus disponible.',
+      );
+
       return false;
     }
 
-    state = state.copyWith(status: LoadStatus.refreshing, clearError: true);
+    // ==========================================================
+    // LOADING
+    // ==========================================================
+
+    state = state.copyWith(
+      status: LoadStatus.refreshing,
+      clearError: true,
+    );
 
     try {
-      final result = await updateMandatoryStatusUseCase(
+      // ========================================================
+      // ACTUALIZAR ESTATUS EN BACKEND
+      // ========================================================
+
+      await updateMandatoryStatusUseCase(
         UpdateMandatoryStatusParams(
           referralId: args.idRemision,
           serviceRequestId: args.idSolicitud,
@@ -94,46 +161,101 @@ class ServiceDetailNotifier extends StateNotifier<ServiceDetailState> {
         ),
       );
 
-      final updatedStatus = state.serviceStatus?.copyWith(
-        nextMandatoryStatus: result.nextMandatoryStatus,
-        nextMandatoryStatusId: result.nextMandatoryStatusId,
-      );
+      // ========================================================
+      // IMPORTANTE
+      //
+      // Después de actualizar el estatus volvemos a consultar:
+      //
+      // - información general
+      // - acciones
+      // - estatus
+      //
+      // De esta forma obtenemos nuevamente:
+      //
+      // blnConfirmation
+      // blnEvidence
+      //
+      // y recalculamos evidenceStep.
+      // ========================================================
 
-      final actions = await getServiceActionsUseCase(args.idSolicitud);
-
-      state = state.copyWith(
-        status: LoadStatus.success,
-        serviceStatus: updatedStatus,
-        serviceActions: actions,
+      await _fetchAll(
+        args.idSolicitud,
       );
 
       return true;
     } catch (e) {
-      state = state.copyWith(status: LoadStatus.error, error: e.toString());
+      state = state.copyWith(
+        status: LoadStatus.error,
+        error: e.toString(),
+      );
+
       return false;
     }
   }
 
+  // ============================================================
+  // CLEAR ERROR
+  // ============================================================
+
   void clearError() {
-    state = state.copyWith(clearError: true);
+    state = state.copyWith(
+      clearError: true,
+    );
   }
 
-  Future<void> _fetchAll(String referralId) async {
+  // ============================================================
+  // FETCH ALL
+  // ============================================================
+
+  Future<void> _fetchAll(
+    String referralId,
+  ) async {
     try {
+      // ========================================================
+      // CONSULTAS
+      // ========================================================
+
       final results = await Future.wait([
-        getServiceGeneralUseCase(referralId),
-        getServiceActionsUseCase(referralId),
-        getServiceStatusUseCase(referralId),
+        getServiceGeneralUseCase(
+          referralId,
+        ),
+        getServiceActionsUseCase(
+          referralId,
+        ),
+        getServiceStatusUseCase(
+          referralId,
+        ),
       ]);
 
+      // ========================================================
+      // RESULTADOS
+      // ========================================================
+
       final service = results[0] as dynamic;
+
       final actions = results[1] as dynamic;
+
       final status = results[2] as dynamic;
+
+      // ========================================================
+      // RESOLVER FLUJO DE EVIDENCIAS
+      //
+      // El UseCase decidirá si corresponde:
+      //
+      // notApplicable
+      // evidencePending
+      //
+      // dependiendo de blnConfirmation y blnEvidence.
+      // ========================================================
 
       final evidenceStep = resolveEvidenceStepUseCase(
         service: service,
         status: status,
       );
+
+      // ========================================================
+      // ACTUALIZAR STATE
+      // ========================================================
 
       state = state.copyWith(
         status: LoadStatus.success,
@@ -143,11 +265,17 @@ class ServiceDetailNotifier extends StateNotifier<ServiceDetailState> {
         evidenceStep: evidenceStep,
       );
     } catch (e) {
-      state = state.copyWith(status: LoadStatus.error, error: e.toString());
+      state = state.copyWith(
+        status: LoadStatus.error,
+        error: e.toString(),
+      );
     }
   }
 
-  // dentro de ServiceDetailNotifier
+  // ============================================================
+  // ACTION ITEMS
+  // ============================================================
+
   List<ServiceActionItem> get actionItems {
     final actions = state.serviceActions;
 

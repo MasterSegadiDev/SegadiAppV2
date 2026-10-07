@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:segadi/features/local_service/domain/entities/stretch.dart';
 import 'package:segadi/features/local_service/domain/enums/tramo_status.dart';
 import 'package:segadi/features/local_service/presentation/providers/provider.dart';
+import 'package:segadi/features/local_service/presentation/widgets/confirmation_dialog.dart';
 
 class TramoAction extends ConsumerWidget {
   final Tramo tramo;
@@ -83,7 +84,22 @@ class TramoAction extends ConsumerWidget {
       // ESPERANDO GRUA
       // ============================================
 
-      TramoStatus.esperandoGrua => const _WaitingCraneView(),
+      // TramoStatus.esperandoGrua => const _WaitingCraneView(),
+
+      TramoStatus.esperandoGrua => _StatusButton(
+          text: 'Maniobra finalizada',
+          icon: Icons.precision_manufacturing_outlined,
+          onPressed: () {
+            _confirmStatusChange(
+              context: context,
+              ref: ref,
+              title: 'Maniobra finalizada',
+              message: '¿Confirmas que estás listo '
+                  'para finalizar la maniobra?',
+              newStatus: TramoStatus.cargaConfirmada,
+            );
+          },
+        ),
 
       // ============================================
       // CARGA CONFIRMADA
@@ -119,29 +135,8 @@ class TramoAction extends ConsumerWidget {
     required String message,
     required TramoStatus newStatus,
   }) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) {
-        return AlertDialog(
-          title: Text(title),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(false);
-              },
-              child: const Text('Cancelar'),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogContext).pop(true);
-              },
-              child: const Text('Confirmar'),
-            ),
-          ],
-        );
-      },
-    );
+    final confirmed =
+        await ConfirmationDialog.show(context, title: title, message: message);
 
     if (confirmed != true) {
       return;

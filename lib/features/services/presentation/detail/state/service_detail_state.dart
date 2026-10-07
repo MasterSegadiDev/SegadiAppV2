@@ -27,16 +27,21 @@ class ServiceDetailState {
   });
 
   bool get isLoading => status == LoadStatus.loading;
+
   bool get isRefreshing => status == LoadStatus.refreshing;
+
   bool get hasError => error != null;
 
   String get serviceNumber => arguments?.serviceNumber ?? '';
+
   String get idRemision => arguments?.idRemision ?? '';
+
   String get idSolicitud => arguments?.idSolicitud ?? '';
 
   bool get enableStatusButton => serviceStatus?.enableBtn ?? false;
 
   String get nextStatusId => serviceStatus?.nextMandatoryStatusId ?? '';
+
   SupportStatusCurrentEntity? get currentSupportStatus =>
       serviceStatus?.supportStatus;
 
@@ -47,14 +52,12 @@ class ServiceDetailState {
         evidenceStep == EvidenceStep.evidencePending) {
       return 'Evidencias faltantes';
     }
+
     return serviceStatus?.nextMandatoryStatus ?? '';
   }
 
   bool get canUpdateStatus {
-    final blocksUpdate = evidenceStep == EvidenceStep.confirmationPending ||
-        evidenceStep == EvidenceStep.evidencePending;
-
-    return enableStatusButton && !blocksUpdate;
+    return enableStatusButton;
   }
 
   ServiceDetailState copyWith({
