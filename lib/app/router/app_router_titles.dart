@@ -5,6 +5,7 @@ class AppRouteTitles {
     '/home': 'Inicio',
     '/services': 'Servicios asignados',
     '/local-service': 'Servicios Locales Por Tramo',
+    '/evidence/eir': 'Enviar Envidencia Entrega Contenedor',
   };
 
   static String forPath(String path) {

@@ -211,11 +211,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
         break;
 
       case ServiceAction.closeEvidence:
-        _handleEvidenceStep(
-          ref
-              .read(serviceDetailNotifierProvider(widget.arguments))
-              .evidenceStep,
-        );
+        context.push('/evidence/eir', extra: widget.arguments);
         break;
 
       case ServiceAction.travelExpenses:

@@ -6,6 +6,7 @@ import 'package:segadi/features/check_list/presentation/pages/checklist_page.dar
 import 'package:segadi/features/developer/presentation/screens/developer_screen.dart';
 import 'package:segadi/features/evidence/presentation/pages/widgets/capture_evidence_page.dart';
 import 'package:segadi/features/evidence/presentation/pages/widgets/confirm_evidence_page.dart';
+import 'package:segadi/features/evidence_eir/presentation/pages/capture_evidence_eir.dart';
 import 'package:segadi/features/georuta/presentation/pages/georoute_page.dart';
 import 'package:segadi/features/local_service/presentation/pages/tramo_detail_page.dart';
 import 'package:segadi/features/local_service/presentation/pages/truck_home_page.dart';
@@ -113,6 +114,16 @@ final routerProvider = Provider<GoRouter>(
             final arguments = state.extra as ServiceDetailArguments;
 
             return CaptureEvidencePage(
+              arguments: arguments,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.evidenceEirCapture,
+          builder: (context, state) {
+            final arguments = state.extra as ServiceDetailArguments;
+
+            return CaptureEvidenceEirPage(
               arguments: arguments,
             );
           },

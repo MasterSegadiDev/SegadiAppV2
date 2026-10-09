@@ -17,6 +17,8 @@ abstract final class AppRoutes {
 
   static const evidenceCapture = '/evidence/capture';
 
+  static const evidenceEirCapture = '/evidence/eir';
+
   static const travelExpenses = '/travel-expenses';
 
   static const downloadCcp = '/download-ccp';
