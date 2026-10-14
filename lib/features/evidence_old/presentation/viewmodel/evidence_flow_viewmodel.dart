@@ -7,7 +7,7 @@ import 'package:flutter_image_compress/flutter_image_compress.dart';
 
 import 'package:segadi/features/evidence_old/domain/repositories/evidence_repository.dart';
 import 'package:segadi/features/evidence_old/presentation/pages/widgets/evidence_pdf_generator.dart';
-import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
+import 'package:segadi/features/service_detail_old/data/repositories/detail_service_repository_impl.dart';
 import '../../domain/evidence_entity.dart';
 
 /// Estatus del flujo de evidencias

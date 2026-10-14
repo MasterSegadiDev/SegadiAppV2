@@ -6,7 +6,7 @@ import 'package:segadi/features/evidence_old/data/datasources/evidence_remote_da
 import 'package:segadi/features/evidence_old/data/repositories/evidence_repository_impl.dart';
 import 'package:segadi/features/evidence_old/presentation/pages/confirm_evidence_page.dart';
 import 'package:segadi/features/evidence_old/presentation/viewmodel/evidence_flow_viewmodel.dart';
-import 'package:segadi/features/service_detail/data/repositories/detail_service_repository_impl.dart';
+import 'package:segadi/features/service_detail_old/data/repositories/detail_service_repository_impl.dart';
 
 class EvidenceFlowPage extends StatelessWidget {
   final int serviceId;

@@ -13,6 +13,7 @@ import 'package:segadi/features/local_service/presentation/pages/truck_home_page
 import 'package:segadi/features/services/presentation/detail/arguments/service_detail_arguments.dart';
 import 'package:segadi/features/services/presentation/detail/pages/service_detail_page.dart';
 import 'package:segadi/features/services/presentation/list/pages/services_page.dart';
+import 'package:segadi/features/travel_expenses/presentation/pages/travel_expenses_page.dart';
 
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/layout/main_layout.dart';
@@ -124,6 +125,16 @@ final routerProvider = Provider<GoRouter>(
             final arguments = state.extra as ServiceDetailArguments;
 
             return CaptureEvidenceEirPage(
+              arguments: arguments,
+            );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.travelExpenses,
+          builder: (context, state) {
+            final arguments = state.extra as ServiceDetailArguments;
+
+            return TravelExpensesPage(
               arguments: arguments,
             );
           },

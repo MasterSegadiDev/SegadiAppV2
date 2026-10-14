@@ -306,8 +306,8 @@ class ServiceDetailNotifier extends StateNotifier<ServiceDetailState> {
         key: ServiceAction.route,
       ),
       ServiceActionItem(
-        title: 'Cerrar Viaje',
-        icon: Icons.check_circle,
+        title: 'Entrega Contenedor',
+        icon: Icons.upload,
         enabled: actions.closeEvidence.enabled,
         show: actions.closeEvidence.show,
         key: ServiceAction.closeEvidence,

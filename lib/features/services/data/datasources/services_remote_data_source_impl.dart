@@ -1,8 +1,6 @@
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:segadi/core/errors/dio_exception_handler.dart';
 import 'package:segadi/core/network/dio_client.dart';
-import 'package:segadi/core/security/session_manager.dart';
 import 'package:segadi/features/services/data/datasources/services_remote_data_source.dart';
 import 'package:segadi/features/services/data/dto/service_general_dto.dart';
 import 'package:segadi/features/services/data/dto/service_status_dto.dart';

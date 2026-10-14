@@ -1,0 +1,89 @@
+import 'package:dio/dio.dart';
+import 'package:dartz/dartz.dart';
+import 'package:segadi/core/network/api_exceptions.dart';
+import 'package:segadi/features/travel_expenses_old/core/errors/travel_expenses_failure.dart';
+import 'package:segadi/features/travel_expenses_old/data/datasources/travel_expenses_remote_datasource.dart';
+import 'package:segadi/features/travel_expenses_old/domain/entities/table_expense_entity.dart';
+import 'package:segadi/features/travel_expenses_old/domain/entities/travel_expense_entity.dart';
+import 'dart:typed_data';
+
+import 'package:segadi/features/travel_expenses_old/domain/repositories/travel_expenses_repository.dart';
+
+import '../../../../core/errors/failure.dart';
+
+class TravelExpensesRepositoryImpl implements TravelExpensesRepository {
+  final TravelExpensesRemoteDataSource remoteDataSource;
+
+  TravelExpensesRepositoryImpl(this.remoteDataSource);
+
+  @override
+  Future<Either<Failure, List<TravelExpenseEntity>>> getAvailableConcepts(
+      int serviceId) async {
+    try {
+      final models = await remoteDataSource.getConcepts(serviceId);
+      return Right(models);
+    } on TravelExpensesFailure catch (e) {
+      // Si el DataSource lanzó tu clase personalizada, tomamos el mensaje directo
+      return Left(ServerFailure(e.message));
+    } on DioException catch (e) {
+      final failure = TravelExpensesFailure.fromDioError(e);
+      return Left(ServerFailure(failure.message));
+    } catch (e) {
+      // Aquí es donde caía el error de casteo
+      return Left(ServerFailure('Error al procesar conceptos: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, List<TableExpenseEntity>>> getRegisteredExpenses(
+      int serviceId) async {
+    try {
+      final models = await remoteDataSource.getRegisteredExpenses(serviceId);
+      return Right(models);
+    } catch (e) {
+      return Left(ServerFailure(e.toString()));
+    }
+  }
+
+  @override
+  Future<Either<Failure, bool>> insertExpense({
+    required int serviceId,
+    required int conceptId,
+    required double amount,
+    String? comments,
+    String? base64Image,
+  }) async {
+    try {
+      final success = await remoteDataSource.insertExpense(
+        serviceId: serviceId,
+        conceptId: conceptId,
+        amount: amount,
+        comments:
+            comments ?? "", // Si comments es null, usar un valor por defecto
+        image: base64Image,
+      );
+      return Right(success);
+    } on DioException catch (e) {
+      // AQUÍ es donde capturamos el mensaje de "Revisar importe"
+      final failure = TravelExpensesFailure.fromDioError(e);
+      return Left(ServerFailure(failure.message));
+    } catch (e) {
+      return Left(ServerFailure('Error al guardar el gasto: $e'));
+    }
+  }
+
+  @override
+  Future<Either<Failure, Uint8List>> getEvidenceImage(String conceptId) async {
+    try {
+      // Agrega este print para ver si el ID llega al repo
+      print("Repo: Solicitando imagen para ID $conceptId");
+      final result = await remoteDataSource.fetchImage(conceptId);
+      return Right(result);
+    } on ApiException catch (e) {
+      return Left(ServerFailure(e.message));
+    } catch (e) {
+      print("Error no controlado en Repo: $e");
+      return Left(ServerFailure("Error en el repositorio al obtener imagen"));
+    }
+  }
+}

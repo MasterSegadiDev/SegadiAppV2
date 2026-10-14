@@ -101,7 +101,7 @@ class _CaptureEvidencePageState extends ConsumerState<CaptureEvidenceEirPage> {
         elevation: 0,
         scrolledUnderElevation: 0,
         title: const Text(
-          'Evidencias de entrega',
+          'Evidencias de entrega EIR',
           style: TextStyle(
             color: Colors.white,
             fontSize: 16,

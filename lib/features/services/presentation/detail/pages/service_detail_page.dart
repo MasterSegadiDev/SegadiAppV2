@@ -215,6 +215,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
         break;
 
       case ServiceAction.travelExpenses:
+        context.push('/travel-expenses', extra: widget.arguments);
       case ServiceAction.downloadCcp:
         break;
     }
