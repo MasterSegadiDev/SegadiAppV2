@@ -38,7 +38,16 @@ class ServiceDetailState {
 
   String get idSolicitud => arguments?.idSolicitud ?? '';
 
-  bool get enableStatusButton => serviceStatus?.enableBtn ?? false;
+  // bool get enableStatusButton => serviceStatus?.enableBtn ?? false;
+
+  bool get enableStatusButton {
+    if (evidenceStep == EvidenceStep.confirmationPending ||
+        evidenceStep == EvidenceStep.evidencePending) {
+      return false;
+    } else {
+      return serviceStatus?.enableBtn ?? false;
+    }
+  }
 
   String get nextStatusId => serviceStatus?.nextMandatoryStatusId ?? '';
 

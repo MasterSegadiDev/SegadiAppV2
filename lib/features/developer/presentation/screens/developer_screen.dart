@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:segadi/app/di/injection_container.dart';
 import 'package:segadi/core/connectivity/connectivity_service.dart';
 import 'package:segadi/core/device/firebase/firebase_service.dart';
@@ -38,137 +39,143 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
       );
     }
 
+    // Return principal de la pantalla
+    return _buildDeveloperScreen(context);
+  }
+
+  Widget _buildDeveloperScreen(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'Developer Tools',
         ),
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            context.go('/');
+          },
+        ),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // const Text(
-          //   'Device',
-          //   style: TextStyle(
-          //     fontSize: 18,
-          //     fontWeight: FontWeight.bold,
-          //   ),
-          // ),
-          // const SizedBox(height: 12),
-          // ElevatedButton(
-          //   onPressed: () {},
-          //   child: const Text(
-          //     'Solicitar permiso Cámara',
-          //   ),
-          // ),
-          // ElevatedButton(
-          //   onPressed: () {},
-          //   child: const Text(
-          //     'Solicitar permiso Ubicación',
-          //   ),
-          // ),
-          // ElevatedButton(
-          //   onPressed: _scanDocument,
-          //   child: const Text(
-          //     'Escanear Documento',
-          //   ),
-          // ),
-          // ElevatedButton(
-          //   onPressed: _getLocation,
-          //   child: const Text(
-          //     'Obtener Ubicación',
-          //   ),
-          // ),
-          // const Divider(height: 40),
-          // const Text(
-          //   'Firebase',
-          //   style: TextStyle(
-          //     fontSize: 18,
-          //     fontWeight: FontWeight.bold,
-          //   ),
-          // ),
-          // const SizedBox(height: 12),
-          // ElevatedButton(
-          //   onPressed: getFirebaseToken,
-          //   child: const Text(
-          //     'Firebase Token',
-          //   ),
-          // ),
-          // ElevatedButton(
-          //   onPressed: testNotification,
-          //   child: const Text(
-          //     'Enviar Notificación Local',
-          //   ),
-          // ),
-          // ElevatedButton(
-          //   onPressed: () async {
-          //     final token = await SessionManager.getAccessToken();
-
-          //     debugPrint('TOKEN: $token');
-          //   },
-          //   child: const Text('Leer Token'),
-          // ),
-          // ElevatedButton(
-          //   onPressed: () async {
-          //     final authenticated = await SessionManager.isAuthenticated();
-
-          //     debugPrint('AUTHENTICATED: $authenticated');
-          //   },
-          //   child: const Text('¿Autenticado?'),
-          // ),
-          // ElevatedButton(
-          //   onPressed: () async {
-          //     await SessionManager.clearSession();
-
-          //     final token = await SessionManager.getAccessToken();
-
-          //     debugPrint(token.toString());
-          //   },
-          //   child: const Text('Cerrar sesión'),
-          // ),
-          // ElevatedButton(
-          //   onPressed: () async {
-          //     final connectivity = getIt<ConnectivityService>();
-
-          //     final connected = await connectivity.hasConnection();
-
-          //     debugPrint('Conectado: $connected');
-          //   },
-          //   child: const Text(
-          //     'Validar Internet',
-          //   ),
-          // ),
-          // ElevatedButton(
-          //   onPressed: () async {
-          //     final connectivity = getIt<ConnectivityService>();
-
-          //     final type = await connectivity.connectionType();
-
-          //     debugPrint(type.toString());
-          //   },
-          //   child: const Text('Tipo de conexión'),
-          // ),
-          // ElevatedButton(
-          //   onPressed: () async {
-          //     final connectivity = getIt<ConnectivityService>();
-
-          //     if (!await connectivity.hasConnection()) {
-          //       debugPrint('NO HAY INTERNET');
-
-          //       return;
-          //     }
-
-          //     debugPrint('CONSULTANDO API...');
-          //   },
-          //   child: const Text('Simular petición'),
-          // ),
-
+          const Text(
+            'Device',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: () {},
+            child: const Text(
+              'Solicitar permiso Cámara',
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () {},
+            child: const Text(
+              'Solicitar permiso Ubicación',
+            ),
+          ),
+          ElevatedButton(
+            onPressed: _scanDocument,
+            child: const Text(
+              'Escanear Documento',
+            ),
+          ),
+          ElevatedButton(
+            onPressed: _getLocation,
+            child: const Text(
+              'Obtener Ubicación',
+            ),
+          ),
+          const Divider(height: 40),
+          const Text(
+            'Firebase',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          ElevatedButton(
+            onPressed: getFirebaseToken,
+            child: const Text(
+              'Firebase Token',
+            ),
+          ),
+          ElevatedButton(
+            onPressed: testNotification,
+            child: const Text(
+              'Enviar Notificación Local',
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final token = await SessionManager.getAccessToken();
+              debugPrint('TOKEN: $token');
+            },
+            child: const Text('Leer Token'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final authenticated = await SessionManager.isAuthenticated();
+              debugPrint('AUTHENTICATED: $authenticated');
+            },
+            child: const Text('¿Autenticado?'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              await SessionManager.clearSession();
+              final token = await SessionManager.getAccessToken();
+              debugPrint(token.toString());
+            },
+            child: const Text('Cerrar sesión'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final connectivity = getIt<ConnectivityService>();
+              final connected = await connectivity.hasConnection();
+              debugPrint('Conectado: $connected');
+            },
+            child: const Text(
+              'Validar Internet',
+            ),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final connectivity = getIt<ConnectivityService>();
+              final type = await connectivity.connectionType();
+              debugPrint(type.toString());
+            },
+            child: const Text('Tipo de conexión'),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              final connectivity = getIt<ConnectivityService>();
+              if (!await connectivity.hasConnection()) {
+                debugPrint('NO HAY INTERNET');
+                return;
+              }
+              debugPrint('CONSULTANDO API...');
+            },
+            child: const Text('Simular petición'),
+          ),
+          const Divider(height: 40),
+          const Text(
+            'Permisos',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
           ElevatedButton(
             onPressed: () async {
               final permission = getIt<PermissionService>();
-
               final granted = await permission.requestLocation();
-
               debugPrint('Location: $granted');
             },
             child: const Text(
@@ -178,9 +185,7 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
           ElevatedButton(
             onPressed: () async {
               final permission = getIt<PermissionService>();
-
               final granted = await permission.requestNotification();
-
               debugPrint('Notifications: $granted');
             },
             child: const Text(
@@ -190,9 +195,7 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
           ElevatedButton(
             onPressed: () async {
               final permission = getIt<PermissionService>();
-
               final granted = await permission.requestStorage();
-
               debugPrint('Storage: $granted');
             },
             child: const Text(
@@ -206,7 +209,6 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
 
   Future<void> _scanDocument() async {
     final scanner = getIt<ScannerService>();
-
     final images = await scanner.scanDocument();
 
     if (!mounted) return;
@@ -238,21 +240,18 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
   Future<void> _getLocation() async {
     print("entrando a get location");
     final location = getIt<LocationService>();
-
     final data = await location.getCurrentPosition();
 
     if (data == null) {
       debugPrint(
         'Sin permisos o ubicación no disponible',
       );
-
       return;
     }
 
     debugPrint(
       'Lat: ${data.latitude}',
     );
-
     debugPrint(
       'Lng: ${data.longitude}',
     );
@@ -260,23 +259,18 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
 
   Future<void> getFirebaseToken() async {
     final firebase = getIt<FirebaseService>();
-
     final token = await firebase.getToken();
-
     debugPrint("FCM TOKEN");
-
     debugPrint(token);
   }
 
   Future<void> testNotification() async {
     final notification = getIt<NotificationService>();
-
     await notification.show(
       title: 'SEGADI',
       body: 'Prueba',
       payload: '12345',
     );
-
     debugPrint("NOTIFICACION ENVIADA");
   }
 }

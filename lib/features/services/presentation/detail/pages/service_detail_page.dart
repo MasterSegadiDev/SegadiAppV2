@@ -15,8 +15,6 @@ import 'package:segadi/features/services/presentation/detail/widgets/detail/send
 import 'package:segadi/features/services/presentation/detail/widgets/detail/service_actions_card.dart';
 import 'package:segadi/features/services/presentation/detail/widgets/detail/service_header_card.dart';
 import 'package:segadi/features/services/presentation/detail/widgets/detail/service_status_button.dart';
-import 'package:segadi/features/services/presentation/list/arguments/service_action_item.dart';
-
 import 'package:segadi/features/support_status/presentation/widgets/support_status_modal.dart';
 
 class _C {

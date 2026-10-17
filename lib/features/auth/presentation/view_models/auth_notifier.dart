@@ -1,10 +1,11 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/legacy.dart';
 import 'package:segadi/features/local_service/presentation/providers/provider.dart';
+import 'package:segadi/features/notifications/domain/usecases/register_fcm_token_usecase.dart';
 
 import '../../../../core/security/permission_codes.dart';
 import '../../../../core/security/session_manager.dart';
-import '../../../../core/security/providers/permission_service_provider.dart';
 
 import '../../data/models/user_model.dart';
 import '../../domain/use_cases/login_usecase.dart';
@@ -13,10 +14,12 @@ import '../state/auth_state.dart';
 
 class AuthNotifier extends StateNotifier<AuthState> {
   final LoginUseCase loginUseCase;
+  final RegisterFcmTokenUseCase registerFcmTokenUseCase;
   final Ref ref;
 
   AuthNotifier(
     this.loginUseCase,
+    this.registerFcmTokenUseCase,
     this.ref,
   ) : super(AuthState.initial());
 
@@ -62,16 +65,20 @@ class AuthNotifier extends StateNotifier<AuthState> {
       ref.read(currentUserProvider.notifier).setUser(session.user);
 
       // ==============================================
-      // CARGAR SERVICIOS LOCALES / TRAMO
+      // REGISTRAR TOKEN FCM
       // ==============================================
-      //
-      // No validamos roles.
-      //
-      // Si el usuario tiene permiso 001
-      // puede trabajar con Servicios.
-      //
-      // Consultamos si además tiene un
-      // tramo activo asignado.
+
+      try {
+        await registerFcmTokenUseCase();
+
+        debugPrint('FCM: proceso de registro completado');
+      } catch (e) {
+        // No invalidar un login exitoso por un fallo FCM.
+        debugPrint('FCM: no se pudo registrar el token: $e');
+      }
+
+      // ==============================================
+      // CARGAR SERVICIOS LOCALES / TRAMO
       // ==============================================
 
       final hasServicesPermission = session.user.permissions.contains(
