@@ -33,4 +33,11 @@ class FirebaseServiceImpl implements FirebaseService {
   Future<RemoteMessage?> getInitialMessage() {
     return _messaging.getInitialMessage();
   }
+
+  @override
+  Future<String?> regenerateToken() async {
+    await FirebaseMessaging.instance.deleteToken();
+
+    return FirebaseMessaging.instance.getToken();
+  }
 }

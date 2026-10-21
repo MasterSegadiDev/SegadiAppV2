@@ -8,6 +8,7 @@ import 'package:segadi/features/notifications/domain/entities/push_notification_
 
 class NotificationCoordinator {
   final NotificationService notificationService;
+  bool _initialized = false;
 
   final void Function(PushNotificationEvent event) onNotificationTap;
 
@@ -20,9 +21,13 @@ class NotificationCoordinator {
   });
 
   Future<void> initialize() async {
+    if (_initialized) return;
+    _initialized = true;
     // 1. Inicializar las notificaciones locales.
     await notificationService.initialize(
       onNotificationTap: (payload) {
+        debugPrint('========== NOTIFICACIÓN LOCAL TOCADA ==========');
+        debugPrint('PAYLOAD: $payload');
         final event = PushNotificationEvent.fromPayload(payload);
 
         if (event != null) {
@@ -95,6 +100,8 @@ class NotificationCoordinator {
   void _handleNotificationOpened(
     RemoteMessage message,
   ) {
+    debugPrint('========== FCM NOTIFICACIÓN ABIERTA ==========');
+    debugPrint('DATA: ${message.data}');
     final event = PushNotificationEvent.fromData(message.data);
 
     if (event == null) {
@@ -103,6 +110,10 @@ class NotificationCoordinator {
       );
       return;
     }
+
+    debugPrint(
+      'FCM TAP: type=${event.type}, referral=${event.referralId}',
+    );
 
     onNotificationTap(event);
   }

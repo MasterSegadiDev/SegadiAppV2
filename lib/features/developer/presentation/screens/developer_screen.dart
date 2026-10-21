@@ -9,6 +9,7 @@ import 'package:segadi/core/device/location/location_service.dart';
 import 'package:segadi/core/device/notifications/notification_service.dart';
 import 'package:segadi/core/device/scanner/scanner_service.dart';
 import 'package:segadi/core/security/session_manager.dart';
+import 'package:segadi/features/notifications/aplication/fcm_token_sync_service.dart';
 
 import '../../../../core/permissions/permission_service.dart';
 
@@ -29,15 +30,15 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (!kDebugMode) {
-      return const Scaffold(
-        body: Center(
-          child: Text(
-            'Developer Screen disponible solo en Debug',
-          ),
-        ),
-      );
-    }
+    // if (!kDebugMode) {
+    //   return const Scaffold(
+    //     body: Center(
+    //       child: Text(
+    //         'Developer Screen disponible solo en Debug',
+    //       ),
+    //     ),
+    //   );
+    // }
 
     // Return principal de la pantalla
     return _buildDeveloperScreen(context);
@@ -67,29 +68,35 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
             ),
           ),
           const SizedBox(height: 12),
+          // ElevatedButton(
+          //   onPressed: () {},
+          //   child: const Text(
+          //     'Solicitar permiso Cámara',
+          //   ),
+          // ),
+          // ElevatedButton(
+          //   onPressed: () {},
+          //   child: const Text(
+          //     'Solicitar permiso Ubicación',
+          //   ),
+          // ),
+          // ElevatedButton(
+          //   onPressed: _scanDocument,
+          //   child: const Text(
+          //     'Escanear Documento',
+          //   ),
+          // ),
+          // ElevatedButton(
+          //   onPressed: _getLocation,
+          //   child: const Text(
+          //     'Obtener Ubicación',
+          //   ),
+          // ),
           ElevatedButton(
-            onPressed: () {},
-            child: const Text(
-              'Solicitar permiso Cámara',
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {},
-            child: const Text(
-              'Solicitar permiso Ubicación',
-            ),
-          ),
-          ElevatedButton(
-            onPressed: _scanDocument,
-            child: const Text(
-              'Escanear Documento',
-            ),
-          ),
-          ElevatedButton(
-            onPressed: _getLocation,
-            child: const Text(
-              'Obtener Ubicación',
-            ),
+            onPressed: () async {
+              await getIt<FcmTokenSyncService>().testTokenRegeneration();
+            },
+            child: const Text('Probar renovación FCM'),
           ),
           const Divider(height: 40),
           const Text(
@@ -182,26 +189,26 @@ class DeveloperScreenState extends ConsumerState<DeveloperScreen> {
               'Permiso Ubicación',
             ),
           ),
-          ElevatedButton(
-            onPressed: () async {
-              final permission = getIt<PermissionService>();
-              final granted = await permission.requestNotification();
-              debugPrint('Notifications: $granted');
-            },
-            child: const Text(
-              'Permiso Notificaciones',
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () async {
-              final permission = getIt<PermissionService>();
-              final granted = await permission.requestStorage();
-              debugPrint('Storage: $granted');
-            },
-            child: const Text(
-              'Permiso Storage',
-            ),
-          ),
+          // ElevatedButton(
+          //   onPressed: () async {
+          //     final permission = getIt<PermissionService>();
+          //     final granted = await permission.requestNotification();
+          //     debugPrint('Notifications: $granted');
+          //   },
+          //   child: const Text(
+          //     'Permiso Notificaciones',
+          //   ),
+          // ),
+          // ElevatedButton(
+          //   onPressed: () async {
+          //     final permission = getIt<PermissionService>();
+          //     final granted = await permission.requestStorage();
+          //     debugPrint('Storage: $granted');
+          //   },
+          //   child: const Text(
+          //     'Permiso Storage',
+          //   ),
+          // ),
         ],
       ),
     );

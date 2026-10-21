@@ -25,6 +25,7 @@ class FcmTokenSyncService {
 
     _subscription = firebaseService.onTokenRefresh.listen(
       (token) async {
+        debugPrint('FCM: onTokenRefresh se ejecutó');
         await _handleTokenRefresh(token);
       },
       onError: (Object error) {
@@ -68,8 +69,43 @@ class FcmTokenSyncService {
     }
   }
 
+  @visibleForTesting
+  Future<void> simulateTokenRefresh(String token) async {
+    await _handleTokenRefresh(token);
+  }
+
   Future<void> dispose() async {
     await _subscription?.cancel();
     _subscription = null;
+  }
+
+  Future<void> testTokenRegeneration() async {
+    try {
+      debugPrint('FCM TEST: iniciando regeneración');
+
+      final newToken = await firebaseService.regenerateToken();
+
+      if (newToken == null || newToken.isEmpty) {
+        debugPrint('FCM TEST: no se obtuvo un nuevo token');
+        return;
+      }
+
+      final hasSession = await SessionManager.hasSession();
+
+      if (!hasSession) {
+        debugPrint('FCM TEST: no existe sesión');
+        return;
+      }
+
+      // Registrar explícitamente el nuevo token.
+      // No dependemos de que onTokenRefresh se dispare.
+      await repository.registerToken(newToken);
+
+      debugPrint(
+        'FCM TEST: nuevo token registrado en backend',
+      );
+    } catch (e) {
+      debugPrint('FCM TEST: error: $e');
+    }
   }
 }

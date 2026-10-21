@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/foundation.dart';
 
 import 'fcm_token_remote_datasource.dart';
 
@@ -15,11 +16,16 @@ class FcmTokenRemoteDatasourceImpl implements FcmTokenRemoteDatasource {
       throw ArgumentError('El token FCM no puede estar vacío.');
     }
 
+    debugPrint(token);
+
     final response = await _dio.post(
       '/appUser/fcm-token',
       data: {
         'strFcmToken': token,
       },
+    );
+    debugPrint(
+      'FCM HTTP STATUS: ${response.statusCode}',
     );
 
     final data = response.data;

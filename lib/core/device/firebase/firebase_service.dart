@@ -12,4 +12,6 @@ abstract class FirebaseService {
   Stream<RemoteMessage> get onMessageOpenedApp;
 
   Future<RemoteMessage?> getInitialMessage();
+
+  Future<String?> regenerateToken();
 }

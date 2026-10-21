@@ -11,51 +11,74 @@ import 'package:segadi/core/theme/app_theme.dart';
 import 'package:segadi/features/notifications/aplication/fcm_token_sync_service.dart';
 import 'package:segadi/features/notifications/aplication/notification_coordinator.dart';
 import 'package:segadi/features/notifications/aplication/notification_navigation_handler.dart';
+import 'package:segadi/features/notifications/aplication/referral_notification_resolver.dart';
 
 import 'package:segadi/firebase_options.dart';
 
 import 'core/constants/app_config.dart';
 
+import 'dart:async';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  // 1. Firebase
+  // 1. Inicializar Firebase.
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
 
-  // 2. Ambiente
+  // 2. Configurar ambiente.
   AppConfig.initialize(
     Environment.development,
   );
 
-  // 3. Dependencias generales
+  // 3. Registrar dependencias generales.
   await setupDependencies();
 
+  // 4. Iniciar sincronización del token FCM.
   getIt<FcmTokenSyncService>().start();
 
-  // 4. Navegación de notificaciones
-  final navigationHandler = NotificationNavigationHandler();
+  // 5. Registrar el resolver ANTES de obtenerlo.
+  setupNotificationResolverDependencies();
 
-  // 5. Registrar coordinador
-  setupNotificationCoordinatorDependencies(
-    onNotificationTap: navigationHandler.handle,
+  final resolver = getIt<ReferralNotificationResolver>();
+
+  // 6. Crear un único contenedor de Riverpod.
+  final container = ProviderContainer();
+
+  // El mismo router se utilizará para toda la aplicación.
+  final router = container.read(routerProvider);
+
+  // 7. Crear el handler de navegación.
+  final navigationHandler = NotificationNavigationHandler(
+    router: router,
+    resolver: resolver,
   );
 
-  // 6. Inicializar coordinador
+  // 8. Registrar el coordinador de notificaciones.
+  setupNotificationCoordinatorDependencies(
+    onNotificationTap: (event) {
+      unawaited(navigationHandler.handle(event));
+    },
+  );
+
   final notificationCoordinator = getIt<NotificationCoordinator>();
 
+  // 9. Configurar recepción de notificaciones.
   await notificationCoordinator.initialize();
 
-  // 7. Iniciar aplicación
+  // 10. Iniciar la app con EL MISMO contenedor.
   runApp(
-    const ProviderScope(
-      child: MyApp(),
+    UncontrolledProviderScope(
+      container: container,
+      child: const MyApp(),
     ),
   );
 
-  // 8. Revisar si la app se abrió desde una notificación
-  await notificationCoordinator.handleInitialMessage();
+  // 11. Procesar notificación que abrió la aplicación.
+  WidgetsBinding.instance.addPostFrameCallback((_) {
+    unawaited(notificationCoordinator.handleInitialMessage());
+  });
 }
 
 class MyApp extends ConsumerWidget {

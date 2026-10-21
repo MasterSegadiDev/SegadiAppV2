@@ -13,7 +13,6 @@ import 'package:segadi/features/services/domain/usecases/get_detail_service_info
 import 'package:segadi/features/services/domain/usecases/get_service_status_usecase.dart';
 import 'package:segadi/features/services/domain/usecases/update_mandatory_status_usecase.dart';
 
-import 'package:segadi/features/services/presentation/list/arguments/service_action_item.dart';
 import 'package:segadi/features/services/presentation/detail/arguments/service_detail_arguments.dart';
 
 class ServiceDetailViewModel extends ChangeNotifier {
