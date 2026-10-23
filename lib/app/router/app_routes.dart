@@ -22,4 +22,6 @@ abstract final class AppRoutes {
   static const travelExpenses = '/travel-expenses';
 
   static const downloadCcp = '/download-ccp';
+
+  static const maintenance = '/maintenance';
 }

@@ -10,6 +10,7 @@ import 'package:segadi/features/evidence_eir/presentation/pages/capture_evidence
 import 'package:segadi/features/georuta/presentation/pages/georoute_page.dart';
 import 'package:segadi/features/local_service/presentation/pages/tramo_detail_page.dart';
 import 'package:segadi/features/local_service/presentation/pages/truck_home_page.dart';
+import 'package:segadi/features/maintenance/presentation/pages/maintenance_unit_selection_page.dart';
 import 'package:segadi/features/services/presentation/detail/arguments/service_detail_arguments.dart';
 import 'package:segadi/features/services/presentation/detail/pages/service_detail_page.dart';
 import 'package:segadi/features/services/presentation/list/pages/services_page.dart';
@@ -137,6 +138,12 @@ final routerProvider = Provider<GoRouter>(
             return TravelExpensesPage(
               arguments: arguments,
             );
+          },
+        ),
+        GoRoute(
+          path: AppRoutes.maintenance,
+          builder: (context, state) {
+            return MaintenanceUnitSelectionPage();
           },
         ),
       ],

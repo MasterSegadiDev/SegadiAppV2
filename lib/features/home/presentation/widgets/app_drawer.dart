@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:segadi/app/router/app_routes.dart';
 import 'package:segadi/core/security/providers/permission_service_provider.dart';
 import 'package:segadi/features/local_service/presentation/providers/provider.dart';
 import 'package:segadi/features/local_service/presentation/states/stretch_state.dart';
@@ -118,7 +119,7 @@ class AppDrawer extends ConsumerWidget {
                     if (canViewServices)
                       DrawerGroup(
                         title: 'Servicios',
-                        icon: Icons.miscellaneous_services,
+                        icon: Icons.assignment_add,
                         children: [
                           if (hasLocalServices)
                             DrawerMenuItem(
@@ -165,6 +166,21 @@ class AppDrawer extends ConsumerWidget {
                             },
                           ),
                         ],
+                      ),
+                    // =================================
+                    // MANTENIMIENTO
+                    // =================================
+                    if (canViewServices)
+                      DrawerMenuItem(
+                        title: 'Matenimiento',
+                        icon: Icons.miscellaneous_services,
+                        route: AppRoutes.maintenance,
+                        onTap: () {
+                          context.pop();
+                          context.go(
+                            AppRoutes.maintenance,
+                          );
+                        },
                       ),
 
                     // =================================

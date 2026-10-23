@@ -1,6 +1,7 @@
 import 'package:get_it/get_it.dart';
 import 'package:segadi/app/di/evidence_eir_injection.dart';
 import 'package:segadi/app/di/fcm_token_injection.dart';
+import 'package:segadi/app/di/maintenance_injection.dart';
 import 'package:segadi/app/di/tramo_injection.dart';
 
 import 'auth_injection.dart';
@@ -37,4 +38,5 @@ Future<void> setupDependencies() async {
   await setupEvidenceEirDependencies(getIt);
   await setupFirebaseDependencies();
   setupFcmTokenDependencies();
+  await setupMaintenanceDependencies();
 }
