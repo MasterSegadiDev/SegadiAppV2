@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:segadi/app/router/app_routes.dart';
 import 'package:segadi/features/maintenance/presentation/providers/maintenance_units_provider.dart';
 
 import '../../domain/entities/maintenance_unit_assigned.dart';
@@ -44,7 +45,7 @@ class _MaintenanceUnitSelectionPageState
     }
 
     context.push(
-      '/maintenance/report',
+      AppRoutes.maintenanceReport,
       extra: {
         'unitId': unitId,
         'vehicleNumber': vehicleNumber,
