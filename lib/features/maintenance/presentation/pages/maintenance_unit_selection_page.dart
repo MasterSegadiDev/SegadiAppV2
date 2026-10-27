@@ -1,20 +1,26 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:segadi/features/maintenance/presentation/providers/maintenance_units_provider.dart';
 
 import '../../domain/entities/maintenance_unit_assigned.dart';
 import '../../domain/entities/maintenance_units_list_entity.dart';
 
-class MaintenanceUnitSelectionPage extends ConsumerWidget {
+class MaintenanceUnitSelectionPage extends ConsumerStatefulWidget {
   const MaintenanceUnitSelectionPage({
     super.key,
     this.onContinue,
   });
 
-  /// Recibe el ID del ERP y el número económico seleccionado.
-  /// Conecta aquí la navegación al formulario de mantenimiento.
   final void Function(String unitId, String vehicleNumber)? onContinue;
 
+  @override
+  ConsumerState<MaintenanceUnitSelectionPage> createState() =>
+      _MaintenanceUnitSelectionPageState();
+}
+
+class _MaintenanceUnitSelectionPageState
+    extends ConsumerState<MaintenanceUnitSelectionPage> {
   static const Color green = Color(0xFF1E7A3C);
   static const Color dark = Color(0xFF101812);
   static const Color background = Color(0xFFF7F8F6);
@@ -32,21 +38,17 @@ class MaintenanceUnitSelectionPage extends ConsumerWidget {
     required String unitId,
     required String vehicleNumber,
   }) {
-    if (onContinue != null) {
-      onContinue!(unitId, vehicleNumber);
+    if (widget.onContinue != null) {
+      widget.onContinue!(unitId, vehicleNumber);
       return;
     }
 
-    // Se muestra este mensaje mientras conectamos
-    // la pantalla de registro de mantenimiento.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'Unidad $vehicleNumber seleccionada. '
-          'Falta conectar el formulario de mantenimiento.',
-        ),
-        backgroundColor: dark,
-      ),
+    context.push(
+      '/maintenance/report',
+      extra: {
+        'unitId': unitId,
+        'vehicleNumber': vehicleNumber,
+      },
     );
   }
 
@@ -54,7 +56,7 @@ class MaintenanceUnitSelectionPage extends ConsumerWidget {
   // ACTUALIZAR DATOS
   // ==========================================
 
-  Future<void> _refresh(WidgetRef ref) async {
+  Future<void> _refresh() async {
     ref.invalidate(assignedUnitProvider);
     ref.invalidate(activeUnitsProvider);
 
@@ -72,9 +74,7 @@ class MaintenanceUnitSelectionPage extends ConsumerWidget {
     BuildContext context,
     List<MaintenanceUnitsListEntity> units,
   ) async {
-    final activeUnits = units.where((unit) {
-      return unit.status.trim().toLowerCase() == 'activa';
-    }).toList();
+    String localSearchQuery = '';
 
     final selected = await showModalBottomSheet<MaintenanceUnitsListEntity>(
       context: context,
@@ -87,140 +87,164 @@ class MaintenanceUnitSelectionPage extends ConsumerWidget {
         ),
       ),
       builder: (sheetContext) {
-        return FractionallySizedBox(
-          heightFactor: 0.75,
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              Container(
-                width: 42,
-                height: 5,
-                decoration: BoxDecoration(
-                  color: border,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  20,
-                  20,
-                  12,
-                  14,
-                ),
-                child: Row(
-                  children: [
-                    const Expanded(
-                      child: Text(
-                        'Seleccionar unidad',
-                        style: TextStyle(
-                          fontSize: 19,
-                          fontWeight: FontWeight.w800,
-                          color: dark,
-                        ),
-                      ),
-                    ),
-                    IconButton(
-                      onPressed: () => Navigator.pop(sheetContext),
-                      icon: const Icon(Icons.close),
-                    ),
-                  ],
-                ),
-              ),
-              const Divider(height: 1, color: border),
-              Expanded(
-                child: activeUnits.isEmpty
-                    ? const Center(
-                        child: Padding(
-                          padding: EdgeInsets.all(24),
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setStateSheet) {
+            final activeUnits = units.where((unit) {
+              final isActive = unit.status.trim().toLowerCase() == 'activa';
+              if (!isActive) return false;
+
+              if (localSearchQuery.trim().isEmpty) return true;
+
+              final query = localSearchQuery.toLowerCase();
+              return unit.vehicleNumber.toLowerCase().contains(query) ||
+                  unit.brand.toLowerCase().contains(query) ||
+                  unit.plates.toLowerCase().contains(query);
+            }).toList();
+
+            return FractionallySizedBox(
+              heightFactor: 0.75,
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(20, 10, 12, 0),
+                    child: Row(
+                      children: [
+                        const Expanded(
                           child: Text(
-                            'No hay unidades activas disponibles.',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(color: secondary),
+                            'Seleccionar unidad',
+                            style: TextStyle(
+                              fontSize: 19,
+                              fontWeight: FontWeight.w800,
+                              color: dark,
+                            ),
                           ),
                         ),
-                      )
-                    : ListView.separated(
-                        padding: const EdgeInsets.all(16),
-                        itemCount: activeUnits.length,
-                        separatorBuilder: (_, __) => const SizedBox(height: 10),
-                        itemBuilder: (context, index) {
-                          final unit = activeUnits[index];
-
-                          return Material(
-                            color: background,
-                            borderRadius: BorderRadius.circular(14),
-                            child: InkWell(
-                              borderRadius: BorderRadius.circular(14),
-                              onTap: () {
-                                Navigator.pop(
-                                  sheetContext,
-                                  unit,
-                                );
-                              },
-                              child: Padding(
-                                padding: const EdgeInsets.all(14),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      width: 46,
-                                      height: 46,
-                                      decoration: BoxDecoration(
-                                        color: softGreen,
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      child: const Icon(
-                                        Icons.local_shipping_outlined,
-                                        color: green,
-                                      ),
-                                    ),
-                                    const SizedBox(width: 12),
-                                    Expanded(
-                                      child: Column(
-                                        crossAxisAlignment:
-                                            CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'Económico '
-                                            '${unit.vehicleNumber}',
-                                            style: const TextStyle(
-                                              fontWeight: FontWeight.w700,
-                                              fontSize: 15,
-                                              color: dark,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 4),
-                                          Text(
-                                            [
-                                              unit.brand,
-                                              unit.plates,
-                                            ]
-                                                .where(
-                                                  (value) =>
-                                                      value.trim().isNotEmpty,
-                                                )
-                                                .join(' · '),
-                                            style: const TextStyle(
-                                              color: secondary,
-                                              fontSize: 12,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                    const Icon(
-                                      Icons.chevron_right,
-                                      color: muted,
-                                    ),
-                                  ],
-                                ),
+                        IconButton(
+                          onPressed: () => Navigator.pop(sheetContext),
+                          icon: const Icon(Icons.close),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: TextField(
+                      decoration: InputDecoration(
+                        hintText: 'Buscar unidad...',
+                        prefixIcon: const Icon(Icons.search),
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(10),
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 0,
+                          horizontal: 16,
+                        ),
+                      ),
+                      onChanged: (value) {
+                        setStateSheet(() {
+                          localSearchQuery = value;
+                        });
+                      },
+                    ),
+                  ),
+                  Expanded(
+                    child: activeUnits.isEmpty
+                        ? const Center(
+                            child: Padding(
+                              padding: EdgeInsets.all(24),
+                              child: Text(
+                                'No hay unidades activas disponibles.',
+                                textAlign: TextAlign.center,
+                                style: TextStyle(color: secondary),
                               ),
                             ),
-                          );
-                        },
-                      ),
+                          )
+                        : ListView.separated(
+                            padding: const EdgeInsets.all(16),
+                            itemCount: activeUnits.length,
+                            separatorBuilder: (_, __) =>
+                                const SizedBox(height: 10),
+                            itemBuilder: (context, index) {
+                              final unit = activeUnits[index];
+
+                              return Material(
+                                color: background,
+                                borderRadius: BorderRadius.circular(14),
+                                child: InkWell(
+                                  borderRadius: BorderRadius.circular(14),
+                                  onTap: () {
+                                    Navigator.pop(
+                                      sheetContext,
+                                      unit,
+                                    );
+                                  },
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(14),
+                                    child: Row(
+                                      children: [
+                                        Container(
+                                          width: 46,
+                                          height: 46,
+                                          decoration: BoxDecoration(
+                                            color: softGreen,
+                                            borderRadius:
+                                                BorderRadius.circular(12),
+                                          ),
+                                          child: const Icon(
+                                            Icons.local_shipping_outlined,
+                                            color: green,
+                                          ),
+                                        ),
+                                        const SizedBox(width: 12),
+                                        Expanded(
+                                          child: Column(
+                                            crossAxisAlignment:
+                                                CrossAxisAlignment.start,
+                                            children: [
+                                              Text(
+                                                'Económico ${unit.vehicleNumber}',
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.w700,
+                                                  fontSize: 15,
+                                                  color: dark,
+                                                ),
+                                              ),
+                                              const SizedBox(height: 4),
+                                              Text(
+                                                [
+                                                  unit.brand,
+                                                  unit.plates,
+                                                ]
+                                                    .where(
+                                                      (value) => value
+                                                          .trim()
+                                                          .isNotEmpty,
+                                                    )
+                                                    .join(' · '),
+                                                style: const TextStyle(
+                                                  color: secondary,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
+                                        const Icon(
+                                          Icons.chevron_right,
+                                          color: muted,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
               ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -561,7 +585,7 @@ class MaintenanceUnitSelectionPage extends ConsumerWidget {
   // ==========================================
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  Widget build(BuildContext context) {
     final assignedState = ref.watch(assignedUnitProvider);
     final unitsState = ref.watch(activeUnitsProvider);
 
@@ -571,6 +595,16 @@ class MaintenanceUnitSelectionPage extends ConsumerWidget {
         backgroundColor: dark,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () {
+            if (context.canPop()) {
+              context.pop();
+            } else {
+              context.go('/');
+            }
+          },
+        ),
         title: const Text(
           'Reporte de mantenimiento',
           style: TextStyle(
@@ -578,20 +612,10 @@ class MaintenanceUnitSelectionPage extends ConsumerWidget {
             fontWeight: FontWeight.w700,
           ),
         ),
-        actions: [
-          IconButton(
-            tooltip: 'Actualizar',
-            onPressed: () {
-              ref.invalidate(assignedUnitProvider);
-              ref.invalidate(activeUnitsProvider);
-            },
-            icon: const Icon(Icons.refresh),
-          ),
-        ],
       ),
       body: RefreshIndicator(
         color: green,
-        onRefresh: () => _refresh(ref),
+        onRefresh: _refresh,
         child: ListView(
           physics: const AlwaysScrollableScrollPhysics(),
           padding: const EdgeInsets.fromLTRB(16, 20, 16, 30),

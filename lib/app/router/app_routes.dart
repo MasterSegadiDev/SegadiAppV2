@@ -24,4 +24,6 @@ abstract final class AppRoutes {
   static const downloadCcp = '/download-ccp';
 
   static const maintenance = '/maintenance';
+
+  static const maintenanceReport = '/maintenance/report';
 }
