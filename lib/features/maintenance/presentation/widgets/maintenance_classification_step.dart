@@ -75,7 +75,7 @@ class MaintenanceClassificationStep extends StatelessWidget {
           ),
           const SizedBox(height: 24),
           _dropdown(
-            label: 'Prioridad *',
+            label: 'Grupo *',
             hint: 'Seleccionar prioridad',
             value: priority,
             options: priorities,

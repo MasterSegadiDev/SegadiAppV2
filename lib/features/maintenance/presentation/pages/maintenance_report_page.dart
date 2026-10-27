@@ -153,7 +153,7 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Paso ${_currentStep + 1} de 3',
+                    'Paso ${_currentStep + 1} de 2',
                     style: const TextStyle(
                       color: green,
                       fontWeight: FontWeight.w700,
@@ -171,7 +171,7 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
                   ),
                   const SizedBox(height: 14),
                   Row(
-                    children: List.generate(3, (index) {
+                    children: List.generate(2, (index) {
                       return Expanded(
                         child: Container(
                           height: 5,
@@ -232,15 +232,16 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
                         );
                       },
                     ),
-                  _ => MaintenanceEvidenceStep(
-                      vehicleNumber: widget.vehicleNumber,
-                      description: _descriptionController.text.trim(),
-                      priority: _priority ?? '',
-                      evidence: _evidence,
-                      onEvidenceChanged: (value) {
-                        setState(() => _evidence = value);
-                      },
-                    ),
+                  _ => null
+                  // MaintenanceEvidenceStep(
+                  //     vehicleNumber: widget.vehicleNumber,
+                  //     description: _descriptionController.text.trim(),
+                  //     priority: _priority ?? '',
+                  //     evidence: _evidence,
+                  //     onEvidenceChanged: (value) {
+                  //       setState(() => _evidence = value);
+                  //     },
+                  //   ),
                 },
               ),
             ),
@@ -293,7 +294,7 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
                               ),
                             )
                           : Text(
-                              _currentStep == 2
+                              _currentStep == 1
                                   ? 'Enviar reporte'
                                   : 'Continuar',
                               style: const TextStyle(
