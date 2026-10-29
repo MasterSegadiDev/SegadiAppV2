@@ -4,4 +4,5 @@ import 'package:segadi/features/maintenance/domain/entities/maintenance_units_li
 abstract class MaintenanceRepository {
   Future<MaintenanceUnitAssigned?> getAssignedUnit();
   Future<List<MaintenanceUnitsListEntity>> getActiveUnits();
+  Future<void> validarUnidad();
 }
