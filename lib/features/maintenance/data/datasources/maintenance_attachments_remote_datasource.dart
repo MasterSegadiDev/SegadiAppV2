@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:segadi/core/network/fracttal_api_client.dart';
 
@@ -10,109 +11,185 @@ class MaintenanceAttachmentsRemoteDataSource {
   final FracttalApiClient _client;
   final Dio _storageDio = Dio();
 
-  Future<List<String>> uploadImages(
-    List<XFile> images,
-  ) async {
-    final keys = <String>[];
+  Future<List<String>> uploadImages(List<XFile> photos) async {
+    final uploadedKeys = <String>[];
 
-    for (final image in images) {
-      final size = await image.length();
+    for (final photo in photos) {
+      final bytes = await photo.readAsBytes();
 
-      if (size <= 0 || size > 100490000) {
-        throw ArgumentError(
-          'La imagen ${image.name} tiene '
-          'un tamaño no permitido.',
-        );
-      }
+      final fileName = '${DateTime.now().microsecondsSinceEpoch}_${photo.name}';
 
+      // 1. Obtener credenciales de Fracttal.
       final response = await _client.request(
         's3_object/',
         method: 'POST',
         data: {
-          'name': image.name,
-          'size': size,
+          'name': fileName,
+          'size': bytes.length,
         },
       );
 
-      final body = response.data;
+      // El cliente puede devolver Response de Dio
+      // o directamente el JSON.
+      final Object? responseData = response.data;
 
-      if (body is! Map || body['success'] != true || body['data'] is! Map) {
-        throw Exception(
-          'Error al obtener credenciales: $body',
+      if (responseData is! Map) {
+        throw StateError(
+          'Respuesta inesperada de Fracttal: '
+          '${responseData.runtimeType}',
         );
       }
 
-      final credentials = body['data'] as Map;
+      final responseMap = Map<String, dynamic>.from(responseData);
 
-      String requiredValue(String field) {
-        final value = credentials[field];
+      debugPrint(
+        '[S3] Campos principales: ${responseMap.keys.toList()}',
+      );
 
-        if (value is! String || value.isEmpty) {
-          throw FormatException(
-            'Falta $field en credenciales S3.',
+      // 2. Extraer data sin asumir que siempre es un Map.
+      final Object? data = responseMap['data'];
+
+      Map<String, dynamic> credentials;
+
+      if (data is Map) {
+        credentials = Map<String, dynamic>.from(data);
+      } else if (data is List && data.isNotEmpty && data.first is Map) {
+        credentials = Map<String, dynamic>.from(data.first as Map);
+      } else if (responseMap.containsKey('key')) {
+        credentials = responseMap;
+      } else {
+        throw StateError(
+          'Estructura de credenciales no reconocida. '
+          'Tipo de data: ${data.runtimeType}. '
+          'Campos disponibles: ${responseMap.keys.toList()}',
+        );
+      }
+
+      debugPrint(
+        '[S3] Campos de credenciales: '
+        '${credentials.keys.toList()}',
+      );
+
+      String requiredField(String field) {
+        final value = credentials[field]?.toString();
+
+        if (value == null || value.trim().isEmpty) {
+          throw StateError(
+            'Fracttal no devolvió el campo $field. '
+            'Campos disponibles: ${credentials.keys.toList()}',
           );
         }
 
         return value;
       }
 
-      final key = requiredValue('key');
-      final host = requiredValue('host');
+      // 3. Preparar URL de Amazon S3.
+      final host = requiredField('host');
+      final bucket = requiredField('bucket');
+      final key = requiredField('key');
 
+      final normalizedHost =
+          host.startsWith('http://') || host.startsWith('https://')
+              ? host
+              : 'https://$host';
+
+      final hostUri = Uri.parse(normalizedHost);
+
+      if (!hostUri.hasAuthority) {
+        throw StateError('Host S3 inválido: $host');
+      }
+
+      final String uploadUrl;
+
+      if (hostUri.host == bucket || hostUri.host.startsWith('$bucket.')) {
+        uploadUrl = hostUri.toString();
+      } else if (hostUri.host.startsWith('s3.') ||
+          hostUri.host == 's3.amazonaws.com') {
+        final basePath = hostUri.path.replaceFirst(RegExp(r'/$'), '');
+
+        uploadUrl = hostUri
+            .replace(
+              path: '$basePath/$bucket',
+            )
+            .toString();
+      } else {
+        uploadUrl = hostUri.toString();
+      }
+
+      // 4. Preparar formulario multipart.
       final form = FormData();
 
       form.fields.addAll([
         MapEntry('key', key),
-        MapEntry('acl', requiredValue('acl')),
-        MapEntry('policy', requiredValue('policy')),
+        MapEntry('acl', requiredField('acl')),
+        MapEntry('policy', requiredField('policy')),
         MapEntry(
           'x-amz-credential',
-          requiredValue('credential'),
+          requiredField('credential'),
         ),
         const MapEntry(
           'x-amz-algorithm',
           'AWS4-HMAC-SHA256',
         ),
-        MapEntry(
-          'x-amz-date',
-          requiredValue('date'),
-        ),
+        MapEntry('x-amz-date', requiredField('date')),
         MapEntry(
           'x-amz-signature',
-          requiredValue('signature'),
+          requiredField('signature'),
         ),
-        const MapEntry(
-          'success_action_status',
-          '200',
-        ),
+        const MapEntry('success_action_status', '200'),
       ]);
 
-      // El archivo debe ser el último campo.
+      // El archivo debe ir al final.
       form.files.add(
         MapEntry(
           'file',
-          await MultipartFile.fromFile(
-            image.path,
-            filename: image.name,
+          MultipartFile.fromBytes(
+            bytes,
+            filename: fileName,
           ),
         ),
       );
 
-      // No usar el token de Fracttal en S3.
-      await _storageDio.post(
-        host,
-        data: form,
-        options: Options(
-          contentType: Headers.multipartFormDataContentType,
-          validateStatus: (status) =>
-              status != null && status >= 200 && status < 300,
-        ),
-      );
+      // 5. Subir a S3 sin token de Fracttal.
+      final s3Dio = Dio();
 
-      keys.add(key);
+      try {
+        debugPrint('[S3] Subiendo archivo a: $uploadUrl');
+
+        final uploadResponse = await s3Dio.post(
+          uploadUrl,
+          data: form,
+          options: Options(
+            contentType: Headers.multipartFormDataContentType,
+            followRedirects: false,
+          ),
+        );
+
+        debugPrint(
+          '[S3] Archivo subido. '
+          'HTTP ${uploadResponse.statusCode}',
+        );
+
+        uploadedKeys.add(key);
+      } on DioException catch (error) {
+        debugPrint(
+          '[S3] URL: ${error.requestOptions.uri}',
+        );
+        debugPrint(
+          '[S3] Método: ${error.requestOptions.method}',
+        );
+        debugPrint(
+          '[S3] HTTP: ${error.response?.statusCode}',
+        );
+        debugPrint(
+          '[S3] Respuesta: ${error.response?.data}',
+        );
+
+        rethrow;
+      }
     }
 
-    return keys;
+    return uploadedKeys;
   }
 
   Future<void> attachImages({
@@ -120,39 +197,63 @@ class MaintenanceAttachmentsRemoteDataSource {
     required int statusId,
     required List<String> keys,
   }) async {
-    if (keys.isEmpty) {
-      throw ArgumentError(
-        'No hay fotografías para asociar.',
-      );
-    }
-
-    if (!{1, 2, 4}.contains(statusId)) {
-      throw StateError(
-        'El estado $statusId de la solicitud '
-        'no admite adjuntos en Fracttal.',
-      );
-    }
-
-    final response = await _client.request(
+    await _client.request(
       'work_requests_attachments_files/$requestIdCode',
       method: 'POST',
       data: {
         'id_status': statusId,
-        'paths': keys.map((key) {
-          return {
-            'name': key,
-            'description': 'Evidencia fotográfica',
-          };
-        }).toList(),
+        'paths': keys
+            .map((key) => {
+                  'name': key,
+                  'description': 'Evidencia de mantenimiento',
+                })
+            .toList(),
       },
     );
 
-    final body = response.data;
+    debugPrint(
+      '[Fracttal] Adjuntos asociados a solicitud $requestIdCode',
+    );
+  }
 
-    if (body is! Map || body['success'] != true) {
-      throw Exception(
-        'Error al asociar fotografías: $body',
-      );
+  String _resolveS3Url({
+    required String host,
+    required String bucket,
+  }) {
+    final rawHost = host.trim();
+
+    if (rawHost.isEmpty) {
+      throw StateError('Fracttal devolvió host vacío');
     }
+
+    final uri = Uri.parse(
+      rawHost.startsWith('http://') || rawHost.startsWith('https://')
+          ? rawHost
+          : 'https://$rawHost',
+    );
+
+    if (!uri.hasAuthority) {
+      throw StateError('Host S3 inválido: $rawHost');
+    }
+
+    // Si el host ya identifica al bucket, conservarlo.
+    if (uri.host == bucket || uri.host.startsWith('$bucket.')) {
+      return uri.toString();
+    }
+
+    // Si Fracttal devuelve un endpoint regional genérico,
+    // usar el bucket como parte de la ruta.
+    if (uri.host.startsWith('s3.') || uri.host == 's3.amazonaws.com') {
+      final path = uri.path.replaceAll(RegExp(r'/$'), '');
+
+      return uri
+          .replace(
+            path: '$path/$bucket',
+          )
+          .toString();
+    }
+
+    // Otros hosts: no modificar la ruta firmada.
+    return uri.toString();
   }
 }

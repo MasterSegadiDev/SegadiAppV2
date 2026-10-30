@@ -118,12 +118,12 @@ class _MaintenanceReportPageState extends ConsumerState<MaintenanceReportPage> {
 
     try {
       final request = CreateMaintenanceRequestModel(
-        assetCode: 'MTX-001',
+        assetCode: 'BUENAVISTA',
         description: _descriptionController.text.trim(),
         observation: _observationController.text.trim(),
         dateIncident: _incidentDate,
-        requestedBy: 'Abraham Frias Ochoa',
-        userCode: '828',
+        requestedBy: 'Adrian Leal Capacitación',
+        userCode: '611',
         isUrgent: _isUrgent,
         typesDescription: 'Maquinaria',
         types1Description: 'Temperatura',
