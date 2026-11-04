@@ -100,7 +100,6 @@ class AppDrawer extends ConsumerWidget {
                         );
                       },
                     ),
-
                     const Padding(
                       padding: EdgeInsets.symmetric(
                         horizontal: 4,

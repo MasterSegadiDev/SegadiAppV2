@@ -56,3 +56,4 @@ class AppColors {
   static const border = Color(0xFFE0E0DA);
   static const errorRed = Color(0xFFB23A3A);
 }
+
