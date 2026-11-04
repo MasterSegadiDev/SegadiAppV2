@@ -1,10 +1,14 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:segadi/features/maintenance/data/models/create_maintenance_request_model.dart';
+import 'package:segadi/features/maintenance/presentation/providers/maintenance_report_provider.dart';
 import 'package:segadi/features/maintenance/presentation/widgets/maintenance_classification_step.dart';
 import 'package:segadi/features/maintenance/presentation/widgets/maintenance_evidence_step.dart';
 import 'package:segadi/features/maintenance/presentation/widgets/maintenance_general_info_step.dart';
 
-class MaintenanceReportPage extends StatefulWidget {
+class MaintenanceReportPage extends ConsumerStatefulWidget {
   const MaintenanceReportPage({
     super.key,
     required this.unitId,
@@ -15,10 +19,11 @@ class MaintenanceReportPage extends StatefulWidget {
   final String vehicleNumber;
 
   @override
-  State<MaintenanceReportPage> createState() => _MaintenanceReportPageState();
+  ConsumerState<MaintenanceReportPage> createState() =>
+      _MaintenanceReportPageState();
 }
 
-class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
+class _MaintenanceReportPageState extends ConsumerState<MaintenanceReportPage> {
   static const green = Color(0xFF1E7A3C);
   static const dark = Color(0xFF101812);
   static const background = Color(0xFFF7F8F6);
@@ -39,6 +44,14 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
 
   XFile? _evidence;
   bool _submitting = false;
+
+  String? _reportIdentifier;
+
+  String _getOrCreateIdentifier() {
+    return _reportIdentifier ??= 'SEGADI-'
+        '${DateTime.now().microsecondsSinceEpoch}-'
+        '${Random.secure().nextInt(1000000)}';
+  }
 
   @override
   void dispose() {
@@ -83,34 +96,62 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
   }
 
   Future<void> _submit() async {
-    if (_evidence == null) {
-      _showMessage('Agrega una fotografía de evidencia.');
+    if (_submitting) return;
+
+    if (_descriptionController.text.trim().isEmpty ||
+        _priority == null ||
+        _classification1 == null ||
+        _classification2 == null) {
+      _showMessage('Completa los datos del reporte.');
+      return;
+    }
+
+    final List<XFile> photos =
+        _evidence == null ? <XFile>[] : <XFile>[_evidence!];
+
+    if (photos.isEmpty) {
+      _showMessage('Agrega al menos una fotografía.');
       return;
     }
 
     setState(() => _submitting = true);
 
     try {
-      // Próximo paso:
-      // await getIt<CreateMaintenanceReportUseCase>().call(
-      //   unitId: widget.unitId,
-      //   vehicleNumber: widget.vehicleNumber,
-      //   description: _descriptionController.text.trim(),
-      //   observation: _observationController.text.trim(),
-      //   incidentDate: _incidentDate,
-      //   isUrgent: _isUrgent,
-      //   priority: _priority!,
-      //   classification1: _classification1!,
-      //   classification2: _classification2!,
-      //   evidencePath: _evidence!.path,
-      // );
-
-      // No simulamos un envío exitoso hasta conectar el API.
-      _showMessage(
-        'Formulario validado. Pendiente conectar Fracttal.',
+      final request = CreateMaintenanceRequestModel(
+        assetCode: 'BUENAVISTA',
+        description: _descriptionController.text.trim(),
+        observation: _observationController.text.trim(),
+        dateIncident: _incidentDate,
+        requestedBy: 'Adrian Leal Capacitación',
+        userCode: '611',
+        isUrgent: _isUrgent,
+        typesDescription: 'Maquinaria',
+        types1Description: 'Temperatura',
+        types2Description: 'Clasificación 2',
+        userType: 'HUMAN_RESOURCES',
+        //thirdPartyCode: 'TRD-MRX-001',
+        //contactName: 'MRX LONDOÑO TERCERO PRUEBA',
+        identifier: _getOrCreateIdentifier(),
       );
+
+      final result = await ref.read(maintenanceReportProvider.notifier).submit(
+            request,
+            photos: photos,
+          );
+
+      if (!mounted) return;
+
+      await _showSuccessDialog(
+        folio: result.idCode.toString(),
+        photosCount: result.photosCount,
+      );
+      // Aquí puedes navegar a Mis reportes.
     } catch (error) {
-      _showMessage('No se pudo registrar el reporte: $error');
+      if (!mounted) return;
+      debugPrint('Error Fracttal: ${error}');
+      _showMessage(
+        'No se pudo completar el reporte: $error',
+      );
     } finally {
       if (mounted) {
         setState(() => _submitting = false);
@@ -153,7 +194,7 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Paso ${_currentStep + 1} de 2',
+                    'Paso ${_currentStep + 1} de 3',
                     style: const TextStyle(
                       color: green,
                       fontWeight: FontWeight.w700,
@@ -171,7 +212,7 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
                   ),
                   const SizedBox(height: 14),
                   Row(
-                    children: List.generate(2, (index) {
+                    children: List.generate(3, (index) {
                       return Expanded(
                         child: Container(
                           height: 5,
@@ -232,16 +273,15 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
                         );
                       },
                     ),
-                  _ => null
-                  // MaintenanceEvidenceStep(
-                  //     vehicleNumber: widget.vehicleNumber,
-                  //     description: _descriptionController.text.trim(),
-                  //     priority: _priority ?? '',
-                  //     evidence: _evidence,
-                  //     onEvidenceChanged: (value) {
-                  //       setState(() => _evidence = value);
-                  //     },
-                  //   ),
+                  _ => MaintenanceEvidenceStep(
+                      vehicleNumber: widget.vehicleNumber,
+                      description: _descriptionController.text.trim(),
+                      priority: _priority ?? '',
+                      evidence: _evidence,
+                      onEvidenceChanged: (value) {
+                        setState(() => _evidence = value);
+                      },
+                    ),
                 },
               ),
             ),
@@ -294,7 +334,7 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
                               ),
                             )
                           : Text(
-                              _currentStep == 1
+                              _currentStep == 2
                                   ? 'Enviar reporte'
                                   : 'Continuar',
                               style: const TextStyle(
@@ -310,5 +350,107 @@ class _MaintenanceReportPageState extends State<MaintenanceReportPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _showSuccessDialog({
+    required String folio,
+    required int photosCount,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF238443),
+                  size: 68,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '¡Reporte registrado!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Tu reporte de mantenimiento se registró '
+                  'correctamente.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Folio: $folio',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text('$photosCount fotografía(s) adjunta(s)'),
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.assignment_outlined),
+                  label: const Text(
+                    'Mis reportes de mantenimiento',
+                  ),
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+
+                    // Navegación GoRouter.
+                    // Sustituir por la ruta real del proyecto.
+                    //context.go('/maintenance-reports');
+                  },
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('Nuevo reporte'),
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+
+                    // Reinicia el formulario actual.
+                    _resetForm();
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _resetForm() {
+    setState(() {
+      _currentStep = 0;
+      _incidentDate = DateTime.now();
+      _isUrgent = false;
+      _priority = null;
+      _classification1 = null;
+      _classification2 = null;
+      _evidence = null;
+      _reportIdentifier = null;
+
+      _descriptionController.clear();
+      _observationController.clear();
+    });
   }
 }

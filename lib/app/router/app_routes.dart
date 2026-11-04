@@ -26,4 +26,6 @@ abstract final class AppRoutes {
   static const maintenance = '/maintenance';
 
   static const maintenanceReport = '/maintenance/report';
+
+  static const maintenanceReports = '/maintenance-reports';
 }

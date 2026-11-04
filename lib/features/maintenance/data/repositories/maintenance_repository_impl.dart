@@ -20,4 +20,9 @@ class MaintenanceRepositoryImpl implements MaintenanceRepository {
   Future<List<MaintenanceUnitsListEntity>> getActiveUnits() {
     return remoteDataSource.getActiveUnits();
   }
+
+  @override
+  Future<void> validarUnidad() {
+    return remoteDataSource.getActiveUnits();
+  }
 }

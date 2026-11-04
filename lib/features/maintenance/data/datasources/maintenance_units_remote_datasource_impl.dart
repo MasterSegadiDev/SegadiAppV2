@@ -54,4 +54,8 @@ class MaintenanceUnitsRemoteDataSourceImpl
       result as Map<String, dynamic>,
     );
   }
+
+  Future<void> validarUnidad() async {
+    return null;
+  }
 }
