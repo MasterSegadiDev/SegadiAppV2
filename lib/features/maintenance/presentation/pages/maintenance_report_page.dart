@@ -141,20 +141,10 @@ class _MaintenanceReportPageState extends ConsumerState<MaintenanceReportPage> {
 
       if (!mounted) return;
 
-      debugPrint(
-        'Solicitud: ${result.idCode}, '
-        'fotos: ${result.photosCount}',
+      await _showSuccessDialog(
+        folio: result.idCode.toString(),
+        photosCount: result.photosCount,
       );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'Reporte ${result.idCode} registrado '
-            'con ${result.photosCount} fotografía(s).',
-          ),
-        ),
-      );
-
       // Aquí puedes navegar a Mis reportes.
     } catch (error) {
       if (!mounted) return;
@@ -360,5 +350,107 @@ class _MaintenanceReportPageState extends ConsumerState<MaintenanceReportPage> {
         ),
       ),
     );
+  }
+
+  Future<void> _showSuccessDialog({
+    required String folio,
+    required int photosCount,
+  }) async {
+    await showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) {
+        return PopScope(
+          canPop: false,
+          child: AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(22),
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  color: Color(0xFF238443),
+                  size: 68,
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  '¡Reporte registrado!',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  'Tu reporte de mantenimiento se registró '
+                  'correctamente.',
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 18),
+                Text(
+                  'Folio: $folio',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.bold,
+                    fontSize: 18,
+                  ),
+                ),
+                const SizedBox(height: 5),
+                Text('$photosCount fotografía(s) adjunta(s)'),
+              ],
+            ),
+            actions: [
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton.icon(
+                  icon: const Icon(Icons.assignment_outlined),
+                  label: const Text(
+                    'Mis reportes de mantenimiento',
+                  ),
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+
+                    // Navegación GoRouter.
+                    // Sustituir por la ruta real del proyecto.
+                    //context.go('/maintenance-reports');
+                  },
+                ),
+              ),
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton.icon(
+                  icon: const Icon(Icons.add_circle_outline),
+                  label: const Text('Nuevo reporte'),
+                  onPressed: () {
+                    Navigator.of(dialogContext).pop();
+
+                    // Reinicia el formulario actual.
+                    _resetForm();
+                  },
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _resetForm() {
+    setState(() {
+      _currentStep = 0;
+      _incidentDate = DateTime.now();
+      _isUrgent = false;
+      _priority = null;
+      _classification1 = null;
+      _classification2 = null;
+      _evidence = null;
+      _reportIdentifier = null;
+
+      _descriptionController.clear();
+      _observationController.clear();
+    });
   }
 }

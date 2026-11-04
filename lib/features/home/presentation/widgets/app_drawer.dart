@@ -171,16 +171,54 @@ class AppDrawer extends ConsumerWidget {
                     // MANTENIMIENTO
                     // =================================
                     if (canViewServices)
-                      DrawerMenuItem(
-                        title: 'Matenimiento',
-                        icon: Icons.miscellaneous_services,
-                        route: AppRoutes.maintenance,
-                        onTap: () {
-                          context.pop();
-                          context.go(
-                            AppRoutes.maintenance,
-                          );
-                        },
+                      // DrawerMenuItem(
+                      //   title: 'Matenimiento',
+                      //   icon: Icons.miscellaneous_services,
+                      //   route: AppRoutes.maintenance,
+                      //   onTap: () {
+                      //     context.pop();
+                      //     context.go(
+                      //       AppRoutes.maintenance,
+                      //     );
+                      //   },
+                      // ),
+
+                      DrawerGroup(
+                        title: 'Mantenimiento',
+                        icon: Icons.assignment_add,
+                        children: [
+                          // ===========================
+                          // REPORTES DE CURSO EN MANTENIMIENTO
+                          // ===========================
+
+                          DrawerMenuItem(
+                            title: 'Reportes en curso',
+                            icon: Icons.miscellaneous_services,
+                            route: AppRoutes.maintenanceReports,
+                            onTap: () {
+                              context.pop();
+                              context.go(
+                                AppRoutes.maintenanceReports,
+                              );
+                            },
+                          ),
+
+                          // ===========================
+                          // NUEVO REPORTE
+                          // ===========================
+
+                          DrawerMenuItem(
+                            title: 'Generar nuevo reporte',
+                            icon: Icons.task_alt,
+                            route: AppRoutes.maintenance,
+                            onTap: () {
+                              context.pop();
+                              context.go(
+                                AppRoutes.maintenance,
+                              );
+                            },
+                          ),
+                        ],
                       ),
 
                     // =================================

@@ -9,7 +9,6 @@ class MaintenanceAttachmentsRemoteDataSource {
   );
 
   final FracttalApiClient _client;
-  final Dio _storageDio = Dio();
 
   Future<List<String>> uploadImages(List<XFile> photos) async {
     final uploadedKeys = <String>[];
@@ -214,46 +213,5 @@ class MaintenanceAttachmentsRemoteDataSource {
     debugPrint(
       '[Fracttal] Adjuntos asociados a solicitud $requestIdCode',
     );
-  }
-
-  String _resolveS3Url({
-    required String host,
-    required String bucket,
-  }) {
-    final rawHost = host.trim();
-
-    if (rawHost.isEmpty) {
-      throw StateError('Fracttal devolvió host vacío');
-    }
-
-    final uri = Uri.parse(
-      rawHost.startsWith('http://') || rawHost.startsWith('https://')
-          ? rawHost
-          : 'https://$rawHost',
-    );
-
-    if (!uri.hasAuthority) {
-      throw StateError('Host S3 inválido: $rawHost');
-    }
-
-    // Si el host ya identifica al bucket, conservarlo.
-    if (uri.host == bucket || uri.host.startsWith('$bucket.')) {
-      return uri.toString();
-    }
-
-    // Si Fracttal devuelve un endpoint regional genérico,
-    // usar el bucket como parte de la ruta.
-    if (uri.host.startsWith('s3.') || uri.host == 's3.amazonaws.com') {
-      final path = uri.path.replaceAll(RegExp(r'/$'), '');
-
-      return uri
-          .replace(
-            path: '$path/$bucket',
-          )
-          .toString();
-    }
-
-    // Otros hosts: no modificar la ruta firmada.
-    return uri.toString();
   }
 }

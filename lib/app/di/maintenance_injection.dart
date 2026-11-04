@@ -1,8 +1,12 @@
 import 'package:segadi/core/network/dio_client.dart';
 import 'package:segadi/core/network/fracttal_api_client.dart';
 import 'package:segadi/features/maintenance/data/datasources/maintenance_attachments_remote_datasource.dart';
+import 'package:segadi/features/maintenance/data/datasources/maintenance_report_remote_datasource.dart';
+import 'package:segadi/features/maintenance/data/datasources/maintenance_report_remote_datasource_impl.dart';
 import 'package:segadi/features/maintenance/data/datasources/maintenance_requests_remote_datasource.dart';
 import 'package:segadi/features/maintenance/data/datasources/maintenance_units_remote_datasource_impl.dart';
+import 'package:segadi/features/maintenance/data/repositories/maintenance_report_repository_impl.dart';
+import 'package:segadi/features/maintenance/domain/repositories/maintenance_report_repository.dart';
 import 'package:segadi/features/maintenance/domain/usecases/create_maintenance_report_usecase.dart';
 
 import 'injection_container.dart';
@@ -29,6 +33,10 @@ Future<void> setupMaintenanceDependencies() async {
   // DataSources
   // ==========================
 
+  getIt.registerLazySingleton<MaintenanceReportRemoteDataSourceImpl>(
+    () => MaintenanceReportRemoteDataSourceImpl(getIt<FracttalApiClient>()),
+  );
+
   getIt.registerLazySingleton<MaintenanceUnitsRemoteDatasource>(
     () => MaintenanceUnitsRemoteDataSourceImpl(),
   );
@@ -48,6 +56,12 @@ Future<void> setupMaintenanceDependencies() async {
   // ==========================
   // Repositories
   // ==========================
+
+  getIt.registerLazySingleton<MaintenanceReportsRepository>(
+    () => MaintenanceReportRepositoryImpl(
+      remoteDataSource: getIt<MaintenanceReportsRemoteDatasource>(),
+    ),
+  );
 
   getIt.registerLazySingleton<MaintenanceRepository>(
     () => MaintenanceRepositoryImpl(
