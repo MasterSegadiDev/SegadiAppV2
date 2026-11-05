@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:segadi/features/maintenance/domain/usecases/get_maintenance_report_detail.dart';
 import 'package:segadi/features/maintenance/domain/usecases/get_maintenance_reports.dart';
@@ -13,16 +14,6 @@ final maintenanceReportProvider =
     AsyncNotifierProvider<MaintenanceReportNotifier, MaintenanceReportResult?>(
   MaintenanceReportNotifier.new,
 );
-
-// final maintenanceReportsViewModelProvider =
-//     StateNotifierProvider<MaintenanceReportsViewModel, MaintenanceReportsState>(
-//         (ref) {
-//   return MaintenanceReportsViewModel(
-//     getReportsUseCase: ref.read(getMaintenanceReportsProvider),
-//     getDetailUseCase: ref.read(getMaintenanceReportDetailProvider),
-//     codeCreator: '611',
-//   );
-// });
 
 class MaintenanceReportNotifier
     extends AsyncNotifier<MaintenanceReportResult?> {
@@ -48,32 +39,6 @@ class MaintenanceReportNotifier
       return result;
     } catch (error, stackTrace) {
       state = AsyncError(error, stackTrace);
-      rethrow;
-    }
-  }
-
-  // Consultar los reportes creados por un usuario.
-  Future<List<MaintenanceReport>> getReports({
-    required String codeCreator,
-  }) async {
-    try {
-      return await getIt<GetMaintenanceReports>().call(
-        codeCreator: codeCreator,
-      );
-    } catch (error) {
-      rethrow;
-    }
-  }
-
-  // Consultar el detalle de un reporte.
-  Future<MaintenanceReport> getReportDetail({
-    required int code,
-  }) async {
-    try {
-      return await getIt<GetMaintenanceReportDetail>().call(
-        code: code,
-      );
-    } catch (error) {
       rethrow;
     }
   }

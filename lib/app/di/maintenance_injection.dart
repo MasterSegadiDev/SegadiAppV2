@@ -15,8 +15,8 @@ import 'package:segadi/features/maintenance/data/datasources/maintenance_units_r
 import 'package:segadi/features/maintenance/data/repositories/maintenance_repository.dart';
 import 'package:segadi/features/maintenance/data/repositories/maintenance_repository_impl.dart';
 
-import 'package:segadi/features/maintenance/domain/usecases/get_assigned_unit_usecase.dart';
-import 'package:segadi/features/maintenance/domain/usecases/get_active_units_usecase.dart';
+import 'package:segadi/features/maintenance/domain/usecases/get_maintenance_reports.dart';
+import 'package:segadi/features/maintenance/domain/usecases/get_maintenance_report_detail.dart';
 
 Future<void> setupMaintenanceDependencies() async {
   // =========================
@@ -32,6 +32,12 @@ Future<void> setupMaintenanceDependencies() async {
   // ==========================
   // DataSources
   // ==========================
+
+  getIt.registerLazySingleton<MaintenanceReportsRemoteDatasource>(
+    () => MaintenanceReportRemoteDataSourceImpl(
+      getIt<FracttalApiClient>(),
+    ),
+  );
 
   getIt.registerLazySingleton<MaintenanceReportRemoteDataSourceImpl>(
     () => MaintenanceReportRemoteDataSourceImpl(getIt<FracttalApiClient>()),
@@ -57,9 +63,9 @@ Future<void> setupMaintenanceDependencies() async {
   // Repositories
   // ==========================
 
-  getIt.registerLazySingleton<MaintenanceReportsRepository>(
+  getIt.registerLazySingleton<MaintenanceReportRepository>(
     () => MaintenanceReportRepositoryImpl(
-      remoteDataSource: getIt<MaintenanceReportsRemoteDatasource>(),
+      remoteDatasource: getIt<MaintenanceReportRemoteDataSourceImpl>(),
     ),
   );
 
@@ -73,18 +79,17 @@ Future<void> setupMaintenanceDependencies() async {
   // UseCases
   // ==========================
 
-  getIt.registerLazySingleton<GetAssignedUnitUseCase>(
-    () => GetAssignedUnitUseCase(
-      getIt<MaintenanceRepository>(),
+  getIt.registerLazySingleton<GetMaintenanceReports>(
+    () => GetMaintenanceReports(
+      getIt<MaintenanceReportRepository>(),
     ),
   );
 
-  getIt.registerLazySingleton<GetActiveUnitsUseCase>(
-    () => GetActiveUnitsUseCase(
-      getIt<MaintenanceRepository>(),
+  getIt.registerLazySingleton<GetMaintenanceReportDetail>(
+    () => GetMaintenanceReportDetail(
+      getIt<MaintenanceReportRepository>(),
     ),
   );
-
   getIt.registerLazySingleton<CreateMaintenanceReportUseCase>(
     () => CreateMaintenanceReportUseCase(
       getIt<MaintenanceRequestsRemoteDataSource>(),

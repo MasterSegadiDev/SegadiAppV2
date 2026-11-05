@@ -1,6 +1,6 @@
 import '../entities/maintenance_report.dart';
 
-abstract class MaintenanceReportsRepository {
+abstract class MaintenanceReportRepository {
   Future<List<MaintenanceReport>> getReports({
     required String codeCreator,
   });
