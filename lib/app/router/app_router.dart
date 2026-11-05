@@ -163,9 +163,7 @@ final routerProvider = Provider<GoRouter>(
         GoRoute(
           path: AppRoutes.maintenanceReports,
           builder: (context, state) {
-            return MaintenanceReportsPage(
-              onReportTap: (MaintenanceReport value) {},
-            );
+            return MaintenanceReportsPage();
           },
         ),
       ],
