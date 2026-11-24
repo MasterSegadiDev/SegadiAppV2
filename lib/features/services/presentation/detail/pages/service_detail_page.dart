@@ -1,7 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
+import 'package:segadi/app/di/injection_container.dart';
 import 'package:segadi/features/check_list/presentation/models/checklist_arguments.dart';
+import 'package:segadi/features/services/domain/entities/support_status_current_entity.dart';
 
 import 'package:segadi/features/services/domain/enums/evidence_step.dart';
 import 'package:segadi/features/services/domain/enums/service_action.dart';
@@ -15,6 +18,7 @@ import 'package:segadi/features/services/presentation/detail/widgets/detail/send
 import 'package:segadi/features/services/presentation/detail/widgets/detail/service_actions_card.dart';
 import 'package:segadi/features/services/presentation/detail/widgets/detail/service_header_card.dart';
 import 'package:segadi/features/services/presentation/detail/widgets/detail/service_status_button.dart';
+import 'package:segadi/features/support_status/presentation/viewmodel/support_status_viewmodel.dart';
 import 'package:segadi/features/support_status/presentation/widgets/support_status_modal.dart';
 
 class _C {
@@ -26,10 +30,6 @@ class _C {
 
   static const textPrimary = Color(0xFF101812);
   static const textSecondary = Color(0xFF6B6B66);
-  static const textMuted = Color(0xFF9A9A94);
-
-  static const border = Color(0xFFE0E0DA);
-  static const errorRed = Color(0xFFB23A3A);
 }
 
 class ServiceDetailPage extends ConsumerStatefulWidget {
@@ -46,10 +46,90 @@ class ServiceDetailPage extends ConsumerStatefulWidget {
 
 class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
   bool _navigatingToEvidence = false;
+  bool _isFinishingSupport = false;
 
-  bool _shouldShowEvidenceBanner(EvidenceStep step) {
-    return step == EvidenceStep.confirmationPending ||
-        step == EvidenceStep.evidencePending;
+  bool _shouldShowEvidenceBanner(ServiceDetailState state) {
+    return state.canOpenEvidence &&
+        (state.evidenceStep == EvidenceStep.confirmationPending ||
+            state.evidenceStep == EvidenceStep.evidencePending);
+  }
+
+  Future<void> _finishSupport(
+    SupportStatusCurrentEntity supportStatus,
+  ) async {
+    if (_isFinishingSupport) return;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          title: const Text('Finalizar soporte'),
+          content: Text(
+            '¿Deseas finalizar el soporte "${supportStatus.statusName}"?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, false),
+              child: const Text('Cancelar'),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFB9382E),
+                foregroundColor: Colors.white,
+              ),
+              child: const Text('Finalizar'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirmed != true || !mounted) return;
+
+    setState(() => _isFinishingSupport = true);
+
+    final supportViewModel = getIt<SupportStatusViewModel>();
+
+    try {
+      final success = await supportViewModel.sendStatusById(
+        referralId: widget.arguments.idRemision,
+        serviceRequestId: widget.arguments.idSolicitud,
+        statusId: supportStatus.id,
+      );
+
+      if (!mounted) return;
+
+      if (success) {
+        await ref
+            .read(serviceDetailNotifierProvider(widget.arguments).notifier)
+            .refreshAfterSupport();
+
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Soporte finalizado correctamente.'),
+            backgroundColor: Color(0xFF1E7A3C),
+          ),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              supportViewModel.error ?? 'No se pudo finalizar el soporte.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    } finally {
+      supportViewModel.dispose();
+
+      if (mounted) {
+        setState(() => _isFinishingSupport = false);
+      }
+    }
   }
 
   @override
@@ -59,7 +139,14 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
     ref.listen<ServiceDetailState>(
       serviceDetailNotifierProvider(widget.arguments),
       (previous, next) {
-        if (previous?.evidenceStep != next.evidenceStep) {
+        if (previous == null) return;
+
+        final registeredDownloadEnd = previous
+                    .serviceStatus?.nextMandatoryStatus ==
+                'Término de descarga' &&
+            next.serviceStatus?.nextMandatoryStatus == 'Salida de destinatario';
+
+        if (registeredDownloadEnd && next.hasPendingEvidence) {
           _handleEvidenceStep(next.evidenceStep);
         }
       },
@@ -100,7 +187,7 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
       body: SafeArea(
         child: Column(
           children: [
-            if (_shouldShowEvidenceBanner(state.evidenceStep))
+            if (_shouldShowEvidenceBanner(state))
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
                 child: PendingEvidenceBanner(
@@ -136,30 +223,53 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
                       ),
                       const SizedBox(height: 10),
                       SenderCard(
-                        name: state.service?.sender?.name ?? '',
-                        phone: state.service?.sender?.phone ?? '',
+                        name: state.service?.sender.name ?? '',
+                        phone: state.service?.sender.phone ?? '',
                         directContact:
-                            state.service?.sender?.directContact ?? '',
-                        address: state.service?.sender?.address ?? '',
+                            state.service?.sender.directContact ?? '',
+                        address: state.service?.sender.address ?? '',
                       ),
                       const SizedBox(height: 12),
                       RecipientCard(
-                        name: state.service?.recipient?.name ?? '',
-                        phone: state.service?.recipient?.phone ?? '',
+                        name: state.service?.recipient.name ?? '',
+                        phone: state.service?.recipient.phone ?? '',
                         directContact:
-                            state.service?.recipient?.directContact ?? '',
-                        address: state.service?.recipient?.address ?? '',
+                            state.service?.recipient.directContact ?? '',
+                        address: state.service?.recipient.address ?? '',
                       ),
                       const SizedBox(height: 26),
-                      const _SectionTitle(
-                        icon: Icons.touch_app_outlined,
-                        title: 'Acciones disponibles',
-                      ),
-                      const SizedBox(height: 10),
                       ServiceActionsCard(
                         actions: notifier.actionItems,
                         supportStatus: state.currentSupportStatus,
                         onActionTap: (item) => _onActionTap(item.key, notifier),
+                        onFinishSupport: (supportStatus) async {
+                          final supportViewModel =
+                              getIt<SupportStatusViewModel>();
+
+                          final success = await supportViewModel.sendStatusById(
+                            referralId: widget.arguments.idRemision,
+                            serviceRequestId: widget.arguments.idSolicitud,
+                            statusId: supportStatus.id,
+                          );
+
+                          if (success) {
+                            await notifier.refreshAfterSupport();
+                          } else {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text(
+                                    supportViewModel.error ??
+                                        'No se pudo finalizar el soporte.',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                ),
+                              );
+                            }
+                          }
+
+                          return success;
+                        },
                       ),
                     ],
                   ),
@@ -222,33 +332,35 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
   Future<void> _handleEvidenceStep(EvidenceStep step) async {
     if (!mounted || _navigatingToEvidence) return;
 
-    switch (step) {
-      case EvidenceStep.confirmationPending:
+    if (step != EvidenceStep.confirmationPending &&
+        step != EvidenceStep.evidencePending) {
+      return;
+    }
+
+    _navigatingToEvidence = true;
+
+    try {
+      if (step == EvidenceStep.confirmationPending) {
         await _pushEvidenceRoute('/evidence/confirmation');
-        break;
-      case EvidenceStep.evidencePending:
+      } else {
         await _pushEvidenceRoute('/evidence/capture');
-        break;
-      case EvidenceStep.completed:
-      case EvidenceStep.notApplicable:
-        break;
+      }
+    } finally {
+      _navigatingToEvidence = false;
     }
   }
 
   Future<void> _pushEvidenceRoute(String route) async {
-    _navigatingToEvidence = true;
-
-    final result = await context.push<bool>(route, extra: widget.arguments);
+    await context.push(
+      route,
+      extra: widget.arguments,
+    );
 
     if (!mounted) return;
 
-    _navigatingToEvidence = false;
-
-    if (result == true) {
-      ref
-          .read(serviceDetailNotifierProvider(widget.arguments).notifier)
-          .refreshServiceState();
-    }
+    await ref
+        .read(serviceDetailNotifierProvider(widget.arguments).notifier)
+        .refreshServiceState();
   }
 
   Future<bool?> _openSupportStatusModal({
@@ -257,10 +369,15 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
   }) {
     return showDialog<bool>(
       context: context,
-      builder: (_) => SupportStatusModal(
-        idRemision: idRemision,
-        idSolicitud: idSolicitud,
-      ),
+      builder: (dialogContext) {
+        return ChangeNotifierProvider(
+          create: (_) => getIt<SupportStatusViewModel>(),
+          child: SupportStatusModal(
+            idRemision: idRemision,
+            idSolicitud: idSolicitud,
+          ),
+        );
+      },
     );
   }
 
@@ -292,14 +409,29 @@ class _ServiceDetailPageState extends ConsumerState<ServiceDetailPage> {
         enabled: state.canUpdateStatus,
         onPressed: () async {
           final success = await notifier.updateMandatoryStatus();
+
+          if (!context.mounted || !success) return;
+
+          // Actualizar servicio, estatus y estado de evidencias.
+          await notifier.refreshServiceState();
+
           if (!context.mounted) return;
-          if (success) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('Estatus actualizado correctamente.'),
-              ),
-            );
+
+          // Leer el estado actualizado.
+          final updatedState = ref.read(
+            serviceDetailNotifierProvider(widget.arguments),
+          );
+
+          if (updatedState.hasPendingEvidence) {
+            // No mostrar mensaje de estatus normal.
+            return;
           }
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Estatus actualizado correctamente.'),
+            ),
+          );
         },
       ),
     );

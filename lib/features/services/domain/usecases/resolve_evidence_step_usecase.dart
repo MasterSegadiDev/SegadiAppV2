@@ -7,7 +7,12 @@ class ResolveEvidenceStepUseCase {
     required ServiceGeneralEntity service,
     required ServiceStatusEntity status,
   }) {
-    if (status.blnOutgoingFromRecipient == true) {
+    // Las evidencias solo aplican después de Término de descarga.
+    if (status.nextMandatoryStatus != 'Salida de destinatario') {
+      return EvidenceStep.notApplicable;
+    }
+
+    if (status.blnOutgoingFromRecipient) {
       return EvidenceStep.notApplicable;
     }
 

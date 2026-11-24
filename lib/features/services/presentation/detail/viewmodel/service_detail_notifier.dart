@@ -59,6 +59,14 @@ class ServiceDetailNotifier extends StateNotifier<ServiceDetailState> {
   // REFRESH COMPLETO
   // ============================================================
 
+  Future<void> refreshServiceDetail() async {
+    final args = state.arguments;
+
+    if (args == null) return;
+
+    await _fetchAll(args.idSolicitud);
+  }
+
   Future<void> refreshServiceState() async {
     final args = state.arguments;
 
@@ -160,23 +168,6 @@ class ServiceDetailNotifier extends StateNotifier<ServiceDetailState> {
           statusId: state.nextStatusId,
         ),
       );
-
-      // ========================================================
-      // IMPORTANTE
-      //
-      // Después de actualizar el estatus volvemos a consultar:
-      //
-      // - información general
-      // - acciones
-      // - estatus
-      //
-      // De esta forma obtenemos nuevamente:
-      //
-      // blnConfirmation
-      // blnEvidence
-      //
-      // y recalculamos evidenceStep.
-      // ========================================================
 
       await _fetchAll(
         args.idSolicitud,

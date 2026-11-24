@@ -9,7 +9,6 @@ import 'package:segadi/features/services/presentation/detail/state/load_status.d
 class ServiceDetailState {
   final LoadStatus status;
   final String? error;
-
   final ServiceDetailArguments? arguments;
   final ServiceGeneralEntity? service;
   final ServiceActionsEntity? serviceActions;
@@ -38,35 +37,41 @@ class ServiceDetailState {
 
   String get idSolicitud => arguments?.idSolicitud ?? '';
 
-  // bool get enableStatusButton => serviceStatus?.enableBtn ?? false;
-
-  bool get enableStatusButton {
-    if (evidenceStep == EvidenceStep.confirmationPending ||
-        evidenceStep == EvidenceStep.evidencePending) {
-      return false;
-    } else {
-      return serviceStatus?.enableBtn ?? false;
-    }
-  }
-
   String get nextStatusId => serviceStatus?.nextMandatoryStatusId ?? '';
 
   SupportStatusCurrentEntity? get currentSupportStatus =>
       serviceStatus?.supportStatus;
 
-  String get nextStatusName => serviceStatus?.nextMandatoryStatus ?? '';
-
   String get statusName {
-    if (evidenceStep == EvidenceStep.confirmationPending ||
-        evidenceStep == EvidenceStep.evidencePending) {
+    if (hasPendingEvidence) {
       return 'Evidencias faltantes';
     }
 
     return serviceStatus?.nextMandatoryStatus ?? '';
   }
 
+  // Valida que el siguiente estatus sea Término de descarga.
+  bool get canOpenEvidence => hasPendingEvidence;
+
+  // Identifica si existen evidencias pendientes.
+  bool get hasPendingEvidence =>
+      evidenceStep == EvidenceStep.confirmationPending ||
+      evidenceStep == EvidenceStep.evidencePending;
+
+  // El botón se bloquea únicamente cuando las evidencias
+  // están pendientes y ya se llegó a Término de descarga.
+  bool get enableStatusButton {
+    if (hasPendingEvidence) {
+      return false;
+    }
+
+    return serviceStatus?.enableBtn ?? false;
+  }
+
   bool get canUpdateStatus {
-    return enableStatusButton;
+    if (hasPendingEvidence) return false;
+
+    return serviceStatus?.enableBtn ?? false;
   }
 
   ServiceDetailState copyWith({
