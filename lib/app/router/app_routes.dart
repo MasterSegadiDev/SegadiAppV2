@@ -1,4 +1,6 @@
 abstract final class AppRoutes {
+  static const String home = '/home';
+
   static const String truck = '/local-service';
 
   static const String tramoDetail = '/local-service/stretch';

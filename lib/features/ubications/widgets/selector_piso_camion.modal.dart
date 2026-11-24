@@ -285,7 +285,7 @@ class SelectorNivelesModal extends StatelessWidget {
 
                       Navigator.pop(context);
 
-                      avisoReacomodo(context, siguienteMovimiento.nivel,
+                      avisoReacomodo(context, siguienteMovimiento!.nivel,
                           siguienteMovimiento.serie!);
 
                       return;

@@ -532,6 +532,7 @@ class _MaintenanceUnitSelectionPageState
     WidgetRef ref,
     Object error,
   ) {
+    debugPrint('Error: $error');
     return Container(
       padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
@@ -599,11 +600,7 @@ class _MaintenanceUnitSelectionPageState
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
-            if (context.canPop()) {
-              context.pop();
-            } else {
-              context.go('/');
-            }
+            context.go('/');
           },
         ),
         title: const Text(

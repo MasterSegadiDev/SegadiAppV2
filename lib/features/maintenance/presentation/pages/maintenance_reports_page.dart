@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:segadi/features/maintenance/presentation/pages/maintenance_report_detail_page.dart';
 import 'package:segadi/features/maintenance/presentation/viewmodels/maintenance_reports_viewmodel.dart';
 
@@ -41,19 +42,6 @@ class _MaintenanceReportsPageState
     return report.idStatus == 5 ||
         report.idStatus == 9 ||
         report.idStatus == 12;
-  }
-
-  List<MaintenanceReport> _getReports(
-    List<MaintenanceReport> reports,
-  ) {
-    if (_selectedTab == 0) {
-      return reports
-          .where((report) => !_isResolved(report) && !_isOtherClosed(report))
-          .toList();
-    }
-
-    // La pestaña Resueltos muestra únicamente solicitudes resueltas.
-    return reports.where(_isResolved).toList();
   }
 
   String _statusLabel(MaintenanceReport report) {
@@ -179,6 +167,11 @@ class _MaintenanceReportsPageState
         backgroundColor: Colors.black,
         foregroundColor: Colors.white,
         elevation: 0,
+        leading: IconButton(
+            onPressed: () {
+              context.go('/');
+            },
+            icon: const Icon(Icons.arrow_back)),
         title: const Text(
           'Mis reportes de mantenimiento',
           style: TextStyle(

@@ -17,13 +17,23 @@ class ServicesPage extends ConsumerStatefulWidget {
 }
 
 class _ServicesPageState extends ConsumerState<ServicesPage> {
+  late final TextEditingController _searchController;
+
   @override
   void initState() {
     super.initState();
 
+    _searchController = TextEditingController();
+
     Future.microtask(() {
       ref.read(servicesProvider.notifier).loadServices();
     });
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -49,25 +59,64 @@ class _ServicesPageState extends ConsumerState<ServicesPage> {
             );
           }
 
-          if (state.services.isEmpty) {
-            return const ServicesEmpty();
-          }
-
-          return ListView.builder(
-            padding: const EdgeInsets.all(16),
-            itemCount: state.services.length,
-            itemBuilder: (_, index) {
-              final service = state.services[index];
-
-              return Padding(
-                padding: const EdgeInsets.only(
-                  bottom: 12,
+          return Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  16,
+                  16,
+                  8,
                 ),
-                child: ServiceCard(
-                  service: service,
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: (value) {
+                    ref.read(servicesProvider.notifier).searchServices(value);
+                  },
+                  decoration: InputDecoration(
+                    hintText: 'Buscar remisión, origen o destino',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: state.searchQuery.isNotEmpty
+                        ? IconButton(
+                            icon: const Icon(Icons.close),
+                            onPressed: () {
+                              _searchController.clear();
+
+                              ref.read(servicesProvider.notifier).clearSearch();
+                            },
+                          )
+                        : null,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      vertical: 14,
+                    ),
+                  ),
                 ),
-              );
-            },
+              ),
+              Expanded(
+                child: state.filteredServices.isEmpty
+                    ? const ServicesEmpty()
+                    : ListView.builder(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        itemCount: state.filteredServices.length,
+                        itemBuilder: (_, index) {
+                          final service = state.filteredServices[index];
+
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: 12,
+                            ),
+                            child: ServiceCard(
+                              service: service,
+                            ),
+                          );
+                        },
+                      ),
+              ),
+            ],
           );
         },
       ),

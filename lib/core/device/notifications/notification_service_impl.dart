@@ -14,7 +14,6 @@ class NotificationServiceImpl implements NotificationService {
   );
 
   @override
-  @override
   Future<void> initialize({
     void Function(String? payload)? onNotificationTap,
   }) async {
@@ -24,9 +23,10 @@ class NotificationServiceImpl implements NotificationService {
       android: android,
     );
 
+    // En esta versión, 'settings' ahora es un parámetro con nombre obligatorio
     await _plugin.initialize(
-      settings,
-      onDidReceiveNotificationResponse: (response) {
+      settings: settings,
+      onDidReceiveNotificationResponse: (NotificationResponse response) {
         onNotificationTap?.call(response.payload);
       },
     );
@@ -38,17 +38,17 @@ class NotificationServiceImpl implements NotificationService {
   }
 
   @override
-  @override
   Future<void> show({
     required String title,
     required String body,
     String? payload,
   }) async {
+    // En esta versión, 'id' se pasa como parámetro con nombre obligatorio
     await _plugin.show(
-      DateTime.now().millisecondsSinceEpoch ~/ 1000,
-      title,
-      body,
-      const NotificationDetails(
+      id: DateTime.now().millisecondsSinceEpoch ~/ 1000,
+      title: title,
+      body: body,
+      notificationDetails: const NotificationDetails(
         android: AndroidNotificationDetails(
           'segadi_channel',
           'SEGADI Notifications',

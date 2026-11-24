@@ -10,6 +10,21 @@ import '../viewmodels/checklist_viewmodel.dart';
 import '../widgets/checklist_card.dart';
 import '../widgets/checklist_footer.dart';
 
+class _C {
+  static const background = Color(0xFFF7F8F6);
+  static const surfaceDark = Color(0xFF101812);
+
+  static const primaryGreen = Color(0xFF1E7A3C);
+  static const primaryGreenSoft = Color(0xFFE1F0E3);
+
+  static const textPrimary = Color(0xFF101812);
+  static const textSecondary = Color(0xFF6B6B66);
+  static const textMuted = Color(0xFF9A9A94);
+
+  static const border = Color(0xFFE0E0DA);
+  static const errorRed = Color(0xFFB23A3A);
+}
+
 class ChecklistPage extends StatelessWidget {
   final ChecklistArguments arguments;
 
@@ -38,64 +53,119 @@ class _ChecklistView extends StatelessWidget {
   const _ChecklistView({
     required this.arguments,
   });
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<ChecklistViewModel>();
 
     if (vm.isLoading) {
       return const Scaffold(
+        backgroundColor: _C.background,
         body: Center(
-          child: CircularProgressIndicator(),
+          child: CircularProgressIndicator(
+            color: _C.primaryGreen,
+          ),
         ),
       );
     }
 
     return Scaffold(
+      backgroundColor: _C.background,
       appBar: AppBar(
+        backgroundColor: _C.surfaceDark,
+        foregroundColor: Colors.white,
         elevation: 0,
-        centerTitle: false,
-        titleSpacing: 0,
+        toolbarHeight: 78,
+        titleSpacing: 16,
         title: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
             const Text(
               'Chequeo de Unidad',
               style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
+                fontSize: 19,
+                fontWeight: FontWeight.w700,
+                letterSpacing: .2,
               ),
             ),
-            const SizedBox(height: 2),
-            Text(
-              'Servicio : ${arguments.serviceNumber}',
-              style: TextStyle(
-                fontSize: 13,
-                color: Colors.white.withOpacity(.85),
-                fontWeight: FontWeight.w400,
-              ),
+            const SizedBox(height: 6),
+            Row(
+              children: [
+                Icon(
+                  Icons.confirmation_number_outlined,
+                  size: 14,
+                  color: Colors.white.withOpacity(.75),
+                ),
+                const SizedBox(width: 5),
+                Text(
+                  'Servicio: ${arguments.serviceNumber}',
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: Colors.white.withOpacity(.75),
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
             ),
           ],
         ),
       ),
-      body: Column(
-        children: [
-          Expanded(
-            child: ChecklistCard(
-              checkpoints: vm.checkpoints,
-              onChanged: vm.toggleCheckpoint,
+      body: SafeArea(
+        top: false,
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(
+                  16,
+                  18,
+                  16,
+                  12,
+                ),
+                child: ChecklistCard(
+                  checkpoints: vm.checkpoints,
+                  onChanged: vm.toggleCheckpoint,
+                ),
+              ),
             ),
-          ),
-          ChecklistFooter(
-            isSaving: vm.isSaving,
-            canSave: vm.hasCheckedItem,
-            onSave: () {
-              _saveChecklist(
-                context,
-                vm,
-              );
-            },
-          )
-        ],
+            Container(
+              decoration: BoxDecoration(
+                color: Colors.white,
+                border: Border(
+                  top: BorderSide(
+                    color: _C.border.withOpacity(.7),
+                  ),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(.04),
+                    blurRadius: 14,
+                    offset: const Offset(0, -4),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                top: false,
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    16,
+                    12,
+                    16,
+                    12,
+                  ),
+                  child: ChecklistFooter(
+                    isSaving: vm.isSaving,
+                    canSave: vm.hasCheckedItem,
+                    onSave: () {
+                      _saveChecklist(context, vm);
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

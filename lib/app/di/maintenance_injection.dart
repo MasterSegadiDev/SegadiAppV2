@@ -8,6 +8,7 @@ import 'package:segadi/features/maintenance/data/datasources/maintenance_units_r
 import 'package:segadi/features/maintenance/data/repositories/maintenance_report_repository_impl.dart';
 import 'package:segadi/features/maintenance/domain/repositories/maintenance_report_repository.dart';
 import 'package:segadi/features/maintenance/domain/usecases/create_maintenance_report_usecase.dart';
+import 'package:segadi/features/maintenance/domain/usecases/get_assigned_unit_usecase.dart';
 
 import 'injection_container.dart';
 
@@ -82,6 +83,12 @@ Future<void> setupMaintenanceDependencies() async {
   getIt.registerLazySingleton<GetMaintenanceReports>(
     () => GetMaintenanceReports(
       getIt<MaintenanceReportRepository>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<GetAssignedUnitUseCase>(
+    () => GetAssignedUnitUseCase(
+      getIt<MaintenanceRepository>(),
     ),
   );
 
